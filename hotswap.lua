@@ -1,6 +1,7 @@
 local util = require "utilities"
 local _require = require
 local registry = {}
+local trigger_interval, timeout = 3 -- seconds
 
 
 local function url(resource)
@@ -37,14 +38,15 @@ function require(resource, force_reload)
 end
 
 
--- TODO timer instead of each frame?
-
 return function()
-    for resource, cache in pairs(registry) do
-        local timestamp = util.modifiedat(cache.url)
-        if cache.timestamp ~= timestamp then
-            cache.timestamp = timestamp
-            require(resource, true)
+    if not timeout or timeout < os.time() then
+        timeout = os.time() + trigger_interval
+        for resource, cache in pairs(registry) do
+            local timestamp = util.modifiedat(cache.url)
+            if cache.timestamp ~= timestamp then
+                cache.timestamp = timestamp
+                require(resource, true)
+            end
         end
     end
 end

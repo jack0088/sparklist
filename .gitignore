@@ -1,0 +1,70 @@
+# NOTE names without a slash `/` (prefixed or suffixed) are matched againts ANY directory
+
+# custom additions go here...
+
+# to ignore every folder(!) at any depth-level that is prefixed with an underscore use: **_*/
+# to ignore every file and folder at any depth use: **_*
+**_*
+
+# executables
+
+*.exe
+*.out
+*.i*86
+*.x86_64
+*.hex
+
+*.love
+*.app
+
+# libraries and other sources
+
+*.src.rock
+*.zip
+*.tar.gz
+
+*.o
+*.os
+*.ko
+*.obj
+*.elf
+
+*.lib
+*.a
+*.la
+*.lo
+*.def
+*.exp
+
+*.gch
+*.pch
+
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Apple specific
+
+Icon
+Thumbs.db
+Network Trash Folder
+Temporary Items
+.TemporaryItems
+.DocumentRevisions-V100
+.Spotlight-V100
+.VolumeIcon.icns
+.DS_Store
+.Trashes
+.AppleDouble
+.LSOverride
+.fseventsd
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+.apdisk
+*~
+._*
+*.swp
+*.lnk
+*.orig

@@ -5,7 +5,7 @@ source = {
 }
 description = {
     homepage = "https://herrsch.de",
-    license = "Closed Source. Unauthorized copying of this file, via any medium is strictly prohibited! 2019 (c) kontakt@herrsch.de"
+    license = "Closed Source. Unauthorized copies or further distribution of files in this project, via any medium, is strictly prohibited! All rights reserved. 2019 (c) kontakt@herrsch.de"
 }
 dependencies = {
     "lua == 5.1.5",
@@ -14,11 +14,13 @@ dependencies = {
     "luasql-sqlite3"
 }
 build = {
-    type = "builtin",
-    modules = {
-        hotswap = "hotswap.lua",
-        mimetype = "mimetype.lua",
-        server = "server.lua",
-        utilities = "utilities.lua"
+    type = "none",
+    install = {
+        lua = {
+            hotswap = "hotswap.lua",
+            mimetype = "mimetype.lua",
+            server = "server.lua",
+            utilities = "utilities.lua"
+        }
     }
 }

@@ -181,7 +181,6 @@ end
 
 
 function filesystem.writefile(path, data)
-    -- TODO? check permissions before write?
     local file_pointer
     if type(path) == "string" then
         if filesystem.isfolder(path) then return false end
@@ -191,6 +190,7 @@ function filesystem.writefile(path, data)
         file_pointer = path -- path is already a file handle
     end
     if not file_pointer then return false end
+    -- TODO? check permissions before write?
     file_pointer:write(data)
     file_pointer:close()
     return true
@@ -265,8 +265,7 @@ function filesystem.permissions(path, right)
         return string.format(fmt, shell.cmd("stat", "-r", path, "|", "awk", "'{print $3}'", "|", "tail", "-c", "4"))
     elseif filesystem.os("linux") then -- Linux
         return shell.stat("-c", "'%a'", path) -- TODO needs testing
-    elseif filesystem.os("windows") then -- Windows
-        -- TODO
+    elseif filesystem.os("windows") then -- TODO Windows support
     end
     return nil
 end
@@ -295,10 +294,11 @@ end
 -- returns (string) current content of the system clipboard
 function filesystem.readclipboard()
     if filesystem.os("darwin") then -- MacOS
-        -- TODO? can we pass around other types like files? do we need to encode/decode these string queries somehow?
+        -- NOTE we could pass around specific formats
+        -- and by encode/decode these queries we could copy/paste application specific data
+        -- just like Adobe can transfer Photos from InDesign to Photoshop and back (or even settings)
         return shell.pbpaste() --trim(sh.echo("`pbpaste`"))
-    elseif filesystem.os("linux") then -- Linux
-        -- TODO use xclip util
+    elseif filesystem.os("linux") then -- TODO Linux sipport via xclip util
     end
     return nil
 end
@@ -309,8 +309,7 @@ end
 function filesystem.writeclipboard(query)
     if filesystem.os("darwin") then -- MacOS
         return shell.cmd("echo", query, "|", "pbcopy")
-    elseif filesystem.os("linux") then -- Linux
-        -- TODO use xclip
+    elseif filesystem.os("linux") then -- TODO Linux support via xclip util
     end
     return false
 end

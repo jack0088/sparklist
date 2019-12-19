@@ -1,7 +1,7 @@
 local util = require "utilities"
 local _require = require
 local registry = {}
-local trigger_interval, timeout = 3 -- seconds
+local trigger_interval, timeout = 1 -- seconds
 
 
 local function url(resource)

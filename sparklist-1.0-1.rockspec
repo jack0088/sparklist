@@ -8,8 +8,10 @@ description = {
     license = "Closed Source. Unauthorized copying of this file, via any medium is strictly prohibited! 2019 (c) kontakt@herrsch.de"
 }
 dependencies = {
-    "lua >= 5.1",
-    "luasocket >= 3.0"
+    "lua == 5.1.5",
+    "luasocket",
+    "sqlite3",
+    "luasql-sqlite3"
 }
 build = {
     type = "builtin",

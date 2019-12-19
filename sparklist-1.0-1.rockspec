@@ -1,7 +1,7 @@
 package = "sparklist"
 version = "1.0-1"
 source = {
-    url = "git+https://supacowa@bitbucket.org/supacowa/sparklist.git"
+    url = "./"
 }
 description = {
     homepage = "https://herrsch.de",

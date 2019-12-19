@@ -1,4 +1,4 @@
--- namespace plumbing tools to access filesystem at low-level
+-- namespace unix plumbing utilities to access (file)system tools at low-level
 local mime = require "mimetype"
 local filesystem = {shell = shell}
 
@@ -180,6 +180,8 @@ function filesystem.readfile(path)
 end
 
 
+-- @path (string) relative- or absolute path to the file
+-- returns (boolean) true on success, false on fail
 function filesystem.writefile(path, data)
     local file_pointer
     if type(path) == "string" then
@@ -315,6 +317,7 @@ function filesystem.writeclipboard(query)
 end
 
 
+-- returns (table) various information about the machine
 function filesystem.sysinfo()
     -- TODO implement system load information
     -- possibly with shell.cmd("top", "-F", "-R", "-o", "cpu") from http://osxdaily.com/2009/10/06/monitoring-cpu-usage-on-your-mac-a-better-top-command

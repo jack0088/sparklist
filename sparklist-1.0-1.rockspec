@@ -5,7 +5,7 @@ source = {
 }
 description = {
     homepage = "https://herrsch.de",
-    license = "***private***"
+    license = "Closed Source. Unauthorized copying of this file, via any medium is strictly prohibited! 2019 (c) kontakt@herrsch.de"
 }
 dependencies = {
     "lua >= 5.1"

@@ -5,6 +5,7 @@ local filesystem = {shell = shell}
 
 -- @str (string) the string to trim
 -- returns (string) with removed whitespaces, tabs and line-break characters from beginning- and ending of the string
+-- NOTE also useful to omit additional return values (only keep the first returned value)
 local function trim(str)
     if type(str) ~= "string" then str = tostring(str or "") end
     local mask = "[ \t\r\n]*"
@@ -60,9 +61,10 @@ end})
 
 -- @platform (string) operating system to check against; returns (boolean) true on match
 -- platform regex could be: linux*, windows* darwin*, cygwin*, mingw* (everything else might count as unknown)
--- returns (string) operating system identifier
+-- returns (string) operating system identifier or (boolean) on match with @platform
 -- NOTE love.system.getOS() is another way of retreving this, if the love2d framework is used in this context
 function filesystem.os(platform)
+    if platform:lower():find("maco?s?") then platform = "darwin" end
     local plat = shell.uname("-s")
     if type(platform) == "string" then return type(plat:lower():match("^"..platform:lower())) ~= "nil" end
     return plat
@@ -125,14 +127,14 @@ end
 -- @path (string) relative- or absolute path to the file or (sub-)folder
 -- returns (string) epoch/ unix date timestamp
 function filesystem.createdat(path)
-    return trim(shell.stat("-f", "%B", path)) -- TODO need to verify on other platforms than MacOS
+    return trim(shell.stat("-f", "%B", path)) -- TODO needs testing on Linux and Windows
 end
 
 
 -- @path (string) relative- or absolute path to the file or (sub-)folder
 -- returns (string) epoch/ unix date timestamp
 function filesystem.modifiedat(path)
-    return trim(shell.date("-r", path, "+%s")) -- TODO need to verify on other platforms than MacOS
+    return trim(shell.date("-r", path, "+%s")) -- TODO needs testing on Linux and Windows
 end
 
 
@@ -144,6 +146,8 @@ function filesystem.checksum(path)
             return shell.cmd("shasum", "-a", 1, path, "|", "awk", "'{print $1}'")
         elseif filesystem.os("linux") then -- Linux
             return shell.cmd("sha1sum", path, "|", "awk", "'{print $1}'")
+        elseif filesystem.os("windows") then -- Windows
+            return shell.cmd("CertUtil", "-hashfile", path, "SHA1") -- TODO needs testing
         end
     end
     return nil
@@ -260,11 +264,11 @@ function filesystem.permissions(path, right)
     if filesystem.os("darwin") then -- MacOS
         return string.format(fmt, shell.cmd("stat", "-r", path, "|", "awk", "'{print $3}'", "|", "tail", "-c", "4"))
     elseif filesystem.os("linux") then -- Linux
-        return trim(shell.stat("-c", "'%a'", path)) -- TODO needs testing
+        return shell.stat("-c", "'%a'", path) -- TODO needs testing
     elseif filesystem.os("windows") then -- Windows
-        -- TODO?
+        -- TODO
     end
-    return nil -- unknown OS
+    return nil
 end
 
 
@@ -312,9 +316,15 @@ function filesystem.writeclipboard(query)
 end
 
 
--- TODO implement system load information
--- possibly with shell.cmd("top", "-F", "-R", "-o", "cpu") from http://osxdaily.com/2009/10/06/monitoring-cpu-usage-on-your-mac-a-better-top-command
--- or something like ps -A -o %cpu | awk '{s+=$1} END {print s "%"}' taken from https://stackoverflow.com/questions/30855440/how-to-get-cpu-utilization-in-in-terminal-mac should also work
+function filesystem.sysinfo()
+    -- TODO implement system load information
+    -- possibly with shell.cmd("top", "-F", "-R", "-o", "cpu") from http://osxdaily.com/2009/10/06/monitoring-cpu-usage-on-your-mac-a-better-top-command
+    -- or something like ps -A -o %cpu | awk '{s+=$1} END {print s "%"}' taken from https://stackoverflow.com/questions/30855440/how-to-get-cpu-utilization-in-in-terminal-mac should also work
+    return {
+        os = filesystem.os(),
+        workload = "...%"
+    }
+end
 
 
 return filesystem

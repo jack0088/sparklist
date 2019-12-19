@@ -13,9 +13,9 @@ end
 -- seems like hotswap() works performance-wise similar to lsfroutine()
 -- so i see no reason to switch from unix plumbing tool to lfs c library
 
-for k, v in pairs(package.loaded) do
-    print(k)
-end
+-- for k, v in pairs(package.loaded) do
+--     print(k)
+-- end
 
 while true do
     hotswap()

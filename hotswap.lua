@@ -1,4 +1,8 @@
-local util = require "utilities"
+local util = dofile "utilities.lua"
+local isfile = util.isfile
+local modifiedat = util.modifiedat
+util = nil
+
 local _require = require
 local registry = {}
 local trigger_interval, timeout = 1 -- seconds
@@ -8,9 +12,9 @@ local function url(resource)
     local file_path = resource:gsub("%.", "/")
     if file_path:sub(1, 1) == "/" then file_path = "."..file_path end
     if file_path:sub(-4) ~= ".lua" then file_path = file_path..".lua" end
-    if not util.isfile(file_path) then
+    if not isfile(file_path) then
         file_path = file_path:sub(1, -4).."init.lua"
-        if not util.isfile(file_path) then
+        if not isfile(file_path) then
             file_path = nil
         end
     end
@@ -24,7 +28,7 @@ function require(resource, force_reload)
         if file_path then
             registry[resource] = {
                 url = file_path,
-                timestamp = util.modifiedat(file_path)
+                timestamp = modifiedat(file_path)
             }
         end
         return _require(resource)
@@ -42,7 +46,7 @@ return function()
     if not timeout or timeout < os.time() then
         timeout = os.time() + trigger_interval
         for resource, cache in pairs(registry) do
-            local timestamp = util.modifiedat(cache.url)
+            local timestamp = modifiedat(cache.url)
             if cache.timestamp ~= timestamp then
                 cache.timestamp = timestamp
                 require(resource, true)

@@ -82,7 +82,9 @@ end
 -- returns (string) mime-type of the resource (file or folder)
 -- NOTE for more predictable web-compilant results use the mime.lua module!
 function filesystem.filetype(path)
-    if filesystem.exists(path) then return trim(shell.file("--mime-type", "-b", path)) end
+    if filesystem.exists(path) then
+        return trim(shell.file("--mime-type", "-b", path))
+    end
     return nil
 end
 
@@ -113,6 +115,7 @@ end
 -- true on a match with @filter + an array of files that match the @filter criteria;
 -- otherwise an array of files inside that folder
 function filesystem.infolder(path, filter)
+    -- TODO? include folders as well but append / to signal that its a folder?
     if not filesystem.isfolder(path) then return nil end
     local content, status = shell.cmd("ls", path, "|", "grep", filter or "")
     local list = {}
@@ -125,16 +128,25 @@ end
 
 
 -- @path (string) relative- or absolute path to the file or (sub-)folder
--- returns (string) epoch/ unix date timestamp
+-- returns (string) birthtime of file as epoch/unix date timestamp
 function filesystem.createdat(path)
-    return trim(shell.stat("-f", "%B", path)) -- TODO needs testing on Linux and Windows
+    if filesystem.os("darwin") then -- MacOS
+        return trim(shell.stat("-f", "%B", path))
+    elseif filesystem.os("linux") then -- Linux
+        -- NOTE most Linux filesystems do not support this property and return 0 or -
+        -- see https://unix.stackexchange.com/questions/91197/how-to-find-creation-date-of-file
+        return trim(shell.stat("-c", "%W", path))
+    end
 end
 
 
 -- @path (string) relative- or absolute path to the file or (sub-)folder
 -- returns (string) epoch/ unix date timestamp
 function filesystem.modifiedat(path)
-    return trim(shell.date("-r", path, "+%s")) -- TODO needs testing on Linux and Windows
+    -- NOTE a machine should first of all have the right timezone set in preferences, for Linux see https://askubuntu.com/questions/3375/how-to-change-time-zone-settings-from-the-command-line
+    -- Linux does always store modification time as UTC and converts these timestamps aleways back into the local timezone of your machine. However, if a device stores time as CET then Linux would assume that timestamp to be UTC and therefor (mistakenly) convert it back into the machines local timezone, see discussion https://unix.stackexchange.com/questions/440765/linux-showing-incorrect-file-modified-time-for-camera-video
+    -- In any case, you get different results for MacOS vs Linux!
+    return trim(shell.date("-r", path, "+%s"))
 end
 
 
@@ -143,11 +155,9 @@ end
 function filesystem.checksum(path)
     if filesystem.isfile(path) then
         if filesystem.os("darwin") then -- MacOS
-            return shell.cmd("shasum", "-a", 1, path, "|", "awk", "'{print $1}'")
+            return trim(shell.cmd("shasum", "-a", 1, path, "|", "awk", "'{print $1}'"))
         elseif filesystem.os("linux") then -- Linux
-            return shell.cmd("sha1sum", path, "|", "awk", "'{print $1}'")
-        elseif filesystem.os("windows") then -- Windows
-            return shell.cmd("CertUtil", "-hashfile", path, "SHA1") -- TODO needs testing
+            return trim(shell.cmd("sha1sum", path, "|", "awk", "'{print $1}'"))
         end
     end
     return nil
@@ -364,7 +374,6 @@ function filesystem.mem()
     elseif filesystem.os("linux") then -- TODO Linux support
     end
 end
-print(filesystem.mem())
 
 
 -- returns (table) various information about the machine

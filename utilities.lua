@@ -174,7 +174,16 @@ end
 
 
 -- @path (string) relative- or absolute path to the file
--- returns (table) that contains information about the file, e.g. path, directory, filename, file extension, raw content, etc
+-- skips non-existing file as well
+-- returns (boolean) true on success
+function filesystem.deletefile(path)
+    if filesystem.isfolder(path) then return false end
+    return select(2, shell.rm("-f", path))
+end
+
+
+-- @path (string) relative- or absolute path to the file
+-- returns (string) raw content of a file; or nil on failure
 function filesystem.readfile(path)
     local file_pointer
     if type(path) == "string" then
@@ -216,15 +225,6 @@ end
 function filesystem.makefolder(path)
     if filesystem.isfile(path) then return false end
     return select(2, shell.mkdir("-p", path))
-end
-
-
--- @path (string) relative- or absolute path to the file
--- skips non-existing file as well
--- returns (boolean) true on success
-function filesystem.deletefile(path)
-    if filesystem.isfolder(path) then return false end
-    return select(2, shell.rm("-f", path))
 end
 
 
@@ -276,8 +276,7 @@ function filesystem.permissions(path, right)
     if filesystem.os("darwin") then -- MacOS
         return string.format(fmt, shell.cmd("stat", "-r", path, "|", "awk", "'{print $3}'", "|", "tail", "-c", "4"))
     elseif filesystem.os("linux") then -- Linux
-        return shell.stat("-c", "'%a'", path) -- TODO needs testing
-    elseif filesystem.os("windows") then -- TODO Windows support
+        return shell.stat("-c", "'%a'", path)
     end
     return nil
 end
@@ -310,7 +309,9 @@ function filesystem.readclipboard()
         -- and by encode/decode these queries we could copy/paste application specific data
         -- just like Adobe can transfer Photos from InDesign to Photoshop and back (or even settings)
         return shell.pbpaste() --trim(sh.echo("`pbpaste`"))
-    elseif filesystem.os("linux") then -- TODO Linux sipport via xclip util
+    elseif filesystem.os("linux") then-- TODO? Linux support via xclip
+        -- NOTE this makes no sense on a machine without a display, like is a webserver
+        -- see https://unix.stackexchange.com/questions/211817/copy-the-contents-of-a-file-into-the-clipboard-without-displaying-its-contents
     end
     return nil
 end
@@ -320,9 +321,9 @@ end
 -- returns (boolean) true on success
 function filesystem.writeclipboard(query)
     if filesystem.os("darwin") then -- MacOS
-        return shell.cmd("echo", query, "|", "pbcopy")
-    elseif filesystem.os("linux") then -- TODO Linux support via xclip util
+        return select(2, shell.cmd("echo", query, "|", "pbcopy"))
     end
+    -- see NOTE above about Linux support
     return false
 end
 

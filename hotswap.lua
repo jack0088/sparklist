@@ -47,6 +47,7 @@ end
 function hotswap:onEnterFrame() -- xors plugin hook
     if not self.timeout or self.timeout < os.time() then
         self.timeout = os.time() + self.trigger_interval
+        print(os.date("%d.%m.%Y %H:%M:%S"), os.time(), self.timeout)
         for resource, cache in pairs(self.registry) do
             local timestamp = modifiedat(cache.url)
             if cache.timestamp ~= timestamp then

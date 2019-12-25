@@ -7,7 +7,7 @@
 -- If you have trouble installing luasec, see https://github.com/luarocks/luarocks/issues/579
 local https = require "ssl.https"
 local view = require "views"
-local api = require "router"()
+local api = require "router"() -- TODO later add rest_api.lua for backend routes (like for preloading content or live streaming over (web)sockets)
 
 
 api:get("/?", function(request, response)

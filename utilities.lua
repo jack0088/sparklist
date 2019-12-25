@@ -287,18 +287,18 @@ end
 -- NOTE .filetype is the operating system mime-type of the resource (file or folder),
 -- while .mimetype is a web-compilant mime-type of the file judged by its file extension
 function filesystem.fileinfo(path)
-    local meta = {}
-    meta.url = path
-    meta.mimetype, meta.path, meta.name, meta.extension = mime.guess(meta.url)
-    meta.filetype = filesystem.filetype(meta.url)
-    meta.exists = filesystem.exists(meta.url)
-    meta.isfile = filesystem.isfile(meta.url)
-    meta.isfolder = filesystem.isfolder(meta.url)
-    meta.created = filesystem.createdat(meta.url)
-    meta.modified = filesystem.modifiedat(meta.url)
-    meta.checksum = filesystem.checksum(meta.url)
-    meta.permissions = filesystem.permissions(meta.url)
-    return meta
+    local t = {}
+    t.url = path
+    t.mimetype, t.path, t.name, t.extension = mime.guess(t.url)
+    t.filetype = filesystem.filetype(t.url)
+    t.exists = filesystem.exists(t.url)
+    t.isfile = filesystem.isfile(t.url)
+    t.isfolder = filesystem.isfolder(t.url)
+    t.created = filesystem.createdat(t.url)
+    t.modified = filesystem.modifiedat(t.url)
+    t.checksum = filesystem.checksum(t.url)
+    t.permissions = filesystem.permissions(t.url)
+    return t
 end
 
 
@@ -334,23 +334,23 @@ function filesystem.cores(hyperthreading)
     if filesystem.os("darwin") then -- MacOS
         local pntr = hyperthreading and "hw.logicalcpu" or "hw.physicalcpu"
         return trim(shell.sysctl(pntr, "|", "awk", "'{print $2}'"))
-    elseif filesystem.os("linux") then -- TODO Linux support
+    elseif filesystem.os("linux") then -- Linux
+        return trim(shell.nproc())
     end
 end
 
 
 -- returns (number) representing cpu workload in % percent
+-- NOTE the workload could be grater than 100% if to much workload or not enough cores to handle it
 function filesystem.cpu()
-    if filesystem.os("darwin") then -- MacOS
+    if filesystem.os("darwin") or filesystem.os("linux") then -- MacOS or Linux
         -- NOTE @avgcpu can be grater than 100% if machine has multiple cores, e.g. up to 600% at 6 cores
         -- it could also be larger than that, because of @hyperthreading (physical vs logical number of cores)
-        local avgcpu = trim(shell.ps("-A", "-o", "%cpu", "|", "awk", "'{s+=$1} END {print s}'")):gsub(",", ".")
+        local avgcpu = trim(shell.ps("-A", "-o", "%cpu", "|", "awk", "'{s+=$1} END {print s}'")):gsub(",", ".") --%
         local ncores = filesystem.cores()
-        local used = avgcpu * 100 / (ncores * 100)
-        -- local free = 100 - used
-        -- return used, free
-        return used
-    elseif filesystem.os("linux") then -- TODO Linux support
+        local used = avgcpu * 100 / (ncores * 100) --%
+        local free = 100 - used --%
+        return used, free
     end
 end
 
@@ -359,31 +359,34 @@ end
 function filesystem.ram()
     if filesystem.os("darwin") then -- MacOS
         return trim(shell.sysctl("hw.memsize"))
-    elseif filesystem.os("linux") then -- TODO Linux support
+    elseif filesystem.os("linux") then -- Linux
+        return trim(shell.cat("/proc/meminfo", "|", "grep", "-i", "MemTotal", "|", "awk", "'{print $2}'"))
     end
 end
 
 
 function filesystem.mem()
-    if filesystem.os("darwin") then -- MacOS
-        local avgmem = trim(shell.ps("-A", "-o", "%mem", "|", "awk", "'{s+=$1} END {print s}'")):gsub(",", ".")
-        local rsize = filesystem.ram()
-        local used = avgmem
-        -- local free = nil
-        -- return used, free
-        return used
-    elseif filesystem.os("linux") then -- TODO Linux support
+    if filesystem.os("darwin") or filesystem.os("linux") then -- MacOS or Linux
+        local avgmem = trim(shell.ps("-A", "-o", "%mem", "|", "awk", "'{s+=$1} END {print s}'")):gsub(",", ".") --%
+        local rsize = filesystem.ram() --kB
+        local rfree = avgmem * rsize / 100 --kB
+        local rused = rsize - rfree --kB
+        local used = 100 - rused * 100 / rsize --%
+        local free = 100 - used --%
+        return used, free
     end
 end
 
 
 -- returns (table) various information about the machine
 function filesystem.sysinfo()
-    return {
-        os = filesystem.os(),
-        cpu = filesystem.cpu(),
-        mem = filesystem.mem()
-    }
+    local t = {cpu = {}, mem = {}}
+    t.os = filesystem.os()
+    t.cores = filesystem.cores()
+    t.cpu.used, t.cpu.free = filesystem.cpu() -- in percent
+    t.ram = filesystem.ram() -- in kilobytes
+    t.mem.used, t.mem.free = filesystem.mem() -- in percent
+    return t
 end
 
 

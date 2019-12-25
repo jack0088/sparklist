@@ -64,7 +64,7 @@ end})
 -- returns (string) operating system identifier or (boolean) on match with @platform
 -- NOTE love.system.getOS() is another way of retreving this, if the love2d framework is used in this context
 function filesystem.os(platform)
-    if platform:lower():find("maco?s?") then platform = "darwin" end
+    if platform and platform:lower():find("maco?s?") then platform = "darwin" end
     local plat = shell.uname("-s")
     if type(platform) == "string" then return type(plat:lower():match("^"..platform:lower())) ~= "nil" end
     return plat
@@ -317,16 +317,68 @@ function filesystem.writeclipboard(query)
 end
 
 
+-- @hyperthreading (optional boolean) to check against maximal resources instead of physically available once
+-- returns (number) of cores this machine has (optionally counting the maximal utilization potential (@hyperthreading = true))
+function filesystem.cores(hyperthreading)
+    if filesystem.os("darwin") then -- MacOS
+        local pntr = hyperthreading and "hw.logicalcpu" or "hw.physicalcpu"
+        return trim(shell.sysctl(pntr, "|", "awk", "'{print $2}'"))
+    elseif filesystem.os("linux") then -- TODO Linux support
+    end
+end
+
+
+-- returns (number) representing cpu workload in % percent
+function filesystem.cpu()
+    if filesystem.os("darwin") then -- MacOS
+        -- NOTE @avgcpu can be grater than 100% if machine has multiple cores, e.g. up to 600% at 6 cores
+        -- it could also be larger than that, because of @hyperthreading (physical vs logical number of cores)
+        local avgcpu = trim(shell.ps("-A", "-o", "%cpu", "|", "awk", "'{s+=$1} END {print s}'")):gsub(",", ".")
+        local ncores = filesystem.cores()
+        local used = avgcpu * 100 / (ncores * 100)
+        -- local free = 100 - used
+        -- return used, free
+        return used
+    elseif filesystem.os("linux") then -- TODO Linux support
+    end
+end
+
+
+-- returns (number) available ram space in kB
+function filesystem.ram()
+    if filesystem.os("darwin") then -- MacOS
+        return trim(shell.sysctl("hw.memsize"))
+    elseif filesystem.os("linux") then -- TODO Linux support
+    end
+end
+
+
+function filesystem.mem()
+    if filesystem.os("darwin") then -- MacOS
+        local avgmem = trim(shell.ps("-A", "-o", "%mem", "|", "awk", "'{s+=$1} END {print s}'")):gsub(",", ".")
+        local rsize = filesystem.ram()
+        local used = avgmem
+        -- local free = nil
+        -- return used, free
+        return used
+    elseif filesystem.os("linux") then -- TODO Linux support
+    end
+end
+print(filesystem.mem())
+
+
 -- returns (table) various information about the machine
 function filesystem.sysinfo()
-    -- TODO implement system load information
-    -- possibly with shell.cmd("top", "-F", "-R", "-o", "cpu") from http://osxdaily.com/2009/10/06/monitoring-cpu-usage-on-your-mac-a-better-top-command
-    -- or something like ps -A -o %cpu | awk '{s+=$1} END {print s "%"}' taken from https://stackoverflow.com/questions/30855440/how-to-get-cpu-utilization-in-in-terminal-mac should also work
     return {
         os = filesystem.os(),
-        workload = "...%"
+        cpu = filesystem.cpu(),
+        mem = filesystem.mem()
     }
 end
+
+
+-- TODO rewrite so that filesystem.os is only checked once
+-- e.g. middleman function can then map filesystem.cpu to filesystem.darwin.cpu or filesystem.linix.cpu
 
 
 return filesystem

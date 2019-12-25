@@ -25,6 +25,7 @@ function Xors:new(settings)
     self.port = settings.port or "80"
     self.info = {}
     self.timeout = settings.timeout or 1
+    self.max_clients = settings.max_clients or 1
     self.directory = settings.directory or "./"
     self.plugins = settings.plugins or {}
     return self
@@ -42,12 +43,15 @@ end
 
 
 function Xors:run()
-    self.joint = assert(socket.bind(self.host, self.port))
+    self.joint = socket.tcp()
+    self.joint:settimeout(self.timeout, "t")
+    self.joint:bind(self.host, self.port)
+    self.joint:listen(self.max_clients)
     --self.ip, self.port = self.joint:getsockname()
     self.info.name, self.ip, self.port = self:whois()
     print(string.format("XORS is listening to clients at %s:%s alias %s:%s", self.ip, self.port, self.info.name, self.port))
     local processor = Plugin(self)
-    while true do processor:run() end
+    while true do processor:run() end -- main loop
     self.joint:close()
     print(string.format("XORS shut down"))
 end

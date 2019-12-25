@@ -16,6 +16,6 @@ local hotswap = require "hotswap"
 local router = require "api"
 local server = require "xors"{
     port = 80,
-    timeout = 1,
+    timeout = 0.1,
 	plugins = {hotswap, router}
 }:run()

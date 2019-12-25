@@ -10,7 +10,8 @@ and allows you to hook-in with a plugin into its lifecycle at different states.
 --]]
 
 
-local tohostname = require "socket".dns.tohostname
+local socket = require "socket"
+local tohostname = socket.dns.tohostname
 local Request = require "request"
 local Response = require "response"
 local class = require "class"
@@ -41,15 +42,18 @@ end
 
 function Processor:connect()
     if not self.client or not self.client.keepalive then
-        self.client = {}
-        self.client.joint = self.server.joint:accept()
-        self.client.joint:settimeout(self.server.timeout, "b")
-        self.client.ip, self.client.port = self.client.joint:getpeername()
-        self.client.info = select(2, tohostname(self.client.ip))
-        if self:hook("onConnect", self.client, self.server) == false then self:disconnect() end
-        print(string.format("XORS connected to client at %s:%s (browse %s:%s)", self.client.ip, self.client.port, self.client.info.name, self.server.port))
-        return self
+        local candidate = self.server.joint:accept()
+        if candidate then
+            self.client = {}
+            self.client.joint = candidate
+            self.client.ip, self.client.port = self.client.joint:getpeername()
+            self.client.info = select(2, tohostname(self.client.ip))
+            if self:hook("onConnect", self.client, self.server) == false then self:disconnect() end
+            print(string.format("XORS connected to client at %s:%s (browse %s:%s)", self.client.ip, self.client.port, self.client.info.name, self.server.port))
+            return self
+        end
     end
+    return false
 end
 
 

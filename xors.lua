@@ -13,9 +13,9 @@ luasec (openssl)
 --]]
 
 
-local class = require "class"
 local socket = require "socket"
 local Plugin = require "hook"
+local class = require "class"
 local Xors = class()
 
 
@@ -25,7 +25,7 @@ function Xors:new(settings)
     self.port = settings.port or "80"
     self.info = {}
     self.timeout = settings.timeout or 1
-    self.max_clients = settings.max_clients or 1
+    self.backlog = settings.backlog or 100 -- max queue of waiting clients
     self.directory = settings.directory or "./"
     self.plugins = settings.plugins or {}
     return self
@@ -46,7 +46,7 @@ function Xors:run()
     self.joint = socket.tcp()
     self.joint:settimeout(self.timeout, "t")
     self.joint:bind(self.host, self.port)
-    self.joint:listen(self.max_clients)
+    self.joint:listen(self.backlog)
     --self.ip, self.port = self.joint:getsockname()
     self.info.name, self.ip, self.port = self:whois()
     print(string.format("XORS is listening to clients at %s:%s alias %s:%s", self.ip, self.port, self.info.name, self.port))

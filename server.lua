@@ -17,5 +17,6 @@ local router = require "api"
 local server = require "xors"{
     port = 80,
     timeout = 0.1,
+    backlog = 100,
 	plugins = {hotswap, router}
 }:run()

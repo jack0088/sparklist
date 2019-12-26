@@ -33,33 +33,32 @@ function require(resource, force_reload) -- override standard Lua function!
                 timestamp = modifiedat(file_path)
             }
         end
-        return assert(_require(resource))
+        return _require(resource)
     end
     local success, message = pcall(dofile, hotswap.registry[resource].url)
     if success and type(message) ~= "nil" then
         -- migrate current state from absolete module to the new loaded one
-        local absolete_module = package.loaded[resource]
-        local new_module = message
+        -- NOTE xors plugins can use a hook :hotswap() to provide a table of their states
         local stateless = true
-        if type(absolete_module) == "table" and type(new_module) == "table" then
-            local cache_state = new_module.hotswap or absolete_module.hotswap -- always use the latest migration function
+        if type(package.loaded[resource]) == "table" and type(message) == "table" then
+            local cache_state = message.hotswap or package.loaded[resource].hotswap -- always use the latest migration function
             if type(cache_state) == "function" then
-                local state_stack = cache_state(absolete_module)
+                local state_stack = cache_state(package.loaded[resource]) -- with self reference
                 if type(state_stack) == "table" then
                     stateless = false
                     for k, v in pairs(state_stack) do
-                        new_module[k] = v
+                        message[k] = v
                     end
                 end
             end
         end
-        absolete_module = new_module -- update the module
+        package.loaded[resource] = message -- update the absolete module
         print(string.format("%s %s hot-swap of module '%s'",
             os.date("%d.%m.%Y %H:%M:%S"),
             stateless and "stateless" or "stateful",
             hotswap.registry[resource].url
         ))
-        return message
+        return package.loaded[resource]
     end
 end
 

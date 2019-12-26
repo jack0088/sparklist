@@ -40,7 +40,7 @@ function Xors:hotswap()
         timeout = self.timeout,
         backlog = self.backlog,
         directory = self.directory,
-        plugins = self.plugins,
+        -- plugins = self.plugins,
         joint = self.joint
     }
 end

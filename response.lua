@@ -189,4 +189,13 @@ function Response:attach(location, name) -- attach file and force client browser
 end
 
 
+function Response:hotswap() -- restore state on hotswapping when file
+    return {
+        transmitter = self.transmitter,
+        request = self.request,
+        header = self.header
+    }
+end
+
+
 return Response

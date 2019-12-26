@@ -79,4 +79,14 @@ function Processor:hook(delegate, ...)
 end
 
 
+function Processor:hotswap() -- restore state when hot-swapping this file
+    return {
+        server = self.server,
+        client = self.client,
+        request = self.request,
+        response = self.response
+    }
+end
+
+
 return Processor

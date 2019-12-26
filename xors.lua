@@ -32,6 +32,20 @@ function Xors:new(settings)
 end
 
 
+function Xors:hotswap()
+    return {
+        host = self.host,
+        port = self.port,
+        info = self.info,
+        timeout = self.timeout,
+        backlog = self.backlog,
+        directory = self.directory,
+        plugins = self.plugins,
+        joint = self.joint
+    }
+end
+
+
 function Xors:whois() -- works even without internet
     local connection, server, client, port = socket.udp()
     connection:setpeername("74.125.115.104", self.port or 80) -- connect client to host (google placeholder, host ip and port are non-relevant here)

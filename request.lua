@@ -104,4 +104,18 @@ function Request:new(receiver)
 end
 
 
+function Request:hotswap() -- hook for restoring state when hot-swappingw this file
+    return {
+        receiver = self.receiver,
+        protocol = self.protocol,
+        method = self.method,
+        header = self.header,
+        url = self.url,
+        query = self.query,
+        parameter = self.parameter,
+        content = self.content
+    }
+end
+
+
 return Request

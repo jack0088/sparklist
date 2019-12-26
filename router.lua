@@ -51,8 +51,8 @@ EXAMPLE (respond with html layout shorthand)
 --]]
 
 local unpack = unpack or table.unpack -- Lua > 5.1
-local class = require "class"
 local view = require "views"
+local class = require "class"
 local Router = class()
 
 
@@ -94,7 +94,6 @@ for _, method in ipairs{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "CONNEC
         dispatcher:register(method:upper(), route, preload(handler))
     end
 end
-
 
 Router.any = function(dispatcher, route, handler)
     dispatcher:register("[A-Z]+", route, preload(handler))

@@ -17,13 +17,13 @@ end)
 
 
 api:get("/foobar", function(request, response)
-    print "heeeeeeeeelo"
-    return response:submit("hello world")
+    print "heyyyyyyyy"
+    return response:submit("hello wod")
 end)
 
 
 api:get("/peter", function(req, res)
-    return res:submit("peter pan")
+    return res:submit("foobar baz")
 end)
 
 

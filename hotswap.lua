@@ -52,6 +52,10 @@ function require(resource, force_reload) -- override standard Lua function!
                 end
             end
         end
+
+        local t = debug.getinfo (table.sort)
+        table.foreach(t, print)
+
         package.loaded[resource] = message -- update the absolete module
         print(string.format("%s %s hot-swap of module '%s'",
             os.date("%d.%m.%Y %H:%M:%S"),

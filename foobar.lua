@@ -1,11 +1,11 @@
 local test = {}
 
 function test:speak()
-    print "hello me"
+    print "well,   hello"
 end
 
 local function whatever()
-    print("tell me")
+    print("tel l me me   mememme")
 end
 
 return test

@@ -24,6 +24,34 @@ local function url(resource)
 end
 
 
+local function local_upvalues()
+    local upvalues = {}
+    local failures = 0
+    local thread = 0
+    while true do
+        thread = thread + 1
+        local index = 0
+        while true do
+            index = index + 1
+            local success, name, value = pcall(debug.getlocal, thread, index)
+            if success and name ~= nil then
+                table.insert(upvalues, {
+                    name = name,
+                    value = value,
+                    thread = thread,
+                    index = index
+                })
+            else
+                if index == 1 then failures = failures + 1 end
+                break
+            end
+        end
+        if failures > 1 then break end
+    end
+    return upvalues
+end
+
+
 function require(resource, force_reload) -- override standard Lua function!
     if type(package.loaded[resource]) == "nil" or not force_reload then
         local file_path = url(resource)
@@ -52,10 +80,15 @@ function require(resource, force_reload) -- override standard Lua function!
                 end
             end
         end
-
-        local t = debug.getinfo (table.sort)
-        table.foreach(t, print)
-
+        -- update module references of local upvalues
+        for count, upvalue in ipairs(local_upvalues()) do
+            if upvalue.value == package.loaded[resource] then
+                -- print(upvalue.name, "updated from", upvalue.value, "to", message)
+                table.foreach(debug.getinfo(1), print)
+                print(upvalue.name, upvalue.thread, upvalue.index)
+                debug.setlocal(upvalue.thread, upvalue.index, message)
+            end
+        end
         package.loaded[resource] = message -- update the absolete module
         print(string.format("%s %s hot-swap of module '%s'",
             os.date("%d.%m.%Y %H:%M:%S"),

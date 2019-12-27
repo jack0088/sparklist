@@ -24,11 +24,12 @@ local function url(resource)
 end
 
 
-local function rereference(absolete, new, namespace, treated)
+local function rereference(absolete, new, namespace, whitelist)
     if type(namespace) == "table" then
-        --deep traverse; look into metatables as well! BUT not already seen tables!
+        --TODO deep traverse; look into metatables as well! BUT not already seen tables!
+        --also try another method mentioned here https://stackoverflow.com/questions/59492946/change-update-value-of-a-local-variable-lua-upvalue
 
-        if treated == nil or treated[namespace] == nil then
+        if whitelist == nil or treated[namespace] == nil then
             for k, v in pairs(namespace) do
                 if v == absolete then
                     namespace[k] = new
@@ -50,13 +51,13 @@ local function rereference(absolete, new, namespace, treated)
                 then
                     if value == absolete then
                         if debug.setlocal(thread, index, new) == name then
-                            print(string.format("%s local upvalue '%s' has been re-referenced",
+                            print(string.format(
+                                "%s local upvalue '%s' has been re-referenced",
                                 os.date("%d.%m.%Y %H:%M:%S"),
                                 name
                             ))
                         end
                     elseif type(value) == "table" then
-                        print "kkkkk"
                         rereference(absolete, new, value)
                     end
                 end
@@ -98,7 +99,8 @@ function require(resource, force_reload) -- override standard Lua function!
         rereference(package.loaded[resource], message, _G) -- update module references of globals
         rereference(package.loaded[resource], message) -- update module references of local upvalues
         package.loaded[resource] = message -- update the absolete package
-        print(string.format("%s module '%s' has been hot-reloaded %s",
+        print(string.format(
+            "%s module '%s' has been hot-reloaded %s",
             os.date("%d.%m.%Y %H:%M:%S"),
             hotswap.registry[resource].url,
             state_message

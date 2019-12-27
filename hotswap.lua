@@ -54,17 +54,21 @@ end
 local function update_upvalue_references(old_reference, new_reference)
     local upvalues = {}
     local failures = 0
-    local thread = 1
+    local thread = 0
     while true do
         thread = thread + 1
         local index = 0
         while true do
             index = index + 1
             local success, name, value = pcall(debug.getlocal, thread, index)
-            print(name, value, old_reference, new_reference)
-            if success and name ~= nil and value == old_reference then
-                debug.setlocal(thread, index, new_reference)
-                table.insert(upvalues, name)
+            -- print(name, value, old_reference, new_reference)
+            if success and name ~= nil then
+                table.insert(upvalues, {
+                    name = name,
+                    value = value,
+                    thread = thread,
+                    index = index
+                })
             else
                 if index == 1 then failures = failures + 1 end
                 break
@@ -72,6 +76,12 @@ local function update_upvalue_references(old_reference, new_reference)
         end
         if failures > 1 then break end
     end
+
+    print(#upvalues)
+    -- for _, upvalue in ipairs(upvalues) do
+    --     debug.setlocal(thread, index, new_reference)
+    -- end
+
     return upvalues
 end
 

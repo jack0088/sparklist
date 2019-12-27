@@ -10,12 +10,13 @@ Any route that returns nil (void) will fall-through to next possible match.
 --]]
 
 local hotswap = require "hotswap"
-local test = require "foobar"
+local test = {}
+test.foobar = require "foobar"
 while true do
     hotswap:onEnterFrame()
     if not ko or ko < os.time() then
         ko = os.time() + .5
-        test:speak()
+        test.foobar:speak()
     end
 end
 

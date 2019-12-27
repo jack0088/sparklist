@@ -24,33 +24,6 @@ local function url(resource)
 end
 
 
--- local function local_upvalues()
---     local upvalues = {}
---     local failures = 0
---     local thread = 0
---     while true do
---         thread = thread + 1
---         local index = 0
---         while true do
---             index = index + 1
---             local success, name, value = pcall(debug.getlocal, thread, index)
---             if success and name ~= nil then
---                 table.insert(upvalues, {
---                     name = name,
---                     value = value,
---                     thread = thread,
---                     index = index
---                 })
---             else
---                 if index == 1 then failures = failures + 1 end
---                 break
---             end
---         end
---         if failures > 1 then break end
---     end
---     return upvalues
--- end
-
 local function update_upvalue_references(old_reference, new_reference)
     local upvalues = {}
     local failures = 0
@@ -58,30 +31,23 @@ local function update_upvalue_references(old_reference, new_reference)
     while true do
         thread = thread + 1
         local index = 0
+        if debug.getinfo(thread) == nil then break end
         while true do
             index = index + 1
-            local success, name, value = pcall(debug.getlocal, thread, index)
-            -- print(name, value, old_reference, new_reference)
-            if success and name ~= nil then
-                table.insert(upvalues, {
-                    name = name,
-                    value = value,
-                    thread = thread,
-                    index = index
-                })
-            else
+            local name, value = debug.getlocal(thread, index)
+            if name == nil then
                 if index == 1 then failures = failures + 1 end
                 break
+            else
+                print(thread..","..index, name, value, ":", old_reference, new_reference)
+                if name ~= "old_reference" and name ~= "new_reference" and value == old_reference then
+                    print(thread, index, name)
+                    print(debug.setlocal(thread, index, new_reference), "<--- should equal "..name)
+                end
             end
         end
         if failures > 1 then break end
     end
-
-    print(#upvalues)
-    -- for _, upvalue in ipairs(upvalues) do
-    --     debug.setlocal(thread, index, new_reference)
-    -- end
-
     return upvalues
 end
 
@@ -118,15 +84,7 @@ function require(resource, force_reload) -- override standard Lua function!
         end
 
         -- update module references of local upvalues
-        local forwardings = update_upvalue_references(package.loaded[resource], message)
-        for index, upvalue in ipairs(forwardings) do
-            print(string.format("%s re-referenced local upvalue '%s' (%s/%s)",
-                current_time,
-                upvalue,
-                index,
-                #forwardings
-            ))
-        end
+        update_upvalue_references(package.loaded[resource], message)
 
         -- update the absolete module
         package.loaded[resource] = message
@@ -136,7 +94,7 @@ function require(resource, force_reload) -- override standard Lua function!
             hotswap.registry[resource].url
         ))
 
-        return package.loaded[resource]
+        return message
     end
 end
 

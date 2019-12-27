@@ -1,7 +1,7 @@
 local test = {}
 
 function test:speak()
-    print "hello friend"
+    print "hou"
 end
 
 local function whatever()

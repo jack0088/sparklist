@@ -24,30 +24,45 @@ local function url(resource)
 end
 
 
--- TODO now do same for globals as wellvvv
--- TODO and also traverse any nesting tables...vvvv
+local function rereference(absolete, new, namespace, treated)
+    if type(namespace) == "table" then
+        --deep traverse; look into metatables as well! BUT not already seen tables!
 
-local function rereference(absolete, new)
-    local thread = 1
-    while debug.getinfo(thread) ~= nil do
-        local index, name, value = 0, nil, nil
-        repeat
-            index = index + 1
-            name, value = debug.getlocal(thread, index)
-            if name ~= nil
-            and name ~= "absolete"
-            and name ~= "new"
-            and value == absolete
-            then
-                if debug.setlocal(thread, index, new) == name then
-                    print(string.format("%s local upvalue '%s' has been re-referenced",
-                        os.date("%d.%m.%Y %H:%M:%S"),
-                        name
-                    ))
+        if treated == nil or treated[namespace] == nil then
+            for k, v in pairs(namespace) do
+                if v == absolete then
+                    namespace[k] = new
+                elseif type(v) == "table" then
+                    -- rereference(absolete, new, v)
                 end
             end
-        until name == nil
-        thread = thread + 1
+        end
+    else
+        local thread = 1
+        while debug.getinfo(thread) ~= nil do
+            local index, name, value = 0, nil, nil
+            repeat
+                index = index + 1
+                name, value = debug.getlocal(thread, index)
+                if name ~= nil
+                and name ~= "absolete"
+                and name ~= "new"
+                then
+                    if value == absolete then
+                        if debug.setlocal(thread, index, new) == name then
+                            print(string.format("%s local upvalue '%s' has been re-referenced",
+                                os.date("%d.%m.%Y %H:%M:%S"),
+                                name
+                            ))
+                        end
+                    elseif type(value) == "table" then
+                        print "kkkkk"
+                        rereference(absolete, new, value)
+                    end
+                end
+            until name == nil
+            thread = thread + 1
+        end
     end
 end
 
@@ -80,8 +95,9 @@ function require(resource, force_reload) -- override standard Lua function!
                 end
             end
         end
+        rereference(package.loaded[resource], message, _G) -- update module references of globals
         rereference(package.loaded[resource], message) -- update module references of local upvalues
-        package.loaded[resource] = message -- update the absolete module
+        package.loaded[resource] = message -- update the absolete package
         print(string.format("%s module '%s' has been hot-reloaded %s",
             os.date("%d.%m.%Y %H:%M:%S"),
             hotswap.registry[resource].url,

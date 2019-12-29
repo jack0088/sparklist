@@ -40,7 +40,11 @@ local function register(resource)
             url = file_path,
             timestamp = modifiedat(file_path)
         }
-        print(string.format("module '%s' has been registred for hot-reload", resource))
+        print(string.format(
+            "%s module '%s' has been registred for hot-reload",
+            os.date("%d.%m.%Y %H:%M:%S"),
+            resource
+        ))
         return true
     end
     return false

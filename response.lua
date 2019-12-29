@@ -1,12 +1,7 @@
---[[
+-- 2019 (c) kontakt@herrsch.de
 
-CLIENT RESPONSE GENERATOR
-This runs after every request from client to server.
-
-2019 (c) kontakt@herrsch.de
-
---]]
-
+-- client response generator
+-- a response runs after every request from client to server
 
 local view = require "views"
 local mimeguess = require "mimetype".guess

@@ -1,14 +1,8 @@
---[[
+-- 2019 (c) kontakt@herrsch.de
 
-PLUGIN HOOK PROCESSOR
-
-This runs on every request from client to server
-and allows you to hook-in with a plugin into its lifecycle at different states.
-
-2019 (c) kontakt@herrsch.de
-
---]]
-
+-- Plugin hook and processor
+-- it runs on every request from client to server
+-- and allows you to hook-in with a plugin at different states of the app lifecycle
 
 local socket = require "socket"
 local hostname = socket.dns.tohostname

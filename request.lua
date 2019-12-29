@@ -1,12 +1,7 @@
---[[
+-- 2019 (c) kontakt@herrsch.de
 
-CLIENT REQUEST PARSER
-This runs on every request from client to server.
-
-2019 (c) kontakt@herrsch.de
-
---]]
-
+-- client request parser
+-- runs on every request coming from client to server
 
 local class = require "class"
 local Request = class()

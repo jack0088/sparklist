@@ -1,3 +1,5 @@
+-- 2019 (c) kontakt@herrsch.de
+
 -- namespace unix plumbing utilities to access (file)system tools at low-level
 local mime = require "mimetype"
 local filesystem = {shell = shell}

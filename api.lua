@@ -1,5 +1,12 @@
--- IMPORTANT NOTE
--- SwoopJS (a paswordless Single-Sign-On service) uses https for login verification requests (plain socket.http.request() fail and always responds with status code 301)
+-- 2019 (c) kontakt@herrsch.de
+
+-- simple router with paths based on regex expressions
+-- NOTE Any route should return true on successful handling of request and false on failing!
+-- NOTE Any route that returns nil (void) will fall-through to next possible match!
+
+
+-- NOTE
+-- SwoopJS (a paswordless single-sign-on service) uses https for login verification requests (plain socket.http.request() fail and always responds with status code 301)
 -- since I decided to keep this whole server simple, I use plain http everywhere and the plan is to protect it behind a reverse SSL proxy (e.g. cloudflare)
 -- however, to overcome the Swoop requirement, we need to install Lua-OpenSSL from one of the fallowing sources:
 -- https://github.com/zhaozg/lua-openssl

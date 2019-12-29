@@ -1,3 +1,4 @@
+-- 2019 (c) kontakt@herrsch.de
 --[[
 
 NAIVE HTML DSL ([kind of] Domain Specific Language)
@@ -7,8 +8,6 @@ Its purpose is to allow mixing Lua and HTML code in the same context.
 The `dom` object lets you create single html elements
 optionally in hierarchical nested order
 or groups/countainers these html elements.
-
-2019 (c) kontakt@herrsch.de
 
 
 EXAMPLE (single html element)

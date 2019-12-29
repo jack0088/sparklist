@@ -1,3 +1,4 @@
+-- 2019 (c) kontakt@herrsch.de
 --[[
 
 The NAIVE REGEX ROUTER is a XORS Plugin
@@ -13,8 +14,6 @@ The NAIVE REGEX ROUTER is a XORS Plugin
 - To use a wildcard, wrap the expression into parentheses, e.g. (%w+)
   They are passed as parameters to your handler function (right after request and response)
   and you can name them however you like, as shown below.
-
-2019 (c) kontakt@herrsch.de
 
 
 EXAMPLE (define routes with custom handlers)

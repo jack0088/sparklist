@@ -1,3 +1,5 @@
+-- 2019 (c) kontakt@herrsch.de
+
 local function prettify(t, o)
     o = o or ""
     if type(t) == "table" then

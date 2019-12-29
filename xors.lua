@@ -1,17 +1,12 @@
---[[
+-- 2019 (c) kontakt@herrsch.de
 
-The project name XORS (pronounced HORSE) is based on the mythological figure Chors https://de.wikipedia.org/wiki/Chors and derivated originally from Pegasus https://github.com/EvandroLG/pegasus.lua but became a complete rewrite and its own project.
+-- xors (pronounced horse) is a HTTP server written in vanilla Lua
+-- its original inspiration came from Pegasus https://github.com/EvandroLG/pegasus.lua but became a complete rewrite
 
-XORS should run sucessfully on any machine supporting fallowing dependencies
-
-Lua >= 5.1 (tested only with 5.1)
-luasocket
-luasec (openssl)
-
-2019 (c) kontakt@herrsch.de
-
---]]
-
+-- xors should run fine on any machine supporting fallowing dependencies:
+---> Lua >= 5.1
+---> luasocket
+---> openssl (or luasec which bundles it)
 
 local socket = require "socket"
 local Plugin = require "hook"

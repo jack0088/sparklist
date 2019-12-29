@@ -14,7 +14,7 @@ util = nil
 local _require = require
 local hotswap = {
     registry = {},
-    interval = 0.5 -- trigger interval in seconds
+    interval = 3 -- trigger interval in seconds
 }
 
 

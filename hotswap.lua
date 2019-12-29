@@ -14,7 +14,7 @@ util = nil
 local _require = require
 local hotswap = {
     registry = {},
-    interval = 5 -- trigger interval in seconds
+    interval = 0.5 -- trigger interval in seconds
 }
 
 
@@ -48,16 +48,14 @@ end
 
 
 local function rereference(absolete, new, namespace, whitelist)
+    if type(whitelist) ~= "table" then whitelist = {} end
     if type(namespace) == "table" then
-        --TODO deep traverse; look into metatables as well! BUT not already seen tables!
-        
-        if whitelist == nil or treated[namespace] == nil then
-            for k, v in pairs(namespace) do
-                if v == absolete then
-                    namespace[k] = new
-                elseif type(v) == "table" then
-                    -- rereference(absolete, new, v)
-                end
+        whitelist[namespace] = true
+        for k, v in pairs(namespace) do
+            if v == absolete then
+                namespace[k] = new
+            elseif type(v) == "table" and not whitelist[v] then
+                rereference(absolete, new, v, whitelist)
             end
         end
     else
@@ -80,7 +78,7 @@ local function rereference(absolete, new, namespace, whitelist)
                             ))
                         end
                     elseif type(value) == "table" then
-                        rereference(absolete, new, value)
+                        rereference(absolete, new, value, whitelist)
                     end
                 end
             until name == nil
@@ -112,8 +110,8 @@ function require(resource, force_reload) -- override standard Lua function!
                 end
             end
         end
-        rereference(package.loaded[resource], message, _G) -- update module references of globals
         rereference(package.loaded[resource], message) -- update module references of local upvalues
+        rereference(package.loaded[resource], message, _G) -- update module references of globals
         package.loaded[resource] = message -- update the absolete package
         print(string.format(
             "%s module '%s' has been hot-reloaded %s",
@@ -142,6 +140,11 @@ end
 
 function hotswap:onEnterFrame() -- xors plugin hook
     self:run()
+end
+
+
+function hotswap:hotswap() -- preserve state hook, see require() above
+    return {registry = self.registry}
 end
 
 

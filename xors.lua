@@ -35,7 +35,6 @@ function Xors:hotswap()
         timeout = self.timeout,
         backlog = self.backlog,
         directory = self.directory,
-        -- plugins = self.plugins,
         joint = self.joint
     }
 end
@@ -58,11 +57,21 @@ function Xors:run()
     self.joint:listen(self.backlog)
     --self.ip, self.port = self.joint:getsockname()
     self.info.name, self.ip, self.port = self:whois()
-    print(string.format("XORS is listening to clients at %s:%s alias %s:%s", self.ip, self.port, self.info.name, self.port))
+    print(string.format(
+        "%s XORS is listening to clients at %s:%s alias %s:%s",
+        os.date("%d.%m.%Y %H:%M:%S"),
+        self.ip,
+        self.port,
+        self.info.name,
+        self.port
+    ))
     local processor = Plugin(self)
     while true do processor:run() end -- main loop
     self.joint:close()
-    print(string.format("XORS shut down"))
+    print(string.format(
+        "%s XORS shut down",
+        os.date("%d.%m.%Y %H:%M:%S")
+    ))
 end
 
 

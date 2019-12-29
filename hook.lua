@@ -43,7 +43,14 @@ function Processor:connect()
             self.client.ip, self.client.port = self.client.joint:getpeername()
             self.client.info = select(2, hostname(self.client.ip))
             if self:hook("onConnect", self.client, self.server) == false then self:disconnect() end
-            print(string.format("XORS connected to client at %s:%s (browse %s:%s)", self.client.ip, self.client.port, self.client.info.name, self.server.port))
+            print(string.format(
+                "%s XORS connected to client at %s:%s (browse %s:%s)",
+                os.date("%d.%m.%Y %H:%M:%S"),
+                self.client.ip,
+                self.client.port,
+                self.client.info.name,
+                self.server.port
+            ))
             return self
         end
     end
@@ -55,7 +62,11 @@ function Processor:disconnect()
     if self.client and not self.client.keepalive then
         self:hook("onDisconnect", self.client, self.server)
         self.client.joint:close()
-        print(string.format("XORS disconnected from client %s", self.client.ip))
+        print(string.format(
+            "%s XORS disconnected from client %s",
+            os.date("%d.%m.%Y %H:%M:%S"),
+            self.client.ip
+        ))
         self.client = nil
         self.request = nil
         self.response = nil

@@ -66,10 +66,12 @@ end})
 -- returns (string) operating system identifier or (boolean) on match with @platform
 -- NOTE love.system.getOS() is another way of retreving this, if the love2d framework is used in this context
 function filesystem.os(platform)
-    if platform and platform:lower():find("maco?s?") then platform = "darwin" end
-    local plat = shell.uname("-s")
-    if type(platform) == "string" then return type(plat:lower():match("^"..platform:lower())) ~= "nil" end
-    return plat
+    filesystem.uname = filesystem.uname or shell.uname("-s")
+    if type(platform) == "string" then
+        if platform:lower():find("maco?s?") then platform = "darwin" end
+        return type(filesystem.uname:lower():match("^"..platform:lower())) ~= "nil"
+    end
+    return filesystem.uname
 end
 
 
@@ -390,10 +392,6 @@ function filesystem.sysinfo()
     t.mem.used, t.mem.free = filesystem.mem() -- in percent
     return t
 end
-
-
--- TODO rewrite so that filesystem.os is only checked once
--- e.g. middleman function can then map filesystem.cpu to filesystem.darwin.cpu or filesystem.linix.cpu
 
 
 return filesystem

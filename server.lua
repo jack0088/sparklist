@@ -1,21 +1,14 @@
---[[
+-- 2019 (c) kontakt@herrsch.de
 
-Define your routes and server configuration here...
 
-Any route should return true on successful handling and false on failing.
-Any route that returns nil (void) will fall-through to next possible match.
-
-2019 (c) kontakt@herrsch.de
-
---]]
-
-local hotswap = require "hotswap"
 test = {}
 test.foobar = require "foobar"
 -- test = require "foobar"
 
+local hotswap = require "hotswap"
+
 while true do
-    hotswap:onEnterFrame()
+    hotswap:run()
     if not ko or ko < os.time() then
         ko = os.time() + .5
         test.foobar:speak()

@@ -1,3 +1,11 @@
+-- 2019 (c) kontakt@herrsch.de
+
+-- NOTE Be careful with this code in production as it's very expensive in terms of CPU ressources!
+-- Its first bottleneck is the file modfification observer (a shell script)
+-- and its second bottleneck is the recursive, deep-traversing routine of _G and all available upvalues (for updating pointers)
+-- NOTE Always think about preserving state of table members when hot-reloading packages
+-- use <table>:hotswap() method to provide the members that need to be preserved
+
 local util = dofile "utilities.lua"
 local isfile = util.isfile
 local modifiedat = util.modifiedat
@@ -6,7 +14,7 @@ util = nil
 local _require = require
 local hotswap = {
     registry = {},
-    interval = 1 -- trigger interval in seconds
+    interval = 5 -- trigger interval in seconds
 }
 
 
@@ -24,11 +32,25 @@ local function url(resource)
 end
 
 
+local function register(resource)
+    if hotswap.registry[resource] ~= nil then return true end
+    local file_path = url(resource)
+    if file_path then
+        hotswap.registry[resource] = {
+            url = file_path,
+            timestamp = modifiedat(file_path)
+        }
+        print(string.format("module '%s' has been registred for hot-reload", resource))
+        return true
+    end
+    return false
+end
+
+
 local function rereference(absolete, new, namespace, whitelist)
     if type(namespace) == "table" then
         --TODO deep traverse; look into metatables as well! BUT not already seen tables!
-        --also try another method mentioned here https://stackoverflow.com/questions/59492946/change-update-value-of-a-local-variable-lua-upvalue
-
+        
         if whitelist == nil or treated[namespace] == nil then
             for k, v in pairs(namespace) do
                 if v == absolete then
@@ -70,13 +92,7 @@ end
 
 function require(resource, force_reload) -- override standard Lua function!
     if type(package.loaded[resource]) == "nil" or not force_reload then
-        local file_path = url(resource)
-        if file_path then
-            hotswap.registry[resource] = {
-                url = file_path,
-                timestamp = modifiedat(file_path)
-            }
-        end
+        register(resource)
         return _require(resource)
     end
     local success, message = pcall(dofile, hotswap.registry[resource].url)
@@ -110,7 +126,7 @@ function require(resource, force_reload) -- override standard Lua function!
 end
 
 
-function hotswap:onEnterFrame() -- xors plugin hook
+function hotswap:run() -- call on each frame, periodically or via a trigger
     if not self.timeout or self.timeout < os.time() then
         self.timeout = os.time() + self.interval
         for resource, cache in pairs(self.registry) do
@@ -121,6 +137,16 @@ function hotswap:onEnterFrame() -- xors plugin hook
             end
         end
     end
+end
+
+
+function hotswap:onEnterFrame() -- xors plugin hook
+    self:run()
+end
+
+
+for resource in pairs(package.loaded) do -- find all modules already loaded and register them
+    register(resource)
 end
 
 

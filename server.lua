@@ -2,6 +2,8 @@
 
 package.path = "./?/init.lua;"..package.path -- Lua <= 5.1
 
+require "log"
+
 local server = require "xors"{
     port = 80,
     timeout = 0.1,

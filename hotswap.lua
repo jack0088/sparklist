@@ -129,12 +129,14 @@ function require(resource, force_reload) -- override standard Lua function!
         ))
         return message
     end
-    print(debug.traceback(string.format(
-        "%s failed to hot-reload module '%s'\nerror message: %s",
-        os.date("%d.%m.%Y %H:%M:%S"),
-        resource,
-        message
-    )))
+    if not success and message ~= nil then
+        print(debug.traceback(string.format(
+            "%s failed to hot-reload module '%s'\nerror message: %s",
+            os.date("%d.%m.%Y %H:%M:%S"),
+            resource,
+            message or "???"
+        )))
+    end
 end
 
 

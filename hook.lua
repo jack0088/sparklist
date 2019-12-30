@@ -14,7 +14,6 @@ local Processor = class()
 
 function Processor:new(server)
     self.server = server
-    return self
 end
 
 
@@ -29,8 +28,10 @@ function Processor:run() -- main loop
         self.response = Response(self.client.joint, self.request)
         if self.response == false then self:disconnect() end
     end
-    if self.client and self:hook("onDispatch", self.request, self.response) == false then self:disconnect() end
-    self:disconnect() -- lifecycle complete?
+    if self.client and not self.client.keepalive and self.request and self.response then
+        self:hook("onDispatch", self.request, self.response)
+    end
+    self:disconnect() -- lifecycle complete or .keepalive?
 end
 
 
@@ -77,8 +78,8 @@ end
 
 function Processor:hook(delegate, ...)
     for _, plugin in ipairs(self.server.plugins) do
-        if plugin[delegate] then
-            return plugin[delegate](plugin, ...)
+        if type(plugin[delegate]) == "function" then
+            plugin[delegate](plugin, ...)
         end
     end
 end

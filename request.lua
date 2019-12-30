@@ -94,8 +94,6 @@ function Request:new(receiver)
     -- TODO? support Transfer-Encoding: chunked with self.keepalive = true (also see response.lua and https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88)
     local length = tonumber(self.header["Content-Length"] or 0)
     if length > 0 then self.content = self.receiver:receive(length) end
-
-    return self
 end
 
 

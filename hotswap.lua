@@ -6,6 +6,9 @@
 -- NOTE Always think about preserving state of table members when hot-reloading packages
 -- use <table>:hotswap() method to provide the members that need to be preserved
 
+-- NOTE be careful with class instances as `local foobar = require "foobar"()` will not be swapped because this is its very own copy of the original (hotswappable) module and is not tracked anymore
+-- one workaround is to re-save the file that contains the call to make the module instance, in this case the file gets hot-swapped as well and the creation of the class instance will be re-triggered as well...
+
 local util = dofile "utilities.lua"
 local isfile = util.isfile
 local modifiedat = util.modifiedat

@@ -57,7 +57,6 @@ local Router = class()
 
 function Router:new()
     self.map = {}
-    return self
 end
 
 

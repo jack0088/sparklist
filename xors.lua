@@ -9,7 +9,7 @@
 ---> openssl (or luasec which bundles it)
 
 local socket = require "socket"
-local Plugin = require "hook"
+local Hook = require "hook"
 local class = require "class"
 local Xors = class()
 
@@ -17,13 +17,11 @@ local Xors = class()
 function Xors:new(settings)
     settings = settings or {}
     self.host = settings.host or "*"
-    self.port = settings.port or "80"
+    self.port = settings.port or "8080"
     self.info = {}
     self.timeout = settings.timeout or 1
     self.backlog = settings.backlog or 100 -- max queue of waiting clients
-    self.directory = settings.directory or "./"
     self.plugins = settings.plugins or {}
-    return self
 end
 
 
@@ -34,7 +32,6 @@ function Xors:hotswap()
         info = self.info,
         timeout = self.timeout,
         backlog = self.backlog,
-        directory = self.directory,
         joint = self.joint
     }
 end
@@ -65,9 +62,9 @@ function Xors:run()
         self.info.name,
         self.port
     ))
-    local processor = Plugin(self)
+    local processor = Hook(self)
     while true do processor:run() end -- main loop
-    self.joint:close()
+    if self.joint then self.joint:close() end
     print(string.format(
         "%s XORS shut down",
         os.date("%d.%m.%Y %H:%M:%S")

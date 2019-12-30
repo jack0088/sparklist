@@ -92,7 +92,6 @@ function Response:new(transmitter, request)
     self.transmitter = transmitter
     self.request = request
     self.header = {}
-    return self
 end
 
 

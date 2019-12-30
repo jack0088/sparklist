@@ -65,7 +65,7 @@ function Router:onDispatch(request, response) -- Plugin hook method
         local parameters = {string.match(request.method:upper()..request.query, "^"..entry.route.."$")}
         if #parameters > 0 then
             local result = entry.handler(request, response, unpack(parameters))
-            if result ~= nil then return result end -- nil falls through to the next route check because such match/response is void
+            if result ~= nil then return result end -- nil falls through to the next route check because match/response is void
         end
     end
     return false

@@ -12,6 +12,7 @@ local modifiedat = util.modifiedat
 util = nil
 
 local _require = require
+
 local hotswap = {
     registry = {},
     interval = 3 -- trigger interval in seconds

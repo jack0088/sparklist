@@ -188,11 +188,12 @@ end
 
 -- @path (string) relative- or absolute path to the file
 -- returns (string) raw content of a file; or nil on failure
-function filesystem.readfile(path)
+function filesystem.readfile(path, mode)
+    if type(mode) ~= "string" then mode = "rb" end
     local file_pointer
     if type(path) == "string" then
         if not filesystem.isfile(path) then return nil end
-        file_pointer = io.open(path, "rb")
+        file_pointer = io.open(path, mode)
     else
         file_pointer = path -- path is already a file handle
     end
@@ -205,12 +206,13 @@ end
 
 -- @path (string) relative- or absolute path to the file
 -- returns (boolean) true on success, false on fail
-function filesystem.writefile(path, data)
+function filesystem.writefile(path, data, mode)
+    if type(mode) ~= "string" then mode = "wb" end
     local file_pointer
     if type(path) == "string" then
         if filesystem.isfolder(path) then return false end
         if not filesystem.exists(path) then filesystem.makefile(path) end
-        file_pointer = io.open(path, "wb")
+        file_pointer = io.open(path, mode)
     else
         file_pointer = path -- path is already a file handle
     end

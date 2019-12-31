@@ -43,7 +43,7 @@ function Processor:connect()
             self.client.joint = candidate
             self.client.ip, self.client.port = self.client.joint:getpeername()
             self.client.info = select(2, hostname(self.client.ip))
-            if self:hook("onConnect", self.client, self.server) == false then self:disconnect() end
+            self:hook("onConnect", self.client, self.server)
             print(string.format(
                 "%s XORS connected to client at %s:%s (browse %s:%s)",
                 os.date("%d.%m.%Y %H:%M:%S"),

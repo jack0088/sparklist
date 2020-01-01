@@ -63,6 +63,7 @@ end
 function Request:new(transmitter)
     self.transmitter = transmitter -- client socket object
     self.complete = false
+    self:onConnect()
 end
 
 
@@ -124,9 +125,9 @@ end
 
 
 function Request:onEnterFrame() -- xors hook
-    if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
-        coroutine.resume(self.run, self)
-    end
+    -- if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
+    --     coroutine.resume(self.run, self)
+    -- end
 end
 
 

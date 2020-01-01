@@ -27,18 +27,18 @@ function Processor:run() -- main loop
         if candidate == self.clients[i].joint then
             candidate = i -- cache id of existing client
         end
-        print(i, self.clients[i].request.complete)
+
         if self.clients[i].request.complete then
             self:hook("onDispatch", self.clients[i].request, self.clients[i].response)
             self:hook("onDisconnect", self.clients[i], self.server)
             
-            for j = #self.server.plugins, 1, -1 do -- remove temporary request & response plugins
-                if self.server.plugins[j] == self.clients[i].request
-                or self.server.plugins[j] == self.clients[i].response
-                then
-                    table.remove(self.server.plugins, j)
-                end
-            end
+            -- for j = #self.server.plugins, 1, -1 do -- remove temporary request & response plugins
+            --     if self.server.plugins[j] == self.clients[i].request
+            --     or self.server.plugins[j] == self.clients[i].response
+            --     then
+            --         table.remove(self.server.plugins, j)
+            --     end
+            -- end
 
             self.clients[i].joint:close()
 
@@ -62,8 +62,8 @@ function Processor:run() -- main loop
         table.insert(self.clients, client)
 
         -- register request & response objects temporary as plugins so they can use xors hooks
-        table.insert(self.server.plugins, client.request)
-        table.insert(self.server.plugins, client.response)
+        -- table.insert(self.server.plugins, client.request)
+        -- table.insert(self.server.plugins, client.response)
 
         self:hook("onConnect", client, self.server)
 

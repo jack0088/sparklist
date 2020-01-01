@@ -14,63 +14,84 @@ local Processor = class()
 
 function Processor:new(server)
     self.server = server
+    self.client = {}
 end
 
 
 function Processor:run() -- main loop
     self:hook("onEnterFrame")
     self:connect()
-    if self.client and not self.client.keepalive then
-        self.request = Request(self.client.joint)
-        if self.request == false then self:disconnect() end
-    end
-    if self.client and not self.client.keepalive then
-        self.response = Response(self.client.joint, self.request)
-        if self.response == false then self:disconnect() end
-    end
-    if self.client and not self.client.keepalive and self.request and self.response then
-        self:hook("onDispatch", self.request, self.response)
-    end
-    self:disconnect() -- lifecycle complete or .keepalive?
+    self:disconnect()
 end
 
 
 function Processor:connect()
-    if not self.client or not self.client.keepalive then
-        local candidate = self.server.joint:accept()
-        if candidate then
-            self.client = {}
-            self.client.joint = candidate
-            self.client.ip, self.client.port = self.client.joint:getpeername()
-            self.client.info = select(2, hostname(self.client.ip))
-            self:hook("onConnect", self.client, self.server)
-            print(string.format(
-                "%s XORS connected to client at %s:%s (browse %s:%s)",
-                os.date("%d.%m.%Y %H:%M:%S"),
-                self.client.ip,
-                self.client.port,
-                self.client.info.name,
-                self.server.port
-            ))
-            return self
+    local unknown, candidate = true, self.server.joint:accept()
+
+    for _, client in ipairs(self.client) do
+        if client.joint == candidate then -- identify existing client
+            candidate:close()
+            candidate = client
+            unknown = false
         end
     end
+
+    if candidate and unknown then
+        local client = {}
+        client.joint = candidate
+        client.ip, client.port = client.joint:getpeername()
+        client.info = select(2, hostname(client.ip))
+        client.request = Request(client.joint)
+        client.reponse = Response(client.joint, client.request)
+
+        candidate = client
+        table.insert(self.client, candidate) -- record new client
+
+        -- register request & response objects temporary as plugins so they can use xors hooks
+        table.insert(self.server.plugins, client.request)
+        table.insert(self.server.plugins, client.response)
+
+        self:hook("onConnect", candidate, self.server)
+
+        print(string.format(
+            "%s xors connected to client at %s:%s (browse %s:%s)",
+            os.date("%d.%m.%Y %H:%M:%S"),
+            candidate.ip,
+            candidate.port,
+            candidate.info.name,
+            self.server.port
+        ))
+    end
+
+    if type(candidate) == "table" then return candidate end
     return false
 end
 
 
 function Processor:disconnect()
-    if self.client and not self.client.keepalive then
-        self:hook("onDisconnect", self.client, self.server)
-        self.client.joint:close()
-        print(string.format(
-            "%s XORS disconnected from client %s",
-            os.date("%d.%m.%Y %H:%M:%S"),
-            self.client.ip
-        ))
-        self.client = nil
-        self.request = nil
-        self.response = nil
+    for id = #self.client, 1, -1 do
+        if self.client[id].request.complete then
+            self:hook("onDispatch", self.client[id].request, self.client[id].response)
+            self:hook("onDisconnect", self.client[id], self.server)
+            
+            for id = #self.server.plugins, 1, -1 do -- remove temporary request & response plugins
+                if self.server.plugins[id] == self.client[id].request
+                or self.server.plugins[id] == self.client[id].response
+                then
+                    table.remove(self.server.plugins, id)
+                end
+            end
+
+            self.client[id].joint:close()
+
+            print(string.format(
+                "%s xors disconnected from client %s",
+                os.date("%d.%m.%Y %H:%M:%S"),
+                self.client[id].ip
+            ))
+
+            table.remove(self.clients, id)
+        end
     end
     return false
 end
@@ -87,10 +108,8 @@ end
 
 function Processor:hotswap() -- restore state when hot-swapping this file
     return {
-        server = self.server,
-        client = self.client,
-        request = self.request,
-        response = self.response
+        server = self.server, -- TODO does this prevent plugins from being hot-swapped? I think so..
+        client = self.client
     }
 end
 

@@ -112,7 +112,7 @@ function require(resource, force_reload) -- override standard Lua function!
                 local state_stack = cache_state(package.loaded[resource]) -- with self reference
                 if type(state_stack) == "table" then
                     state_message = "statefully"
-                    for k, v in pairs(state_stack) do
+                    for k, v in pairs(state_stack) do -- TODO make this multi-level!!! because top level might only hold a few values that should be overriden, the others might remain as initiated..
                         message[k] = v
                     end
                 end

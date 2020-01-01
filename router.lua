@@ -1,7 +1,7 @@
 -- 2019 (c) kontakt@herrsch.de
 --[[
 
-The NAIVE REGEX ROUTER is a XORS Plugin
+The NAIVE REGEX ROUTER is a xors Plugin
 
 - Match concrete literal route strings or match routes by regex expressions.
 - On any request the router will try to map a given route (inluding the http method)

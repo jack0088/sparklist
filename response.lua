@@ -88,8 +88,8 @@ Response.file = function(url)
 end
 
 
-function Response:new(transmitter, request)
-    self.transmitter = transmitter
+function Response:new(receiver, request)
+    self.receiver = receiver -- client socket object
     self.request = request
     self.header = {}
 end
@@ -146,7 +146,7 @@ end
 
 
 function Response:submit(content, mime, status) -- NOTE mime-types must match their actual file mime-types, e.g. a *.txt file saved in utf-8 charset should be passed with "text/plain; charset=utf-8"
-    if not self.transmitter then return false end
+    if not self.receiver then return false end
     if (content or ""):match(".+%.%w%w%w+$") then -- content suffix is a file extension
         content, mime, status = self.file("."..content) -- prefix with current (root) directory
     end
@@ -159,7 +159,7 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
     self:addHeader("Content-Length", #content) -- TODO? add support for utf-8 charsets because length is calculated different on those
     self:addHeader("Content-Type", mime or "text/plain")
     self:addHeader("X-Content-Type-Options", "nosniff")
-    self.transmitter:send(string.format( -- TODO? support Transfer-Encoding: chunked (also see request.lua)
+    self.receiver:send(string.format( -- TODO? support Transfer-Encoding: chunked (also see request.lua)
         Response.PATTERN_RESPONSE,
         status or 200,
         Response.STATUS_TEXT[status or 200],
@@ -185,7 +185,7 @@ end
 
 function Response:hotswap() -- restore state on hotswapping when file
     return {
-        transmitter = self.transmitter,
+        receiver = self.receiver,
         request = self.request,
         header = self.header
     }

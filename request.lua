@@ -47,7 +47,7 @@ Request.parseHeaders = function(query)
     for identifier, content in string.gmatch(query, Request.PATTERN_HEADER) do
         if not headers[identifier] then headers[identifier] = {} end
         table.insert(headers[identifier], content)
-        -- TODO extract single cookies with Request.PATTERN_COOKIE_STRING (and that string must be edited, because cookie options are separated dby , in this case not ;)
+        -- TODO extract single cookies with Request.PATTERN_COOKIE_STRING (and that string must be edited, because cookie options are separated by , but would not be in this case ;)
     end
     return headers
 end
@@ -60,53 +60,88 @@ Request.parseURLEncoded = function(query)
 end
 
 
-function Request:new(receiver)
-    local firstline, status, partial = receiver:receive()
+function Request:new(transmitter)
+    self.transmitter = transmitter -- client socket object
+    self.complete = false
+end
+
+
+function Request:receiveHeaders()
+    local firstline, status, partial = self.transmitter:receive()
     if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
         return false
     end
 
-    local method, path, protocol = string.match(firstline, Request.PATTERN_REQUEST)
+    local method, path, protocol = string.match(firstline, self.PATTERN_REQUEST)
     if not method then
         return false
     end
 
     local resource, urlquery = ""
     if #path > 0 then
-        resource, urlquery = string.match(path, Request.PATTERN_PARAMETER_STRING)
-        resource = Request.normalize(resource)
+        resource, urlquery = string.match(path, self.PATTERN_PARAMETER_STRING)
+        resource = self.normalize(resource)
     end
 
     local headerquery, header = ""
     repeat
-        header = receiver:receive() or ""
+        header = self.transmitter:receive() or ""
         headerquery = headerquery..header.."\r\n"
     until #header <= 0
 
-    self.receiver = receiver
     self.protocol = protocol
     self.method = method:upper()
-    self.header = Request.parseHeaders(headerquery)
+    self.header = self.parseHeaders(headerquery)
     self.url = resource or path
     self.query = path -- raw url
-    self.parameter = Request.parseURLEncoded(urlquery)
+    self.parameter = self.parseURLEncoded(urlquery)
+end
 
-    -- TODO? support Transfer-Encoding: chunked with self.keepalive = true (also see response.lua and https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88)
-    local length = tonumber(self.header["Content-Length"] or 0)
-    if length > 0 then self.content = self.receiver:receive(length) end
+
+function Request:receiveMessage()
+    local length = 0
+    if type(self.content) ~= "string" then self.content = "" end
+    if self.header["Transfer-Encoding"] == "chunked" then
+        -- see https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88
+        repeat
+            length = tonumber(self.transmitter:receive(), 16) -- hexadecimal value
+            self.content = self.content..self.transmitter:receive(length)
+            coroutine.yield()
+        until length <= 0 -- 0\r\n
+    else
+        length = tonumber(self.header["Content-Length"] or 0)
+        self.content = self.transmitter:receive(length)
+        print("ohhhhh")
+    end
+    self.complete = true
+end
+
+
+function Request:onConnect() -- xors hook
+    self:receiveHeaders()
+    self.run = coroutine.wrap(self.receiveMessage)
+    self:run()
+end
+
+
+function Request:onEnterFrame() -- xors hook
+    if coroutine.status(self.run) ~= "dead" then
+        self:run()
+    end
 end
 
 
 function Request:hotswap() -- hook for restoring state when hot-swappingw this file
     return {
-        receiver = self.receiver,
+        transmitter = self.transmitter,
         protocol = self.protocol,
         method = self.method,
         header = self.header,
         url = self.url,
         query = self.query,
         parameter = self.parameter,
-        content = self.content
+        content = self.content,
+        run = self.run -- coroutine resume function
     }
 end
 

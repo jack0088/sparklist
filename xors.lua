@@ -55,7 +55,7 @@ function Xors:run()
     --self.ip, self.port = self.joint:getsockname()
     self.info.name, self.ip, self.port = self:whois()
     print(string.format(
-        "%s XORS is listening to clients at %s:%s alias %s:%s",
+        "%s xors is listening to clients at %s:%s alias %s:%s",
         os.date("%d.%m.%Y %H:%M:%S"),
         self.ip,
         self.port,
@@ -66,7 +66,7 @@ function Xors:run()
     while true do processor:run() end -- main loop
     if self.joint then self.joint:close() end
     print(string.format(
-        "%s XORS shut down",
+        "%s xors shut down",
         os.date("%d.%m.%Y %H:%M:%S")
     ))
 end

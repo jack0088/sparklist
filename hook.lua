@@ -20,56 +20,13 @@ end
 
 function Processor:run() -- main loop
     self:hook("onEnterFrame")
-    self:connect()
-    self:disconnect()
-end
+    
+    local candidate = self.server.joint:accept()
 
-
-function Processor:connect()
-    local unknown, candidate = true, self.server.joint:accept()
-
-    for _, client in ipairs(self.client) do
-        if client.joint == candidate then -- identify existing client
-            candidate:close()
-            candidate = client
-            unknown = false
-        end
-    end
-
-    if candidate and unknown then
-        local client = {}
-        client.joint = candidate
-        client.ip, client.port = client.joint:getpeername()
-        client.info = select(2, hostname(client.ip))
-        client.request = Request(client.joint)
-        client.reponse = Response(client.joint, client.request)
-
-        candidate = client
-        table.insert(self.client, candidate) -- record new client
-
-        -- register request & response objects temporary as plugins so they can use xors hooks
-        table.insert(self.server.plugins, client.request)
-        table.insert(self.server.plugins, client.response)
-
-        self:hook("onConnect", candidate, self.server)
-
-        print(string.format(
-            "%s xors connected to client at %s:%s (browse %s:%s)",
-            os.date("%d.%m.%Y %H:%M:%S"),
-            candidate.ip,
-            candidate.port,
-            candidate.info.name,
-            self.server.port
-        ))
-    end
-
-    if type(candidate) == "table" then return candidate end
-    return false
-end
-
-
-function Processor:disconnect()
     for id = #self.client, 1, -1 do
+        if candidate == self.client[id].joint then
+            candidate = id -- cache id of existing client
+        end
         if self.client[id].request.complete then
             self:hook("onDispatch", self.client[id].request, self.client[id].response)
             self:hook("onDisconnect", self.client[id], self.server)
@@ -93,7 +50,31 @@ function Processor:disconnect()
             table.remove(self.clients, id)
         end
     end
-    return false
+
+    if type(candidate) ~= "number" then -- record new client
+        local client = {}
+        client.joint = candidate
+        client.ip, client.port = client.joint:getpeername()
+        client.info = select(2, hostname(client.ip))
+        client.request = Request(client.joint)
+        client.reponse = Response(client.joint, client.request)
+        table.insert(self.client, client)
+
+        -- register request & response objects temporary as plugins so they can use xors hooks
+        table.insert(self.server.plugins, client.request)
+        table.insert(self.server.plugins, client.response)
+
+        self:hook("onConnect", client, self.server)
+
+        print(string.format(
+            "%s xors connected to client at %s:%s (browse %s:%s)",
+            os.date("%d.%m.%Y %H:%M:%S"),
+            client.ip,
+            client.port,
+            client.info.name,
+            self.server.port
+        ))
+    end
 end
 
 

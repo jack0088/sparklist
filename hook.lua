@@ -14,7 +14,7 @@ local Processor = class()
 
 function Processor:new(server)
     self.server = server
-    self.client = {}
+    self.clients = {}
 end
 
 
@@ -23,42 +23,43 @@ function Processor:run() -- main loop
     
     local candidate = self.server.joint:accept()
 
-    for id = #self.client, 1, -1 do
-        if candidate == self.client[id].joint then
-            candidate = id -- cache id of existing client
+    for i = #self.clients, 1, -1 do
+        if candidate == self.clients[i].joint then
+            candidate = i -- cache id of existing client
         end
-        if self.client[id].request.complete then
-            self:hook("onDispatch", self.client[id].request, self.client[id].response)
-            self:hook("onDisconnect", self.client[id], self.server)
+        print(i, self.clients[i].request.complete)
+        if self.clients[i].request.complete then
+            self:hook("onDispatch", self.clients[i].request, self.clients[i].response)
+            self:hook("onDisconnect", self.clients[i], self.server)
             
-            for id = #self.server.plugins, 1, -1 do -- remove temporary request & response plugins
-                if self.server.plugins[id] == self.client[id].request
-                or self.server.plugins[id] == self.client[id].response
+            for j = #self.server.plugins, 1, -1 do -- remove temporary request & response plugins
+                if self.server.plugins[j] == self.clients[i].request
+                or self.server.plugins[j] == self.clients[i].response
                 then
-                    table.remove(self.server.plugins, id)
+                    table.remove(self.server.plugins, j)
                 end
             end
 
-            self.client[id].joint:close()
+            self.clients[i].joint:close()
 
             print(string.format(
                 "%s xors disconnected from client %s",
                 os.date("%d.%m.%Y %H:%M:%S"),
-                self.client[id].ip
+                self.clients[i].ip
             ))
 
-            table.remove(self.clients, id)
+            table.remove(self.clients, i)
         end
     end
 
-    if type(candidate) ~= "number" then -- record new client
+    if candidate ~= nil and type(candidate) ~= "number" then -- record new client
         local client = {}
         client.joint = candidate
         client.ip, client.port = client.joint:getpeername()
         client.info = select(2, hostname(client.ip))
         client.request = Request(client.joint)
-        client.reponse = Response(client.joint, client.request)
-        table.insert(self.client, client)
+        client.response = Response(client.joint, client.request)
+        table.insert(self.clients, client)
 
         -- register request & response objects temporary as plugins so they can use xors hooks
         table.insert(self.server.plugins, client.request)
@@ -90,7 +91,7 @@ end
 function Processor:hotswap() -- restore state when hot-swapping this file
     return {
         server = self.server, -- TODO does this prevent plugins from being hot-swapped? I think so..
-        client = self.client
+        clients = self.clients
     }
 end
 

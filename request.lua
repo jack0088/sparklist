@@ -106,12 +106,11 @@ function Request:receiveMessage()
         repeat
             length = tonumber(self.transmitter:receive(), 16) -- hexadecimal value
             self.content = self.content..self.transmitter:receive(length)
-            coroutine.yield()
+            coroutine.yield(self)
         until length <= 0 -- 0\r\n
     else
         length = tonumber(self.header["Content-Length"] or 0)
         self.content = self.transmitter:receive(length)
-        print("ohhhhh")
     end
     self.complete = true
 end
@@ -119,14 +118,14 @@ end
 
 function Request:onConnect() -- xors hook
     self:receiveHeaders()
-    self.run = coroutine.wrap(self.receiveMessage)
-    self:run()
+    self.run = coroutine.create(self.receiveMessage)
+    coroutine.resume(self.run, self)
 end
 
 
 function Request:onEnterFrame() -- xors hook
-    if coroutine.status(self.run) ~= "dead" then
-        self:run()
+    if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
+        coroutine.resume(self.run, self)
     end
 end
 

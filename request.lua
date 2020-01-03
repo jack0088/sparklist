@@ -102,25 +102,7 @@ end
 
 function Request:receiveMessage()
     local length = 0
-    local chunk = ""
     if type(self.content) ~= "string" then self.content = "" end
-    repeat
-        if self.header["Transfer-Encoding"] == "chunked" then
-            length = tonumber(self.transmitter:receive(), 16) or 0 -- hexadecimal value
-        else
-            length = tonumber(self.header["Content-Length"] or 0)
-        end
-        -- if length > 0 then
-            chunk = self.transmitter:receive(length > 0 and length or "*l")
-            self.content = self.content..chunk
-        -- else
-        --     chunk = ""
-        -- end
-    until length <= 0 or chunk == ""
-    self.complete = true
-    return self.complete
-
-    --[[
     if self.header["Transfer-Encoding"] == "chunked" then
         -- see https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88
         repeat
@@ -129,32 +111,31 @@ function Request:receiveMessage()
             if self.run then coroutine.yield(self) end -- is coroutine check
         until length <= 0 -- 0\r\n
     else
-        
+        length = tonumber(self.header["Content-Length"] or 0)
         if length > 0 then self.content = self.transmitter:receive(length) end
     end
     self.complete = true
     return self.complete
-    --]]
 end
 
 
-function Request:onConnect() -- xors hook
+function Request:onConnect()
     self:receiveHeaders()
     self.run = coroutine.create(self.receiveMessage)
-    coroutine.resume(self.run, self)
 end
 
 
-function Request:onEnterFrame() -- xors hook
+function Request:onEnterFrame()
     if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
         coroutine.resume(self.run, self)
     end
 end
 
 
-function Request:hotswap() -- hook for restoring state when hot-swappingw this file
+function Request:hotswap()
     return {
         transmitter = self.transmitter,
+        complete = self.complete,
         protocol = self.protocol,
         method = self.method,
         header = self.header,
@@ -162,7 +143,7 @@ function Request:hotswap() -- hook for restoring state when hot-swappingw this f
         query = self.query,
         parameter = self.parameter,
         content = self.content,
-        run = self.run -- coroutine resume function
+        run = self.run -- coroutine thread
     }
 end
 

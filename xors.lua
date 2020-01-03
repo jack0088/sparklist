@@ -135,7 +135,15 @@ end
 
 function Xors:hotswap()
     return {
-        -- TODO
+        socket = self.socket,
+        host = self.host,
+        port = self.port,
+        ip = self.ip,
+        name = self.name,
+        timeput = self.timeout,
+        backlog = self.backlog,
+        clients = self.clients,
+        plugins = self.plugins -- TODO does this block hotswapper?
     }
 end
 

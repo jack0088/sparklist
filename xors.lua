@@ -34,7 +34,6 @@ function Xors:run()
     self.socket:listen(self.backlog)
     --self.ip = self.socket:getsockname()
     self.name, self.ip = self:whois()
-
     print(string.format(
         "%s xors is listening to clients at %s:%s alias %s:%s",
         os.date("%d.%m.%Y %H:%M:%S"),
@@ -45,55 +44,31 @@ function Xors:run()
     ))
 
     while true do -- main application loop
-        local transmitters, receivers = socket.select(self.queue, self.queue, self.timeout) -- list of ready-to-read/write client sockets
-        local candidate = self.socket:accept()
+        local remote = self.socket:accept()
         
-        for _, client in ipairs(self.queue) do
-            if candidate == client then -- already known client
-                candidate = nil
-                break
-            end
-        end
-
-        if candidate then -- yet unknown client
-            local ip, port = candidate:getpeername()
-            table.insert(self.queue, candidate)
-            self.clients[candidate] = {
-                socket = candidate,
-                ip = ip,
-                port = port
-            }
+        if remote ~= nil then
+            local client = {}
+            client.socket = remote
+            client.ip, client.port = client.socket:getpeername()
+            client.request = Request(client.socket)
+            client.response = Response(client.socket, client.request)
+            table.insert(self.clients, client)
             print(string.format(
-                "%s xors attempts to connect to client at %s:%s",
+                "%s xors connected to client at %s:%s",
                 os.date("%d.%m.%Y %H:%M:%S"),
-                ip,
-                port
+                client.ip,
+                client.port
             ))
+            self:insertPlugin(client.request) -- register request and response objects temporaray as plugins so they can use xors hooks
+            self:insertPlugin(client.response)
+            self:hook("onConnect", client, self)
         end
 
-        print(#transmitters, #receivers)
-        
-        for _, remote in ipairs(transmitters) do
-            local client = self.clients[remote]
-            self:hook("onEnterFrame", client, self)
-            if not client.request or not client.response then
-                client.request = Request(client.socket)
-                client.response = Response(client.socket, client.request)
-                print(string.format(
-                    "%s xors connected to client %s",
-                    os.date("%d.%m.%Y %H:%M:%S"),
-                    client.ip
-                ))
-                self:insertPlugin(client.request)
-                self:insertPlugin(client.response)
-                self:hook("onConnect", client, self)
-            end
-        end
+        self:hook("onEnterFrame", self)
 
-        for _, remote in ipairs(receivers) do
-            local client = self.clients[remote]
-            self:hook("onEnterFrame", client, self)
-            if client.request.complete then
+        for client_id = #self.clients, 1, -1 do
+            local client = self.clients[client_id]
+            if client.request.complete and not client.response.complete then
                 self:hook("onDispatch", client.request, client.response)
             end
             if client.response.complete then
@@ -106,19 +81,12 @@ function Xors:run()
                 client.socket:close()
                 self:removePlugin(client.request)
                 self:removePlugin(client.response)
-                self.client[remote] = nil
-                for id, ptr in ipairs(self.queue) do
-                    if ptr == remote then
-                        table.remove(self.queue, id)
-                        break
-                    end
-                end
+                table.remove(self.clients, client_id)
             end
         end
     end
     
     if self.socket then self.socket:close() end
-
     print(string.format(
         "%s xors shut down",
         os.date("%d.%m.%Y %H:%M:%S")

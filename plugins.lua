@@ -1,7 +1,7 @@
--- local livecode = require "hotswap"
+local livecode = require "hotswap"
 local router = require "api"
 
 return {
-    -- livecode,
+    livecode,
     router
 }

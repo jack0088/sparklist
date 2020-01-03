@@ -60,7 +60,7 @@ function Router:new()
 end
 
 
-function Router:onDispatch(request, response) -- Plugin hook method
+function Router:onDispatch(request, response)
     for _, entry in ipairs(self.map) do
         local parameters = {string.match(request.method:upper()..request.query, "^"..entry.route.."$")}
         if #parameters > 0 then

@@ -143,7 +143,7 @@ function Xors:hotswap()
         timeput = self.timeout,
         backlog = self.backlog,
         clients = self.clients,
-        plugins = self.plugins -- TODO does this block hotswapper?
+        plugins = self.plugins
     }
 end
 

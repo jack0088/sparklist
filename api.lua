@@ -24,7 +24,16 @@ end)
 
 
 api:get("/foobar", function(request, response)
-    return response:submit("war hello world from foobar")
+    return response:submit("hahahha, hello foobar baz")
+    --return response:submit(coroutine.create(function()
+        --create headers
+        --send headers
+        --e.g. open file
+        --loop and read chunk of data
+            --send chunk of data
+            --yield coroutine
+        --end loop
+    --end))
 end)
 
 

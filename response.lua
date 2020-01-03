@@ -97,7 +97,7 @@ end
 
 
 function Response:addHeader(identifier, content)
-    if identifier == "Set-Cookie" then -- security recomendations for cookies https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
+    if identifier == "Set-Cookie" then -- add security recomendations for cookies https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
         local function unpack_attributes(cookie)
             local attributes = {}
             for k, v in string.gmatch(cookie, "([^=; ]+)=([^=;]+)") do
@@ -139,7 +139,7 @@ function Response:serializeHeaders()
     local headers = ""
     for identifier, list in pairs(self.header) do
         for _, content in ipairs(list) do
-            headers = headers..string.format(Response.PATTERN_HEADER, identifier, content)
+            headers = headers..string.format(self.PATTERN_HEADER, identifier, content)
         end
     end
     return headers
@@ -165,16 +165,16 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
     if not content or content == "" then -- resource not found
         status = status or 404
         mime = mime or "text/html"
-        content = view("views.404", self.request.query, self.request.method, status, Response.STATUS_TEXT[status])
+        content = view("views.404", self.request.query, self.request.method, status, self.STATUS_TEXT[status])
     end
     self:addHeader("Date", Response.GTM())
     self:addHeader("Content-Length", #content) -- TODO? add support for utf-8 charsets because length is calculated different on those
     self:addHeader("Content-Type", mime or "text/plain")
     self:addHeader("X-Content-Type-Options", "nosniff")
     self.receiver:send(string.format( -- TODO? support Transfer-Encoding: chunked (also see request.lua)
-        Response.PATTERN_RESPONSE,
+        self.PATTERN_RESPONSE,
         status or 200,
-        Response.STATUS_TEXT[status or 200],
+        self.STATUS_TEXT[status or 200],
         self:serializeHeaders(),
         content
     ))
@@ -196,7 +196,7 @@ function Response:attach(location, name) -- attach file and force client browser
 end
 
 
-function Response:hotswap() -- restore state on hotswapping when file
+function Response:hotswap()
     return {
         receiver = self.receiver,
         request = self.request,

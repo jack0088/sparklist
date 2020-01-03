@@ -26,7 +26,6 @@ end
 
 
 function Xors:run()
-    self.queue = {}
     self.clients = {}
     self.socket = socket.tcp()
     self.socket:settimeout(self.timeout, "t")

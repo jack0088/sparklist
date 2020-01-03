@@ -23,6 +23,11 @@ api:get("/?", function(request, response)
 end)
 
 
+api:get("/foobar", function(request, response)
+    return response:submit("war hello world from foobar")
+end)
+
+
 api:get("/assets/([%w%p]+)%.(%a%a%a+)", function(request, response, filename, extension) -- requests to files
     if string.find("jpg jpg png tiff bmp gif svg eps pdf", extension) then -- whitelist look-up
         -- return response:submit(request.url)

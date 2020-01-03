@@ -92,6 +92,7 @@ function Response:new(receiver, request)
     self.receiver = receiver -- client socket object
     self.request = request
     self.header = {}
+    self.complete = false
 end
 
 
@@ -166,7 +167,8 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
         self:serializeHeaders(),
         content
     ))
-    return true
+    self.complete = true
+    return self.complete
 end
 
 

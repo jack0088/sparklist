@@ -63,7 +63,6 @@ end
 function Request:new(transmitter)
     self.transmitter = transmitter -- client socket object
     self.complete = false
-    self:onConnect()
 end
 
 
@@ -96,24 +95,46 @@ function Request:receiveHeaders()
     self.url = resource or path
     self.query = path -- raw url
     self.parameter = self.parseURLEncoded(urlquery)
+
+    return true
 end
 
 
 function Request:receiveMessage()
     local length = 0
+    local chunk = ""
     if type(self.content) ~= "string" then self.content = "" end
+    repeat
+        if self.header["Transfer-Encoding"] == "chunked" then
+            length = tonumber(self.transmitter:receive(), 16) or 0 -- hexadecimal value
+        else
+            length = tonumber(self.header["Content-Length"] or 0)
+        end
+        -- if length > 0 then
+            chunk = self.transmitter:receive(length > 0 and length or "*l")
+            self.content = self.content..chunk
+        -- else
+        --     chunk = ""
+        -- end
+    until length <= 0 or chunk == ""
+    self.complete = true
+    return self.complete
+
+    --[[
     if self.header["Transfer-Encoding"] == "chunked" then
         -- see https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88
         repeat
             length = tonumber(self.transmitter:receive(), 16) -- hexadecimal value
-            self.content = self.content..self.transmitter:receive(length)
-            coroutine.yield(self)
+            if length > 0 then self.content = self.content..self.transmitter:receive(length) end
+            if self.run then coroutine.yield(self) end -- is coroutine check
         until length <= 0 -- 0\r\n
     else
-        length = tonumber(self.header["Content-Length"] or 0)
-        self.content = self.transmitter:receive(length)
+        
+        if length > 0 then self.content = self.transmitter:receive(length) end
     end
     self.complete = true
+    return self.complete
+    --]]
 end
 
 
@@ -125,9 +146,9 @@ end
 
 
 function Request:onEnterFrame() -- xors hook
-    -- if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
-    --     coroutine.resume(self.run, self)
-    -- end
+    if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
+        coroutine.resume(self.run, self)
+    end
 end
 
 

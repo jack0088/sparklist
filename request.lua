@@ -108,7 +108,7 @@ function Request:receiveMessage()
         repeat
             length = tonumber(self.transmitter:receive(), 16) -- hexadecimal value
             if length > 0 then self.content = self.content..self.transmitter:receive(length) end
-            if self.run then coroutine.yield(self) end -- is coroutine check
+            if self.run then coroutine.yield(self) end -- yield coroutine or receive everything in one blocking loop event
         until length <= 0 -- 0\r\n
     else
         length = tonumber(self.header["Content-Length"] or 0)

@@ -140,22 +140,22 @@ function require(resource, force_reload) -- override standard Lua function!
 end
 
 
-function hotswap:run() -- call on each frame, periodically or via a trigger
-    if not self.timeout or self.timeout < os.time() then
-        self.timeout = os.time() + self.interval
-        for resource, cache in pairs(self.registry) do
-            local timestamp = modifiedat(cache.url)
-            if cache.timestamp ~= timestamp then
-                cache.timestamp = timestamp
-                require(resource, true)
-            end
+function hotswap:run() -- call on each frame, periodically or via a interface trigger
+    for resource, cache in pairs(self.registry) do
+        local timestamp = modifiedat(cache.url)
+        if cache.timestamp ~= timestamp then
+            cache.timestamp = timestamp
+            require(resource, true)
         end
     end
 end
 
 
-function hotswap:onEnterFrame() -- xors plugin hook
-    self:run()
+function hotswap:onEnterFrame()
+    if not self.timeout or self.timeout < os.time() then
+        self.timeout = os.time() + self.interval
+        self:run()
+    end
 end
 
 

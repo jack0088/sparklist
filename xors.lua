@@ -67,10 +67,15 @@ function Xors:run()
 
         for client_id = #self.clients, 1, -1 do
             local client = self.clients[client_id]
-            if client.request.complete and not client.response.complete then
+            if client.request.headers_received
+            and client.request.content_received
+            and not client.response.headers_send
+            then
                 self:hook("onDispatch", client.request, client.response)
             end
-            if client.response.complete then
+            if client.response.headers_send
+            and client.response.content_send
+            then
                 self:hook("onDisconnect", client, self)
                 print(string.format(
                     "%s xors disconnected from client %s",

@@ -146,6 +146,17 @@ function Response:serializeHeaders()
 end
 
 
+function Response:sendHeaders()
+    -- TODO
+end
+
+
+function Response:sendMessage(msg)
+    -- TODO chunked-transfer
+    -- TODO do this in a coroutine
+end
+
+
 function Response:submit(content, mime, status) -- NOTE mime-types must match their actual file mime-types, e.g. a *.txt file saved in utf-8 charset should be passed with "text/plain; charset=utf-8"
     if not self.receiver then return false end
     if (content or ""):match(".+%.%w%w%w+$") then -- content suffix is a file extension
@@ -189,7 +200,8 @@ function Response:hotswap() -- restore state on hotswapping when file
     return {
         receiver = self.receiver,
         request = self.request,
-        header = self.header
+        header = self.header,
+        complete = self.complete
     }
 end
 

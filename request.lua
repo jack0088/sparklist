@@ -62,11 +62,14 @@ end
 
 function Request:new(transmitter)
     self.transmitter = transmitter -- client socket object
-    self.complete = false
+    self.headers_received = false
+    self.content_received = false
 end
 
 
 function Request:receiveHeaders()
+    if self.headers_received then return true end
+
     local firstline, status, partial = self.transmitter:receive()
     if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
         return false
@@ -96,32 +99,40 @@ function Request:receiveHeaders()
     self.query = path -- raw url
     self.parameter = self.parseURLEncoded(urlquery)
 
+    self.headers_received = true
     return true
 end
 
 
 function Request:receiveMessage()
-    local length = 0
-    if type(self.content) ~= "string" then self.content = "" end
-    if self.header["Transfer-Encoding"] == "chunked" then
-        -- see https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88
-        repeat
-            length = tonumber(self.transmitter:receive(), 16) -- hexadecimal value
-            if length > 0 then self.content = self.content..self.transmitter:receive(length) end
-            if self.run then coroutine.yield(self) end -- yield coroutine or receive everything in one blocking loop event
-        until length <= 0 -- 0\r\n
-    else
-        length = tonumber(self.header["Content-Length"] or 0)
-        if length > 0 then self.content = self.transmitter:receive(length) end
+    if not self.content_received then
+        if not self.headers_received then
+            self:receiveHeaders()
+        end
+        local length = 0
+        if type(self.content) ~= "string" then self.content = "" end
+        if self.header["Transfer-Encoding"] == "chunked" then
+            -- see https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88
+            repeat
+                length = tonumber(self.transmitter:receive(), 16) -- hexadecimal value
+                if length > 0 then self.content = self.content..self.transmitter:receive(length) end
+                if type(self.run) == "thread" then coroutine.yield(self) end -- yield coroutine or receive everything in one blocking loop event
+            until length <= 0 -- 0\r\n
+        else
+            length = tonumber(self.header["Content-Length"] or 0)
+            if length > 0 then self.content = self.transmitter:receive(length) end
+        end
+        self.content_received = true
     end
-    self.complete = true
-    return self.complete
+    return true
 end
 
 
 function Request:onConnect()
     self:receiveHeaders()
-    self.run = coroutine.create(self.receiveMessage)
+    if self.run == nil then
+        self.run = coroutine.create(self.receiveMessage)
+    end
 end
 
 
@@ -135,7 +146,6 @@ end
 function Request:hotswap()
     return {
         transmitter = self.transmitter,
-        complete = self.complete,
         protocol = self.protocol,
         method = self.method,
         header = self.header,
@@ -143,7 +153,9 @@ function Request:hotswap()
         query = self.query,
         parameter = self.parameter,
         content = self.content,
-        run = self.run -- coroutine thread
+        run = self.run, -- coroutine thread
+        headers_received = self.headers_received,
+        content_received = self.content_received
     }
 end
 

@@ -3,14 +3,17 @@
 -- client response generator
 -- a response runs after every request from client to server
 
-local view = require "views"
+local utf8len = require "utf8".len
 local mimeguess = require "mimetype".guess
+local view = require "views"
 local class = require "class"
 local Response = class()
 
 
 Response.PATTERN_HEADER = "%s: %s\r\n" -- field, value
-Response.PATTERN_RESPONSE = "HTTP/1.1 %s %s\r\n%s\r\n%s\r\n"--0\r\n\r\n -- status, message, headers, content [, trailer?]
+Response.PATTERN_HEADER_RESPONSE = "HTTP/1.1 %s %s\r\n%s\r\n" -- status, message, headers
+Response.PATTERN_CONTENT_RESPONSE = "%s\r\n" -- [length,] content [, trailer 0\r\n\r\n]
+Response.PATTERN_RESPONSE = Response.PATTERN_HEADER_RESPONSE..Response.PATTERN_CONTENT_RESPONSE
 Response.STATUS_TEXT = {
     [100] = "Continue",
     [101] = "Switching Protocols",
@@ -92,7 +95,8 @@ function Response:new(receiver, request)
     self.receiver = receiver -- client socket object
     self.request = request
     self.header = {}
-    self.complete = false
+    self.headers_send = false
+    self.content_send = false
 end
 
 
@@ -147,39 +151,84 @@ end
 
 
 function Response:sendHeaders()
-    -- TODO
+    if not self.headers_send then
+        self.receiver:send(string.format(
+            self.PATTERN_HEADER_RESPONSE,
+            status or 200,
+            self.STATUS_TEXT[status or 200],
+            self:serializeHeaders()
+        ))
+        self.headers_send = true
+    end
+    return true
 end
 
 
-function Response:sendMessage(msg)
-    -- TODO chunked-transfer
-    -- TODO do this in a coroutine
+function Response:sendMessage(data)
+    if not self.content_send then
+        if not self.headers_send then
+            self:sendHeaders()
+        end
+        if self.header["Transfer-Encoding"] == "chunked" then
+            repeat
+                self.receiver:send(string.format(
+                    "%s\r\n"..self.PATTERN_CONTENT_RESPONSE,
+                    string.format("%X", utf8len(data)), -- hexadecimal value
+                    data
+                ))
+                if type(self.run) == "thread" then coroutine.yield(self) end
+            until data == nil
+        else
+            self.receiver:send(string.format(self.PATTERN_CONTENT_RESPONSE, data))
+            self.content_send = true
+        end
+    end
+    return true
 end
 
 
 function Response:submit(content, mime, status) -- NOTE mime-types must match their actual file mime-types, e.g. a *.txt file saved in utf-8 charset should be passed with "text/plain; charset=utf-8"
     if not self.receiver then return false end
-    if (content or ""):match(".+%.%w%w%w+$") then -- content suffix is a file extension
+    if self.headers_send then
+        if self.content_send then return true end
+        if self.header["Transfer-Encoding"] == "chunked" then
+            self.receiver:send("0\r\n") -- append closing trailer to chunked response
+            self.content_send = true
+            return true
+        end
+    end
+
+    if (content or ""):match(".+%.%w%w%w+$") then -- content suffix has a file extension?
         content, mime, status = self.file("."..content) -- prefix with current (root) directory
     end
+
     if not content or content == "" then -- resource not found
         status = status or 404
         mime = mime or "text/html"
-        content = view("views.404", self.request.query, self.request.method, status, self.STATUS_TEXT[status])
+        content = view(
+            "views.404",
+            self.request.query,
+            self.request.method,
+            status,
+            self.STATUS_TEXT[status]
+        )
     end
+
     self:addHeader("Date", Response.GTM())
-    self:addHeader("Content-Length", #content) -- TODO? add support for utf-8 charsets because length is calculated different on those
+    self:addHeader("Content-Length", utf8len(content))
     self:addHeader("Content-Type", mime or "text/plain")
     self:addHeader("X-Content-Type-Options", "nosniff")
-    self.receiver:send(string.format( -- TODO? support Transfer-Encoding: chunked (also see request.lua)
+    self.receiver:send(string.format(
         self.PATTERN_RESPONSE,
         status or 200,
         self.STATUS_TEXT[status or 200],
         self:serializeHeaders(),
         content
     ))
-    self.complete = true
-    return self.complete
+
+    self.headers_send = true
+    self.content_send = true
+    return true
 end
 
 
@@ -196,12 +245,27 @@ function Response:attach(location, name) -- attach file and force client browser
 end
 
 
+function Response:onDispatch()
+    if self.run == nil then
+        self.run = coroutine.create(self.sendMessage)
+    end
+end
+
+
+function Response:onEnterFrame()
+    if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
+        coroutine.resume(self.run, self)
+    end
+end
+
+
 function Response:hotswap()
     return {
         receiver = self.receiver,
         request = self.request,
         header = self.header,
-        complete = self.complete
+        headers_send = self.headers_send,
+        content_send = self.content_send
     }
 end
 

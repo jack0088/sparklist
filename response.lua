@@ -96,7 +96,7 @@ function Response:new(receiver, request)
     self.request = request
     self.header = {}
     self.headers_send = false
-    self.content_send = false
+    self.message_send = false
 end
 
 
@@ -165,10 +165,8 @@ end
 
 
 function Response:sendMessage(data)
-    if not self.content_send then
-        if not self.headers_send then
-            self:sendHeaders()
-        end
+    if not self.message_send then
+        self:sendHeaders()
         if self.header["Transfer-Encoding"] == "chunked" then
             repeat
                 self.receiver:send(string.format(
@@ -180,7 +178,7 @@ function Response:sendMessage(data)
             until data == nil
         else
             self.receiver:send(string.format(self.PATTERN_CONTENT_RESPONSE, data))
-            self.content_send = true
+            self.message_send = true
         end
     end
     return true
@@ -188,12 +186,17 @@ end
 
 
 function Response:submit(content, mime, status) -- NOTE mime-types must match their actual file mime-types, e.g. a *.txt file saved in utf-8 charset should be passed with "text/plain; charset=utf-8"
-    if not self.receiver then return false end
+    print(self.request.headers_received, self.request.message_received)
+
+    if not self.receiver then
+        return false
+    end
+
     if self.headers_send then
-        if self.content_send then return true end
+        if self.message_send then return true end
         if self.header["Transfer-Encoding"] == "chunked" then
-            self.receiver:send("0\r\n") -- append closing trailer to chunked response
-            self.content_send = true
+            self.receiver:send("0\r\n") -- close up chunked response
+            self.message_send = true
             return true
         end
     end
@@ -227,7 +230,7 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
     ))
 
     self.headers_send = true
-    self.content_send = true
+    self.message_send = true
     return true
 end
 
@@ -253,7 +256,7 @@ end
 
 
 function Response:onEnterFrame()
-    if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
+    if type(self.run) == "thread" and coroutine.status(self.run) ~= "dead" then
         coroutine.resume(self.run, self)
     end
 end
@@ -265,7 +268,7 @@ function Response:hotswap()
         request = self.request,
         header = self.header,
         headers_send = self.headers_send,
-        content_send = self.content_send
+        message_send = self.message_send
     }
 end
 

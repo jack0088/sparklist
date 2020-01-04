@@ -43,8 +43,9 @@ function Xors:run()
     ))
 
     while true do -- main application loop
+        self:hook("onEnterFrame", self)
+
         local remote = self.socket:accept()
-        
         if remote ~= nil then
             local client = {}
             client.socket = remote
@@ -58,23 +59,22 @@ function Xors:run()
                 client.ip,
                 client.port
             ))
-            self:insertPlugin(client.request) -- register request and response objects temporaray as plugins so they can use xors hooks
-            self:insertPlugin(client.response)
             self:hook("onConnect", client, self)
         end
-
-        self:hook("onEnterFrame", self)
 
         for client_id = #self.clients, 1, -1 do
             local client = self.clients[client_id]
             if client.request.headers_received
-            and client.request.content_received
-            and not client.response.headers_send
+            and (not client.request.message_received
+            or not client.response.headers_send
+            or not client.response.message_send)
             then
                 self:hook("onDispatch", client.request, client.response)
             end
-            if client.response.headers_send
-            and client.response.content_send
+            if client.request.headers_received
+            and client.request.message_received
+            and client.response.headers_send
+            and client.response.message_send
             then
                 self:hook("onDisconnect", client, self)
                 print(string.format(
@@ -83,8 +83,6 @@ function Xors:run()
                     client.ip
                 ))
                 client.socket:close()
-                self:removePlugin(client.request)
-                self:removePlugin(client.response)
                 table.remove(self.clients, client_id)
             end
         end

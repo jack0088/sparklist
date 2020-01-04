@@ -63,7 +63,8 @@ end
 function Request:new(transmitter)
     self.transmitter = transmitter -- client socket object
     self.headers_received = false
-    self.content_received = false
+    self.message_received = false
+    self:receiveHeaders()
 end
 
 
@@ -105,42 +106,45 @@ end
 
 
 function Request:receiveMessage()
-    if not self.content_received then
-        if not self.headers_received then
-            self:receiveHeaders()
-        end
-        local length = 0
-        if type(self.content) ~= "string" then self.content = "" end
-        if self.header["Transfer-Encoding"] == "chunked" then
-            -- see https://gist.github.com/CMCDragonkai/6bfade6431e9ffb7fe88
-            repeat
-                length = tonumber(self.transmitter:receive(), 16) -- hexadecimal value
-                if length > 0 then self.content = self.content..self.transmitter:receive(length) end
-                if type(self.run) == "thread" then coroutine.yield(self) end -- yield coroutine or receive everything in one blocking loop event
-            until length <= 0 -- 0\r\n
-        else
-            length = tonumber(self.header["Content-Length"] or 0)
-            if length > 0 then self.content = self.transmitter:receive(length) end
-        end
-        self.content_received = true
+    print "receive..."
+    if not self.message_received then
+        self.message = ""
+        self:receiveHeaders()
+        local threaded = type(coroutine.running()) == "thread"
+        local chunked = self.header["Transfer-Encoding"] == "chunked"
+        local length = tonumber(self.header["Content-Length"] or 0)
+        repeat
+            if chunked then length = tonumber(self.transmitter:receive(), 16) end -- hexadecimal value
+            if length > 0 then
+                local stream = self.transmitter:receive(length)
+                if not threaded then
+                    self.message = self.message..stream
+                else
+                    self.message = stream
+                    coroutine.yield(stream)
+                end
+                if not chunked then length = 0 end -- signal to break the loop
+            end
+        until length <= 0 -- 0\r\n
+        if threaded then self.message = "" end
+        self.message_received = true
     end
     return true
 end
 
 
-function Request:onConnect()
-    self:receiveHeaders()
-    if self.run == nil then
-        self.run = coroutine.create(self.receiveMessage)
-    end
-end
-
-
-function Request:onEnterFrame()
-    if self.run ~= nil and coroutine.status(self.run) ~= "dead" then
-        coroutine.resume(self.run, self)
-    end
-end
+-- function Request:receiveFile(save_path)
+--     if not self.message_received then
+--         self:receiveHeaders()
+--         if self.method == "POST" and self.header["Content-Disposition"] ~= nil then
+--             -- TODO implement receiving file attachments, see https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work#answer-28193031
+--             self.message_received = true
+--         else
+--             self:receiveMessage()
+--         end
+--     end
+--     return true
+-- end
 
 
 function Request:hotswap()
@@ -152,10 +156,10 @@ function Request:hotswap()
         url = self.url,
         query = self.query,
         parameter = self.parameter,
-        content = self.content,
-        run = self.run, -- coroutine thread
+        message = self.message,
+        -- run = self.run, -- coroutine thread
         headers_received = self.headers_received,
-        content_received = self.content_received
+        message_received = self.message_received
     }
 end
 

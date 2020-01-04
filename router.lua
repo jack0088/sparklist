@@ -43,7 +43,7 @@ EXAMPLE (respond with html layout after custom handling the route)
     end)
 
 
-EXAMPLE (respond with html layout shorthand)
+EXAMPLE (respond with html layout shorthand; taken care by preload() function, see below)
 
     Router:any(".*", "views.404") -- response is always status 200
 
@@ -60,20 +60,23 @@ function Router:new()
 end
 
 
-function Router:onDispatch(request, response)
-    for _, entry in ipairs(self.map) do
-        local parameters = {string.match(request.method:upper()..request.query, "^"..entry.route.."$")}
-        if #parameters > 0 then
-            local result = entry.handler(request, response, unpack(parameters))
-            if result ~= nil then return result end -- nil falls through to the next route check because match/response is void
-        end
-    end
-    return false
+function Router:register(route_method, route_regex, route_handler)
+    table.insert(self.map, {
+        route = route_method:upper()..route_regex,
+        handler = route_handler --coroutine.wrap(route_handler)
+    })
 end
 
 
-function Router:register(route_method, route_regex, route_handler)
-    table.insert(self.map, {route = route_method:upper()..route_regex, handler = route_handler})
+function Router:onDispatch(request, response)
+    -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
+    for _, entry in ipairs(self.map) do
+        if #{string.match(request.method:upper()..request.query, "^"..entry.route.."$")} > 0 then
+            -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
+            local message = entry.handler(request, response)
+            if message ~= nil then break end
+        end
+    end
 end
 
 

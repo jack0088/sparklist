@@ -23,17 +23,11 @@ api:get("/?", function(request, response)
 end)
 
 
-api:get("/foobar", function(request, response)
-    return response:submit("hahahha, hello foobar baz")
-    --return response:submit(coroutine.create(function()
-        --create headers
-        --send headers
-        --e.g. open file
-        --loop and read chunk of data
-            --send chunk of data
-            --yield coroutine
-        --end loop
-    --end))
+api:get("/chunked%-message", function(request, response)
+    print "route fired..."
+    request:receiveMessage()
+    print("received msg:", request.message)
+    return response:submit("foobar")
 end)
 
 

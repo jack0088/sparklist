@@ -25,16 +25,18 @@ end)
 
 api:get("/chunked%-message", function(request, response)
     print "route fired..."
-    request:receiveMessage()
-    print("received msg:", request.message)
+    request:receiveMessage(function(chunk)
+        print("chunk received:", chunk)
+    end)
+    print("request.message:", request.message)
     return response:submit("foobar")
 end)
 
 
-api:get("/assets/([%w%p]+)%.(%a%a%a+)", function(request, response, filename, extension) -- requests to files
+api:get("/uploads/([%w%p]+)%.(%a%a%a+)", function(request, response, filename, extension) -- requests to files
     if string.find("jpg jpg png tiff bmp gif svg eps pdf", extension) then -- whitelist look-up
-        -- return response:submit(request.url)
-        return response:attach(request.url)
+        return response:submit(request.url)
+        -- return response:attach(request.url)
     end
     return response:submit(nil, nil, 403)
 end)

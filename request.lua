@@ -91,6 +91,14 @@ function Request:receiveHeaders()
             headerquery = headerquery..header.."\r\n"
         until #header <= 0
 
+        -- NOTE some browsers send multiple requests to the same url because they try to get the .favicon or other resources up front. Safari even triggers urls while auto-completing them. Just don't wonder when you read the logfile...
+        print(string.format(
+            "%s %s\n%s",
+            os.date("%d.%m.%Y %H:%M:%S"),
+            firstline,
+            headerquery:gsub("([^\r\n]+)", "    %1"):match("(.+)\r\n$")
+        ))
+
         self.protocol = protocol
         self.method = method:upper()
         self.header = self.parseHeaders(headerquery)

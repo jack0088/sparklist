@@ -168,7 +168,7 @@ function Response:sendMessage(stream)
     if not self.message_send then
         self:sendHeaders()
         local threaded = type(coroutine.running()) == "thread"
-        local chunked = self.header["Transfer-Encoding"] == "chunked"
+        local chunked = self.header["Transfer-Encoding"] ~= nil
         local length = #(stream or "") -- TODO add UTF-8 support? see :submit() method as well...
         if self.message == nil then self.message = "" end
         if length < 1 then -- message_send

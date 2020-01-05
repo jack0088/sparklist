@@ -108,7 +108,7 @@ function Request:receiveMessage(stream_sink)
         self.message = ""
         self:receiveHeaders()
         local threaded = type(coroutine.running()) == "thread"
-        local chunked = self.header["Transfer-Encoding"] == "chunked"
+        local chunked = self.header["Transfer-Encoding"] ~= nil
         local length = tonumber(self.header["Content-Length"] or 0)
         repeat
             if chunked then length = tonumber(self.transmitter:receive(), 16) end -- hexadecimal value

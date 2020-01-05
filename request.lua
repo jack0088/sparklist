@@ -42,21 +42,23 @@ Request.normalize = function(path)
 end
 
 
+Request.parseURLEncoded = function(query)
+    local parameters = {}
+    for name, value in string.gmatch(query, Request.PATTERN_QUERY_STRING) do parameters[name] = value end
+    return parameters
+end
+
+
+-- TODO add helper functions for further extracting header values like cookie that consits of multiple parameters separated by semicolon (other headers do this as well like Content-Disposition from POST method)
+
+
 Request.parseHeaders = function(query)
     local headers = {}
     for identifier, content in string.gmatch(query, Request.PATTERN_HEADER) do
         if not headers[identifier] then headers[identifier] = {} end
         table.insert(headers[identifier], content)
-        -- TODO extract single cookies with Request.PATTERN_COOKIE_STRING (and that string must be edited, because cookie options are separated by , but would not be in this case ;)
     end
     return headers
-end
-
-
-Request.parseURLEncoded = function(query)
-    local parameters = {}
-    for name, value in string.gmatch(query, Request.PATTERN_QUERY_STRING) do parameters[name] = value end
-    return parameters
 end
 
 

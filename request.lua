@@ -69,38 +69,34 @@ end
 
 
 function Request:receiveHeaders()
-    if self.headers_received then return true end
+    if not self.headers_received then
+        local firstline, status, partial = self.transmitter:receive()
+        if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
+            return false
+        end
+        local method, path, protocol = string.match(firstline, self.PATTERN_REQUEST)
+        if not method then
+            return false
+        end
+        local resource, urlquery = ""
+        if #path > 0 then
+            resource, urlquery = string.match(path, self.PATTERN_PARAMETER_STRING)
+            resource = self.normalize(resource)
+        end
+        local headerquery, header = ""
+        repeat
+            header = self.transmitter:receive() or ""
+            headerquery = headerquery..header.."\r\n"
+        until #header <= 0
 
-    local firstline, status, partial = self.transmitter:receive()
-    if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
-        return false
+        self.protocol = protocol
+        self.method = method:upper()
+        self.header = self.parseHeaders(headerquery)
+        self.url = resource or path
+        self.query = path -- raw url
+        self.parameter = self.parseURLEncoded(urlquery)
+        self.headers_received = true
     end
-
-    local method, path, protocol = string.match(firstline, self.PATTERN_REQUEST)
-    if not method then
-        return false
-    end
-
-    local resource, urlquery = ""
-    if #path > 0 then
-        resource, urlquery = string.match(path, self.PATTERN_PARAMETER_STRING)
-        resource = self.normalize(resource)
-    end
-
-    local headerquery, header = ""
-    repeat
-        header = self.transmitter:receive() or ""
-        headerquery = headerquery..header.."\r\n"
-    until #header <= 0
-
-    self.protocol = protocol
-    self.method = method:upper()
-    self.header = self.parseHeaders(headerquery)
-    self.url = resource or path
-    self.query = path -- raw url
-    self.parameter = self.parseURLEncoded(urlquery)
-
-    self.headers_received = true
     return true
 end
 
@@ -116,16 +112,9 @@ function Request:receiveMessage(stream_sink)
             if chunked then length = tonumber(self.transmitter:receive(), 16) end -- hexadecimal value
             if length > 0 then
                 local stream = self.transmitter:receive(length)
-                if type(stream_sink) == "function" then
-                    stream_sink(stream)
-                end
-                if not threaded then
-                    self.message = self.message..stream
-                else
-                    self.message = stream
-                    coroutine.yield(stream)
-                end
+                if not threaded then self.message = self.message..stream else self.message = stream end
                 if not chunked then length = 0 end -- signal to break the loop
+                if type(stream_sink) == "function" then stream_sink(stream) end
             end
         until length <= 0 -- 0\r\n
         if threaded then self.message = "" end
@@ -135,18 +124,19 @@ function Request:receiveMessage(stream_sink)
 end
 
 
--- function Request:receiveFile(save_path)
---     if not self.message_received then
---         self:receiveHeaders()
---         if self.method == "POST" and self.header["Content-Disposition"] ~= nil then
---             -- TODO implement receiving file attachments, see https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work#answer-28193031
---             self.message_received = true
---         else
---             self:receiveMessage()
---         end
---     end
---     return true
--- end
+function Request:receiveFile()
+    local stream_sink
+    if self.method == "POST" and self.header["Content-Disposition"] then
+        stream_sink = function(stream)
+            -- TODO we need to parse POST data
+            -- then, implement receiving file attachments as described in
+            -- https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work#answer-28193031
+            -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
+        end
+    end
+    self:receiveMessage(stream_sink)
+    return true
+end
 
 
 function Request:hotswap()

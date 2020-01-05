@@ -80,6 +80,17 @@ Response.serializeURLEncoded = function(parameters)
 end
 
 
+Response.serializeHeaders = function(headers)
+    local query = ""
+    for identifier, values in pairs(headers) do
+        for _, content in ipairs(values) do
+            query = query..string.format(self.PATTERN_HEADER, identifier, content)
+        end
+    end
+    return query
+end
+
+
 Response.file = function(url)
     local handle = io.open(url, "rb")
     if handle then
@@ -139,24 +150,13 @@ function Response:addHeader(identifier, content)
 end
 
 
-function Response:serializeHeaders()
-    local headers = ""
-    for identifier, list in pairs(self.header) do
-        for _, content in ipairs(list) do
-            headers = headers..string.format(self.PATTERN_HEADER, identifier, content)
-        end
-    end
-    return headers
-end
-
-
 function Response:sendHeaders()
     if not self.headers_send then
         self.receiver:send(string.format(
             self.PATTERN_HEADER_RESPONSE,
             status or 200,
             self.STATUS_TEXT[status or 200],
-            self:serializeHeaders()
+            self.serializeHeaders(self.header)
         ))
         self.headers_send = true
     end
@@ -225,7 +225,7 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
         self.PATTERN_RESPONSE,
         status or 200,
         self.STATUS_TEXT[status or 200],
-        self:serializeHeaders(),
+        self.serializeHeaders(self.header),
         content
     ))
 

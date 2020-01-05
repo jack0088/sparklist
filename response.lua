@@ -197,6 +197,7 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
 
     if self.headers_send then
         if self.message_send then return true end
+        if not content and self.header["Transfer-Encoding"] ~= nil then content = "0\r\n\r\n" end
         self.receiver:send(content or "")
         self.message_send = true
         return true

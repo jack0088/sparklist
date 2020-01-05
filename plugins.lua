@@ -1,7 +1,7 @@
-local livecode = require "hotswap"
-local router = require "api"
+local hotswapper = require "hotswap"
+local dispatcher = require "dispatcher"
 
 return {
-    livecode,
-    router
+    hotswapper,
+    dispatcher
 }

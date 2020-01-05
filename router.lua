@@ -63,7 +63,7 @@ end
 function Router:register(route_method, route_regex, route_handler)
     table.insert(self.map, {
         route = route_method:upper()..route_regex,
-        handler = route_handler --coroutine.wrap(route_handler)
+        handler = route_handler
     })
 end
 
@@ -71,10 +71,16 @@ end
 function Router:onDispatch(request, response)
     -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
     for _, entry in ipairs(self.map) do
-        if #{string.match(request.method:upper()..request.query, "^"..entry.route.."$")} > 0 then
-            -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
-            local message = entry.handler(request, response)
-            if message ~= nil then break end
+        local wildcards = {string.match(request.method:upper()..request.query, "^"..entry.route.."$")}
+        if #wildcards > 0 then
+            if type(request.route_handler) ~= "thread" then
+                request.route_handler = coroutine.create(entry.handler)
+            end
+            if coroutine.status(request.route_handler) ~= "dead" then
+                -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
+                local status, message = coroutine.resume(request.route_handler, request, response, unpack(wildcards))
+                if status and message ~= nil then break end
+            end
         end
     end
 end

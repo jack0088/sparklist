@@ -1,5 +1,7 @@
-return function(template, ...)
-    local status, view = pcall(dofile, template:gsub("%.", "/")..".lua") -- pcalls are not cheap I heared somewhere
-    if status and type(view) == "function" then return view(...) end
-    return ""
+local function view(template, ...)
+    if not template:match("^views.+") then template = "views."..template end
+    local status, delegate = pcall(dofile, template:gsub("%.", "/")..".lua")
+    if status and type(delegate) == "function" then return delegate(...) end
+    return view "404"
 end
+return view

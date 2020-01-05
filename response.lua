@@ -84,7 +84,7 @@ Response.serializeHeaders = function(headers)
     local query = ""
     for identifier, values in pairs(headers) do
         for _, content in ipairs(values) do
-            query = query..string.format(self.PATTERN_HEADER, identifier, content)
+            query = query..string.format(Response.PATTERN_HEADER, identifier, content)
         end
     end
     return query

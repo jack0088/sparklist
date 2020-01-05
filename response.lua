@@ -3,7 +3,7 @@
 -- client response generator
 -- a response runs after every request from client to server
 
-local utf8len = require "utf8".len
+-- local utf8len = require "utf8".len
 local mimeguess = require "mimetype".guess
 local view = require "views"
 local class = require "class"
@@ -171,7 +171,8 @@ function Response:sendMessage(data)
             repeat
                 self.receiver:send(string.format(
                     "%s\r\n"..self.PATTERN_CONTENT_RESPONSE,
-                    string.format("%X", utf8len(data)), -- hexadecimal value
+                    -- TODO add UTF-8 support? for more information see :submit() method
+                    string.format("%X", #data), -- hexadecimal value
                     data
                 ))
                 if type(self.run) == "thread" then coroutine.yield(self) end
@@ -186,8 +187,6 @@ end
 
 
 function Response:submit(content, mime, status) -- NOTE mime-types must match their actual file mime-types, e.g. a *.txt file saved in utf-8 charset should be passed with "text/plain; charset=utf-8"
-    print(self.request.headers_received, self.request.message_received)
-
     if not self.receiver then
         return false
     end
@@ -218,7 +217,8 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
     end
 
     self:addHeader("Date", Response.GTM())
-    self:addHeader("Content-Length", utf8len(content))
+    -- TODO add UTF-8 support? not yet sure if (and how) we should handle UTF-8 charset encoding as it failed with serving images when Content-Length was calculated with utf8len(content)
+    self:addHeader("Content-Length", #content)
     self:addHeader("Content-Type", mime or "text/plain")
     self:addHeader("X-Content-Type-Options", "nosniff")
     self.receiver:send(string.format(

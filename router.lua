@@ -78,7 +78,12 @@ function Router:onDispatch(request, response)
             end
             if coroutine.status(request.route_handler) ~= "dead" then
                 -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
-                local status, message = coroutine.resume(request.route_handler, request, response, unpack(wildcards))
+                local status, message = coroutine.resume(
+                    request.route_handler,
+                    request,
+                    response,
+                    unpack(wildcards)
+                )
                 if status and message ~= nil then break end
             end
         end

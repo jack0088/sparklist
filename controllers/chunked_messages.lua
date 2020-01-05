@@ -8,6 +8,8 @@ return function(request, response)
     print("request.message:", request.message)
 
     print "responding with chunked response:"
+    response:addHeader("Date", response.GTM())
+    response:addHeader("Content-Type", "text/plain; charset=utf-8")
     response:addHeader("Transfer-Encoding", "chunked")
     
     --TODO!?!?! these need to be one level deep so we can compare to == "chunked"

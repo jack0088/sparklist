@@ -50,6 +50,7 @@ EXAMPLE (respond with html layout shorthand; taken care by preload() function, s
 --]]
 
 local unpack = unpack or table.unpack -- Lua > 5.1
+local controller = require "controllers"
 local view = require "views"
 local class = require "class"
 local Router = class()
@@ -63,7 +64,7 @@ end
 function Router:register(route_method, route_regex, route_handler)
     table.insert(self.map, {
         route = route_method:upper()..route_regex,
-        handler = route_handler
+        controller = route_handler
     })
 end
 
@@ -73,13 +74,13 @@ function Router:onDispatch(request, response)
     for _, entry in ipairs(self.map) do
         local wildcards = {string.match(request.method:upper()..request.query, "^"..entry.route.."$")}
         if #wildcards > 0 then
-            if type(request.route_handler) ~= "thread" then
-                request.route_handler = coroutine.create(entry.handler)
+            if type(request.route_controller) ~= "thread" then
+                request.route_controller = coroutine.create(entry.controller)
             end
-            if coroutine.status(request.route_handler) ~= "dead" then
+            if coroutine.status(request.route_controller) ~= "dead" then
                 -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
                 local status, message = coroutine.resume(
-                    request.route_handler,
+                    request.route_controller,
                     request,
                     response,
                     unpack(wildcards)
@@ -91,13 +92,20 @@ function Router:onDispatch(request, response)
 end
 
 
-local function preload(template)
-    if type(template) == "function" then
-        return template
+local function preload(handler)
+    assert(type(handler) == "function" or type(handler) == "string")
+    if type(handler) == "function" then
+        return handler
     end
-    return function(request, response, ...)
-        response:submit(view(template, ...), "text/html", 200)
+    if handler:match("^controller.+") then
+        return controller(handler)
     end
+    if handler:match("^view.+") then
+        return function(request, response, ...)
+            response:submit(view(handler, ...), "text/html", 200)
+        end
+    end
+    return controller("controllers."..handler)
 end
 
 

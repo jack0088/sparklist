@@ -164,22 +164,26 @@ function Response:sendHeaders()
 end
 
 
-function Response:sendMessage(data)
+function Response:sendMessage(stream)
     if not self.message_send then
         self:sendHeaders()
-        if self.header["Transfer-Encoding"] == "chunked" then
-            repeat
-                self.receiver:send(string.format(
-                    "%s\r\n"..self.PATTERN_CONTENT_RESPONSE,
-                    -- TODO add UTF-8 support? for more information see :submit() method
-                    string.format("%X", #data), -- hexadecimal value
-                    data
-                ))
-                if type(self.run) == "thread" then coroutine.yield(self) end
-            until data == nil
+        local threaded = type(coroutine.running()) == "thread"
+        local chunked = self.header["Transfer-Encoding"] == "chunked"
+        local length = #(stream or "") -- TODO add UTF-8 support? see :submit() method as well...
+        if self.message == nil then self.message = "" end
+        if length < 1 then -- message_send
+            if threaded then self.message = "" end
+            return self:submit()
+        end
+        if not threaded then self.message = self.message..stream else self.message = stream end
+        if not chunked then
+            return self:submit(string.format(self.PATTERN_CONTENT_RESPONSE, stream))
         else
-            self.receiver:send(string.format(self.PATTERN_CONTENT_RESPONSE, data))
-            self.message_send = true
+            self.receiver:send(string.format(
+                "%s\r\n"..self.PATTERN_CONTENT_RESPONSE,
+                string.format("%X", length), -- hexadecimal value
+                stream
+            ))
         end
     end
     return true
@@ -193,11 +197,9 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
 
     if self.headers_send then
         if self.message_send then return true end
-        if self.header["Transfer-Encoding"] == "chunked" then
-            self.receiver:send("0\r\n") -- close up chunked response
-            self.message_send = true
-            return true
-        end
+        self.receiver:send(content or "")
+        self.message_send = true
+        return true
     end
 
     if (content or ""):match(".+%.%w%w%w+$") then -- content suffix has a file extension?
@@ -208,7 +210,7 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
         status = status or 404
         mime = mime or "text/html"
         content = view(
-            "views.404",
+            "404",
             self.request.query,
             self.request.method,
             status,

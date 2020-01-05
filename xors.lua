@@ -69,7 +69,7 @@ function Xors:run()
             or not client.response.headers_send
             or not client.response.message_send)
             then
-                self:hook("onDispatch", client.request, client.response)
+                self:hook("onDispatch", client.request, client.response, client, self)
             end
             if client.request.headers_received
             and client.request.message_received

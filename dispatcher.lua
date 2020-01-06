@@ -6,10 +6,11 @@
 
 local api = require "router"()
 
-api:get("/?", "controllers.index")
 api:get("/chunked%-message", "controllers.chunked_messages")
+api:get("/auth%?id=(.+)", "controllers.auth")
+api:get("/auth", "controllers.auth")
 api:get("/uploads/([%w%p]+)%.(%a%a%a+)", "controllers.assets")
-api:any("/hello%?id=(.+)", "controllers.login")
-api:any(".*", "controllers.404")
+api:get("/?", "controllers.index")
+api:any(".*", "views.404")
 
 return api

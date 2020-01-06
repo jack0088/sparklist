@@ -72,7 +72,6 @@ function Xors:run()
                 self:hook("onDispatch", client.request, client.response, client, self)
             end
             if client.request.headers_received
-            and client.request.message_received
             and client.response.headers_send
             and client.response.message_send
             then

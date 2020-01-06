@@ -251,20 +251,6 @@ function Response:attach(location, name) -- attach file and force client browser
 end
 
 
-function Response:onDispatch()
-    if self.run == nil then
-        self.run = coroutine.create(self.sendMessage)
-    end
-end
-
-
-function Response:onEnterFrame()
-    if type(self.run) == "thread" and coroutine.status(self.run) ~= "dead" then
-        coroutine.resume(self.run, self)
-    end
-end
-
-
 function Response:hotswap()
     return {
         receiver = self.receiver,

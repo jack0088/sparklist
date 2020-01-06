@@ -12,7 +12,7 @@ local Response = class()
 
 Response.PATTERN_HEADER = "%s: %s\r\n" -- field, value
 Response.PATTERN_HEADER_RESPONSE = "HTTP/1.1 %s %s\r\n%s\r\n" -- status, message, headers
-Response.PATTERN_CONTENT_RESPONSE = "%s\r\n" -- [length,] content [, trailer 0\r\n\r\n]
+Response.PATTERN_CONTENT_RESPONSE = "%s\r\n" -- [length,] content [, trailer_headers]
 Response.PATTERN_RESPONSE = Response.PATTERN_HEADER_RESPONSE..Response.PATTERN_CONTENT_RESPONSE
 Response.STATUS_TEXT = {
     [100] = "Continue",

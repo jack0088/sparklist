@@ -27,7 +27,7 @@ return function(request, response, token)
     -- the server (xors) requests the swoopjs API with the token https://app.swoopnow.com/api/inbound_emails/d98fc8d31ceb2bf9208dae120530e2bf
     -- if the user is- or has been logged-in successfully then out respose is a plain/text containing the email of the user and a status code of 200, otherwise status code of 404 and no message
 
-    print "auth route..."
+    print "auth route fired..."
 
     local cookie = request.header["cookie: swoopid"] -- TODO!!!!
     local identity = token or cookie
@@ -35,16 +35,17 @@ return function(request, response, token)
 
     if identity then
         local email, status = https.request("https://app.swoopnow.com/api/inbound_emails/"..identity) -- TODO add timeout of 1s
-        print(string.format("%s swoop login response with token=%s, state=%s, email=%s"
+        print(string.format(
+            "%s swoop login response with token=%s, state=%s, email=%s",
             os.date("%d.%m.%Y %H:%M:%S"),
             identity,
             status,
             email
-        )
-        if status == 200 and email then
+        ))
+        if status == 200 and type(email) == "string" and #email > 0 then
             response:addHeader("Set-Cookie", "swoopid="..identity) -- create new or update existing
-            return response:submit(view("profile", email), "text/html")
+            return response:submit("view/profile.lua", "text/html", 200, email)
         end
     end
-    return response:redirect("/", nil, 200)
+    return response:submit("no swoopid token found in either cookie or url")
 end

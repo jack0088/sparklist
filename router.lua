@@ -18,7 +18,7 @@ The NAIVE REGEX ROUTER is a xors Plugin
 
 EXAMPLE (define routes with custom handlers)
 
-    local view = require "views"
+    local view = require "view"
     local Router = require("router")()
 
     Router:get(".+%/([%w%p]+)%.(%a%a%a+)$", function(request, response, filename, extension) -- requests to files!
@@ -39,19 +39,17 @@ EXAMPLE (respond with html layout after custom handling the route)
 
     Router:any(".*", function(request, response, path)
         --do whatever here
-        response:submit(view("views.404", request.url), "text/html", 404)
+        response:submit(view("view.404", request.url), "text/html", 404)
     end)
 
 
 EXAMPLE (respond with html layout shorthand; taken care by preload() function, see below)
 
-    Router:any(".*", "views.404") -- response is always status 200
+    Router:any(".*", "view.404") -- response is always status 200
 
 --]]
 
 local unpack = unpack or table.unpack -- Lua > 5.1
-local controller = require "controllers"
-local view = require "views"
 local class = require "class"
 local Router = class()
 
@@ -60,6 +58,15 @@ function Router:new()
     self.map = {}
 end
 
+
+-- @route_method is the HTTP method (GET, POST,...)
+-- @route_regex is the regex based url to check the request against
+-- @route_handler can actually be a function or a string!
+-- in case of function it IS the route handler function for the request/response
+-- in case of string it is supposed to be a file name
+-- (path separated by / and with .extension OR separated by . in require paths)
+-- if that file could be found and returns a function then its supposed to be the @route_handler
+-- if no handler function was found through that file path then a proxy @route_handler is created that responds directly with the file path (or view 404 if that leads to nowhere)
 
 function Router:register(route_method, route_regex, route_handler)
     table.insert(self.map, {
@@ -74,11 +81,19 @@ function Router:onDispatch(request, response)
     for _, entry in ipairs(self.map) do
         local wildcards = {string.match(request.method:upper()..request.query, "^"..entry.route.."$")}
         if #wildcards > 0 then
+            print(string.format(
+                "%s client dispatched to route '%s'",
+                os.date("%d.%m.%Y %H:%M:%S"),
+                entry.route
+            ))
             if type(request.route_controller) ~= "thread" then
                 request.route_controller = coroutine.create(entry.controller)
             end
             if coroutine.status(request.route_controller) ~= "dead" then
                 -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
+                if wildcards[1] == entry.route then
+                    table.remove(wildcards, 1)
+                end
                 local status, message = coroutine.resume(
                     request.route_controller,
                     request,
@@ -97,15 +112,15 @@ local function preload(handler)
     if type(handler) == "function" then
         return handler
     end
-    if handler:match("^controller.+") then
-        return controller(handler)
+    local file_name, file_extension = handler:match("(.+)(%.%w%w%w+)$")
+    if file_extension ~= ".lua" then file_extension = file_extension..".lua" end
+    local status, delegate = pcall(dofile, file_name:gsub("%.", "/")..file_extension)
+    if status and type(delegate) == "function" then
+        return delegate
     end
-    if handler:match("^view.+") then
-        return function(request, response, ...)
-            response:submit(view(handler, ...), "text/html", 200)
-        end
+    return function(request, response)
+        return response:submit(handler)
     end
-    return controller("controllers."..handler)
 end
 
 

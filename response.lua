@@ -4,8 +4,8 @@
 -- a response runs after every request from client to server
 
 -- local utf8len = require "utf8".len
+local runstring = loadstring or load -- Lua > 5.1
 local mimeguess = require "mimetype".guess
-local view = require "views"
 local class = require "class"
 local Response = class()
 
@@ -98,7 +98,7 @@ Response.file = function(url)
         handle:close()
         return content, mimeguess(url), 200 -- binary content, mime type, status code
     end
-    return "", nil, 404
+    return nil, nil, 404
 end
 
 
@@ -169,7 +169,7 @@ function Response:sendMessage(stream)
         self:sendHeaders()
         local threaded = type(coroutine.running()) == "thread"
         local chunked = self.header["Transfer-Encoding"] ~= nil
-        local length = #(stream or "") -- TODO add UTF-8 support? see :submit() method as well...
+        local length = #(stream or "")
         if self.message == nil then self.message = "" end
         if length < 1 then -- message_send
             if threaded then self.message = "" end
@@ -190,28 +190,49 @@ function Response:sendMessage(stream)
 end
 
 
-function Response:submit(content, mime, status) -- NOTE mime-types must match their actual file mime-types, e.g. a *.txt file saved in utf-8 charset should be passed with "text/plain; charset=utf-8"
+function Response:submit(content, mime, status, ...) -- NOTE mime-types must match their actual file mime-types, e.g. a *.txt file saved in utf-8 charset should be passed with "text/plain; charset=utf-8"
     if not self.receiver then
         return false
     end
 
+    -- close up ongoing response
     if self.headers_send then
         if self.message_send then return true end
-        if not content and self.header["Transfer-Encoding"] ~= nil then content = "0\r\n\r\n" end
+        local threaded = type(coroutine.running()) == "thread"
+        local chunked = self.header["Transfer-Encoding"] ~= nil
+        if not content and chunked then content = "0\r\n\r\n" end
+        if threaded then self.message = "" end
         self.receiver:send(content or "")
         self.message_send = true
         return true
     end
 
-    if (content or ""):match(".+%.%w%w%w+$") then -- content suffix has a file extension?
-        content, mime, status = self.file("."..content) -- prefix with current (root) directory
+    -- repond with file or view
+    if type(content) == "string" and #content > 0 then
+        local file_extension = content:match(".+(%.%w%w%w+)$")
+        if file_extension then
+            local file_content, file_mime, response_status = self.file(content:gsub("^[%./]+", ""))
+            if file_extension == ".lua"
+            and type(file_content) == "string"
+            and (mime or ""):match("^text/html.*")
+            then
+                -- respond with a non-empty .lua file
+                -- with explicit mime of 'text/html' means we want a view template
+                -- fire runstring() should produce an HTML string, or error out
+                content = assert(runstring(file_content)()(...))
+            else
+                content = file_content
+                mime = mime or file_mime
+                status = status or response_status
+            end
+        end
     end
 
-    if not content or content == "" then -- resource not found
+    -- respond with 404
+    if not content then
         status = status or 404
         mime = mime or "text/html"
-        content = view(
-            "404",
+        content = assert(dofile("view/404.lua"))(
             self.request.query,
             self.request.method,
             status,
@@ -220,7 +241,6 @@ function Response:submit(content, mime, status) -- NOTE mime-types must match th
     end
 
     self:addHeader("Date", Response.GTM())
-    -- TODO add UTF-8 support? not yet sure if (and how) we should handle UTF-8 charset encoding as it failed with serving images when Content-Length was calculated with utf8len(content)
     self:addHeader("Content-Length", #content)
     self:addHeader("Content-Type", mime or "text/plain")
     self:addHeader("X-Content-Type-Options", "nosniff")

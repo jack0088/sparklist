@@ -2,7 +2,7 @@ local dom = require "dom"
 
 return function(email)
     local message = "sorry fellow, i dont know you."
-    if type(email) == "string" and #email > 0 then
+    if email then
         message = "dear friend, i know your email <"..email..">. well hello world :)"
     end
     return dom{

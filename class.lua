@@ -77,7 +77,7 @@ local function proxy(object, key, new_value)
 
     -- try find own setter and use it
     if type(set) == "function" then
-        return set(object, new_value) or new_value
+        return set(object, new_value) or new_value -- return value of setter or implicit return of new_value
     elseif type(parent) == "table" then -- try use __parent setter if it has one
         set = parent["set_"..key] -- go through proxy
         if type(set) == "function" then

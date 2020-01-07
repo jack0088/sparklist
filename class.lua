@@ -125,10 +125,7 @@ local function cast(object, ...)
     -- however, if the default class proxy has been overriden by now then use that new one
     -- we just have to hope they've been altered on purpose!
     -- as this override might throw off getter/setter support altogether!
-    local mt = getmetatable(object)
-    local index = type(mt.__index) == "function" and mt.__index or proxy
-    local newindex = type(mt.__newindex) == "function" and mt.__newindex or proxy
-    return setmetatable(replica(object, ...), {__index = index, __newindex = newindex or proxy})
+    return setmetatable(replica(object, ...), getmetatable(object) or {__index = proxy, __newindex = proxy})
 end
 
 

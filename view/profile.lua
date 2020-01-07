@@ -1,9 +1,9 @@
 local dom = require "dom"
 
-return function(email)
+return function(email, url)
     local message = "sorry fellow, i dont know you."
     if email then
-        message = "dear friend, i know your email <"..email..">. well hello world :)"
+        message = "dear friend, i know your email &lt;"..email.."&gt;. well hello world :)"
     end
     return dom{
         dom["!doctype"] "html",
@@ -13,7 +13,8 @@ return function(email)
                 dom.meta{charset = "utf-8"},
             },
             dom.body{
-                dom.p(message)
+                dom.p(message),
+                dom.p(string.format("here's the url you originally requested: '%s'", tostring(url)))
             }
         }
     }.sourcecode

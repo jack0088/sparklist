@@ -214,12 +214,14 @@ function Response:submit(content, mime, status, ...) -- NOTE mime-types must mat
             local file_content, file_mime, response_status = self.file(content:gsub("^[%./]+", ""))
             if file_extension == ".lua"
             and type(file_content) == "string"
-            and (mime or ""):match("^text/html.*")
+            and (mime or ""):match("^text/html.*") ~= nil
             then
                 -- respond with a non-empty .lua file
                 -- with explicit mime of 'text/html' means we want a view template
                 -- fire runstring() should produce an HTML string, or error out
-                content = assert(runstring(file_content)()(...))
+                local view_loader = assert(runstring(file_content))()
+                local html_content = assert(view_loader(...))
+                content = html_content
             else
                 content = file_content
                 mime = mime or file_mime

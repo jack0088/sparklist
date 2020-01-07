@@ -120,11 +120,11 @@ end
 -- and is fallowed by optional number and type of arguments to that the instance constructor might need
 -- returns (table) an instance of a class
 local function cast(object, ...)
-    -- NOTE object copy needs to support getter/setter as well
-    -- that's why class proxy is used here
-    -- however, if the default class proxy has been overriden by now then use that new one
-    -- we just have to hope they've been altered on purpose!
-    -- as this override might throw off getter/setter support altogether!
+    -- NOTE any object copy needs to support getter/setter as well
+    -- that's why a metatable with proxy's used here, similar to a class() call
+    -- however, if this default metatable has been overriden by developer then use that new one
+    -- we just have to hope it has been altered on purpose
+    -- because this override could throw off getter/setter support altogether!
     return setmetatable(replica(object, ...), getmetatable(object) or {__index = proxy, __newindex = proxy})
 end
 

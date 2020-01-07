@@ -119,8 +119,16 @@ end
 -- @... (required arguments) the list starts with the class to instanciate from,
 -- and is fallowed by optional number and type of arguments to that the instance constructor might need
 -- returns (table) an instance of a class
-local function cast(...)
-    return setmetatable(replica(...), {__index = proxy, __newindex = proxy}) -- support getter/setter
+local function cast(object, ...)
+    -- NOTE object copy needs to support getter/setter as well
+    -- that's why class proxy is used here
+    -- however, if the default class proxy has been overriden by now then use that new one
+    -- we just have to hope they've been altered on purpose!
+    -- as this override might throw off getter/setter support altogether!
+    local mt = getmetatable(object)
+    local index = type(mt.__index) == "function" and mt.__index or proxy
+    local newindex = type(mt.__newindex) == "function" and mt.__newindex or proxy
+    return setmetatable(replica(object, ...), {__index = index, __newindex = newindex or proxy})
 end
 
 

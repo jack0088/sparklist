@@ -246,6 +246,7 @@ function Response:submit(content, mime, status, ...) -- NOTE mime-types must mat
     self:addHeader("Content-Length", #content)
     self:addHeader("Content-Type", mime or "text/plain")
     self:addHeader("X-Content-Type-Options", "nosniff")
+    self:addHeader("Set-Cookie", "previous-sparklist-url="..self.request.url)
     self.receiver:send(string.format(
         self.PATTERN_RESPONSE,
         status or 200,

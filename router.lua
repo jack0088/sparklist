@@ -94,12 +94,12 @@ function Router:onDispatch(request, response)
                 if wildcards[1] == entry.route then
                     table.remove(wildcards, 1)
                 end
-                local status, message = coroutine.resume(
+                local status, message = assert(coroutine.resume(
                     request.route_controller,
                     request,
                     response,
                     unpack(wildcards)
-                )
+                ))
                 if status and message ~= nil then break end
             end
         end

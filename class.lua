@@ -31,60 +31,64 @@ super.derivant = function(child, parent) return child:parent() == parent end
 -- @key (required string) is the property we try to access
 -- @value (optional of any type) is the new value we want to assign to that @object[@key]
 -- returns (any type) the value that the getter, setter or the propery returned
-local function proxy(object, key, value)
+local function proxy(object, key, new_value)
     if type(object) == "nil" or type(key) == "nil" then
         return nil
     end
 
+    local parent = rawget(object, "__parent")
+    local current_value = rawget(object, key)
     local get = rawget(object, "get_"..key)
     local set = rawget(object, "set_"..key)
     local getset = key:lower():match("^[gs]et_(.+)")
 
     -- we look for the value of a key
-    if type(value) == "nil" then
+    if type(new_value) == "nil" then
         -- access with getter/setter prefix
         if getset then
-            return rawget(object, key)
+            return current_value
         end
         -- try find own getter on prefixless access, however ignore non-function getter
         if type(get) == "function" then
-            -- print(">>>", key, get, debug.traceback())
             return get(object)
-        elseif type(rawget(object, "__parent")) == "table" then -- try use __parent getter if any
-            get = object.__parent["get_"..key]
-            if type(get) == "function" then return get(object) end
+        elseif type(parent) == "table" then -- try use __parent getter if any
+            get = parent["get_"..key] -- go through proxy as well
+            if type(get) == "function" then
+                return get(object)
+            end
         end
         -- receive the value of key without any getter
-        local v = rawget(object, key)
-        if type(v) ~= "nil" then
-            return v
+        if type(current_value) ~= "nil" then
+            return current_value
         end
-        if type(rawget(object, "__parent")) == "table" then
-            return object.__parent[key]
+        if type(parent) == "table" then
+            return parent[key]
         end
-        return v
+        return current_value
     end
 
     -- we want to assign a value to a key
     if getset then -- with getter/setter prefix
         assert(type(rawget(object, getset)) == "nil", "getter/setter assignment failed due to conflict with existing property")
-        assert(type(value) == "function", "getter/setter assignment must be a function value")
-        rawset(object, key, value)
-        return value
+        assert(type(new_value) == "function", "getter/setter assignment must be a function value")
+        rawset(object, key, new_value)
+        return new_value
     end
 
     -- try find own setter and use it
     if type(set) == "function" then
-        return set(object, value) or value
-    elseif type(rawget(object, "__parent")) == "table" then -- try use __parent setter it has one
-        set = object.__parent["set_"..key]
-        if type(set) == "function" then return set(object, value) or value end
+        return set(object, new_value) or new_value
+    elseif type(parent) == "table" then -- try use __parent setter if it has one
+        set = parent["set_"..key] -- go through proxy
+        if type(set) == "function" then
+            return set(object, new_value) or new_value
+        end
     end
 
     -- assing the new value to key without any setter
     assert(type(get) == "nil", "property assignment failed due to conflict with existing getter")
-    rawset(object, key, value)
-    return value
+    rawset(object, key, new_value)
+    return new_value
 end
 
 

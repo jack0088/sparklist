@@ -13,6 +13,8 @@
 -- Base class for all new (parentless) class objects
 -- Only useful to provide important methods across all (sub-)classes
 -- Properties and methods of this object are NOT copied to instances of classes!
+local class_mt
+local cast_mt
 local super = {}
 super.__index = super
 
@@ -77,7 +79,7 @@ local function proxy(object, key, new_value)
 
     -- try find own setter and use it
     if type(set) == "function" then
-        return set(object, new_value) or new_value
+        return set(object, new_value) or new_value -- return value of setter or implicit return of new_value
     elseif type(parent) == "table" then -- try use __parent setter if it has one
         set = parent["set_"..key] -- go through proxy
         if type(set) == "function" then
@@ -115,8 +117,6 @@ local function replica(object, ...)
 end
 
 
-local class_mt = {__index = proxy, __newindex = proxy, __call = cast}
-local cast_mt = {__index = proxy, __newindex = proxy}
 
 
 -- This wrapper adds a proxy to a class instance to maintain getter/setter support
@@ -124,9 +124,14 @@ local cast_mt = {__index = proxy, __newindex = proxy}
 -- and is fallowed by optional number and type of arguments to that the instance constructor might need
 -- returns (table) an instance of a class
 local function cast(object, ...)
+    -- NOTE any object copy needs to support getter/setter as well
+    -- that's why a metatable with proxy's used here, similar to a class() call
+    -- however, if this default metatable has been overriden by developer then use that new one
+    -- we just have to hope it has been altered on purpose
+    -- because this override could throw off getter/setter support altogether!
     local mt = getmetatable(object)
     if mt == class_mt then mt = cast_mt end
-    return setmetatable(replica(object, ...), mt) -- support getter/setter
+    return setmetatable(replica(object, ...), mt)
 end
 
 
@@ -135,6 +140,10 @@ end
 local function class(parent)
     return setmetatable({__parent = parent or super}, class_mt)
 end
+
+
+class_mt = {__index = proxy, __newindex = proxy, __call = cast}
+cast_mt = {__index = proxy, __newindex = proxy}
 
 
 return class

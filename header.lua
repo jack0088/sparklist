@@ -3,8 +3,8 @@ local Header = class()
 
 
 Header.URL_QUERY = "([^=]*)=([^&]*)&?"
-Request.URL_PARAM = "^([^#?]+)[#|?]?(.*)"
-Request.COOKIE_ATTR = "([^=]*)=([^;]*);?%s?"
+Header.URL_PARAM = "^([^#?]+)[#|?]?(.*)"
+Header.COOKIE_ATTR = "([^=]*)=([^;]*);?%s?"
 
 
 function Header:new(query)
@@ -21,14 +21,14 @@ function Header:new(query)
 end
 
 
-function Header:parse(header_reference)
+function Header:parse(header_reference, pattern_recipe)
     -- TODO
     --take header and split it into parts like cookies into a list of single cookie or multiple header-fields into list of single (duplicate) headers
     -- resulting header-values can be :split() further into attributes if any
 end
 
 
-function Header:split(header_value)
+function Header:split(header_value, pattern_recipe)
     -- TODO split a header_value into its single attributes like cookie into value, expires, domain, etc.
 end
 

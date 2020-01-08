@@ -115,19 +115,25 @@ local function replica(object, ...)
 end
 
 
+local class_mt = {__index = proxy, __newindex = proxy, __call = cast}
+local cast_mt = {__index = proxy, __newindex = proxy}
+
+
 -- This wrapper adds a proxy to a class instance to maintain getter/setter support
 -- @... (required arguments) the list starts with the class to instanciate from,
 -- and is fallowed by optional number and type of arguments to that the instance constructor might need
 -- returns (table) an instance of a class
-local function cast(...)
-    return setmetatable(replica(...), {__index = proxy, __newindex = proxy}) -- support getter/setter
+local function cast(object, ...)
+    local mt = getmetatable(object)
+    if mt == class_mt then mt = cast_mt end
+    return setmetatable(replica(object, ...), mt) -- support getter/setter
 end
 
 
 -- Create a new class object or create a sub-class from an already existing class
 -- @parent (optional table): parent class to sub-call from
 local function class(parent)
-    return setmetatable({__parent = parent or super}, {__index = proxy, __newindex = proxy, __call = cast})
+    return setmetatable({__parent = parent or super}, class_mt)
 end
 
 

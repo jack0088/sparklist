@@ -13,6 +13,8 @@
 -- Base class for all new (parentless) class objects
 -- Only useful to provide important methods across all (sub-)classes
 -- Properties and methods of this object are NOT copied to instances of classes!
+local class_mt
+local cast_mt
 local super = {}
 super.__index = super
 
@@ -125,15 +127,21 @@ local function cast(object, ...)
     -- however, if this default metatable has been overriden by developer then use that new one
     -- we just have to hope it has been altered on purpose
     -- because this override could throw off getter/setter support altogether!
-    return setmetatable(replica(object, ...), getmetatable(object) or {__index = proxy, __newindex = proxy})
+    local mt = getmetatable(object)
+    if mt == class_mt then mt = cast_mt end
+    return setmetatable(replica(object, ...), mt)
 end
 
 
 -- Create a new class object or create a sub-class from an already existing class
 -- @parent (optional table): parent class to sub-call from
 local function class(parent)
-    return setmetatable({__parent = parent or super}, {__index = proxy, __newindex = proxy, __call = cast})
+    return setmetatable({__parent = parent or super}, class_mt)
 end
+
+
+class_mt = {__index = proxy, __newindex = proxy, __call = cast}
+cast_mt = {__index = proxy, __newindex = proxy}
 
 
 return class

@@ -4,6 +4,7 @@
 -- runs on every request coming from client to server
 
 local class = require "class"
+local Header = require "header"
 local Request = class()
 
 
@@ -13,7 +14,7 @@ Request.PATTERN_PROTOCOL = "(HTTP%/%d%.%d)"
 Request.PATTERN_REQUEST = (Request.PATTERN_METHOD..Request.PATTERN_PATH..Request.PATTERN_PROTOCOL)
 Request.PATTERN_HEADER = "([%w-]+): ([%w %p]+=?)"
 Request.PATTERN_QUERY_STRING = "([^=]*)=([^&]*)&?"
-Request.PATTERN_COOKIE_STRING = "([^=]*)=([^;]*);? ?"
+Request.PATTERN_COOKIE_STRING = "([^=]*)=([^;]*);?%s?"
 Request.PATTERN_PARAMETER_STRING = "^([^#?]+)[#|?]?(.*)"
 
 
@@ -44,21 +45,10 @@ end
 
 Request.parseURLEncoded = function(query)
     local parameters = {}
-    for name, value in string.gmatch(query, Request.PATTERN_QUERY_STRING) do parameters[name] = value end
-    return parameters
-end
-
-
--- TODO add helper functions for further extracting header values like cookie that consits of multiple parameters separated by semicolon (other headers do this as well like Content-Disposition from POST method)
-
-
-Request.parseHeaders = function(query)
-    local headers = {}
-    for identifier, content in string.gmatch(query, Request.PATTERN_HEADER) do
-        if not headers[identifier] then headers[identifier] = {} end
-        table.insert(headers[identifier], content)
+    for name, value in string.gmatch(query, Request.PATTERN_QUERY_STRING) do
+        parameters[name] = value
     end
-    return headers
+    return parameters
 end
 
 
@@ -101,7 +91,7 @@ function Request:receiveHeaders()
 
         self.protocol = protocol
         self.method = method:upper()
-        self.header = self.parseHeaders(headerquery)
+        self.header = Header(headerquery)
         self.url = resource or path
         self.query = path -- raw url
         self.parameter = self.parseURLEncoded(urlquery)

@@ -7,6 +7,7 @@
 local runstring = loadstring or load -- Lua > 5.1
 local mimeguess = require "mimetype".guess
 local class = require "class"
+local Header = require "header"
 local Response = class()
 
 
@@ -80,17 +81,6 @@ Response.serializeURLEncoded = function(parameters)
 end
 
 
-Response.serializeHeaders = function(headers)
-    local query = ""
-    for identifier, values in pairs(headers) do
-        for _, content in ipairs(values) do
-            query = query..string.format(Response.PATTERN_HEADER, identifier, content)
-        end
-    end
-    return query
-end
-
-
 Response.file = function(url)
     local handle = io.open(url, "rb")
     if handle then
@@ -105,48 +95,9 @@ end
 function Response:new(receiver, request)
     self.receiver = receiver -- client socket object
     self.request = request
-    self.header = {}
+    self.header = Header()
     self.headers_send = false
     self.message_send = false
-end
-
-
-function Response:addHeader(identifier, content)
-    if identifier == "Set-Cookie" then -- add security recomendations for cookies https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
-        local function unpack_attributes(cookie)
-            local attributes = {}
-            for k, v in string.gmatch(cookie, "([^=; ]+)=([^=;]+)") do
-                k = k:lower():gsub("%p", "")
-                if not string.find("expires maxage domain path secure httponly samesite", k) then attributes.name, attributes.value = k, v
-                else attributes[k] = v end
-            end
-            return attributes
-        end
-
-        local function verify_attributes(cookie)
-            assert(cookie.name, cookie.value, "cookie header is missing attributes")
-            cookie.name = cookie.name:gsub("%p*", "") -- trim punctuation
-            cookie.httponly = cookie.httponly == false and false or true -- nil defaults to true
-            cookie.samesite = cookie.samesite or "Lax"
-            return cookie
-        end
-
-        local function pack_attributes(cookie)
-            local value = string.format("%s=%s", cookie.name, cookie.value)
-            if cookie.expires then value = value.."; Expires="..cookie.expires end
-            if cookie.maxage then value = value.."; Max-Age="..cookie.maxage end
-            if cookie.domain then value = value.."; Domain="..cookie.domain end
-            if cookie.path then value = value.."; Path="..cookie.path end
-            if cookie.secure then value = value.."; Secure" end
-            if cookie.httponly then value = value.."; HttpOnly" end
-            if cookie.samesite then value = value.."; SameSite="..cookie.samesite end
-            return value
-        end
-
-        content = pack_attributes(verify_attributes(unpack_attributes(content)))
-    end
-    if not self.header[identifier] then self.header[identifier] = {} end
-    table.insert(self.header[identifier], content)
 end
 
 
@@ -156,7 +107,7 @@ function Response:sendHeaders()
             self.PATTERN_HEADER_RESPONSE,
             status or 200,
             self.STATUS_TEXT[status or 200],
-            self.serializeHeaders(self.header)
+            self.header:serialize()
         ))
         self.headers_send = true
     end
@@ -242,16 +193,15 @@ function Response:submit(content, mime, status, ...) -- NOTE mime-types must mat
         )
     end
 
-    self:addHeader("Date", Response.GTM())
-    self:addHeader("Content-Length", #content)
-    self:addHeader("Content-Type", mime or "text/plain")
-    self:addHeader("X-Content-Type-Options", "nosniff")
-    self:addHeader("Set-Cookie", "previous-sparklist-url="..self.request.url)
+    self.header:add("Date", Response.GTM())
+    self.header:add("Content-Length", #content)
+    self.header:add("Content-Type", mime or "text/plain")
+    self.header:add("X-Content-Type-Options", "nosniff")
     self.receiver:send(string.format(
         self.PATTERN_RESPONSE,
         status or 200,
         self.STATUS_TEXT[status or 200],
-        self.serializeHeaders(self.header),
+        self.header:serialize(),
         content
     ))
 
@@ -262,14 +212,14 @@ end
 
 
 function Response:redirect(url)
-    self:addHeader("Location", url)
+    self.header:add("Location", url)
     return self:submit(nil, nil, 307) -- automatic request forward with unchanged request method and body
 end
 
 
 function Response:attach(location, name) -- attach file and force client browser to download it from given location [with custom name]
     local filename, extension = location:match("([^%p]+)%.(%a%a%a+)$")
-    self:addHeader("Content-Disposition", string.format("attachment; filename=%s", name or filename))
+    self.header:add("Content-Disposition", string.format("attachment; filename=%s", name or filename))
     return self:submit(location)
 end
 

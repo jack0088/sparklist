@@ -40,65 +40,59 @@ local function proxy(object, key, new_value)
     
     local current_value = rawget(object, key)
     local parent = rawget(object, "__parent")
-    local suffix = tostring(key):lower():match("^[gs]et_(.+)") -- suffix == key but useful to identify how the key was passed, with or without a get_/set_ prefix
+    local suffix = tostring(key):lower():match("^[gs]et_(.+)") -- suffix == key but is useful to identify how the key was passed, with or without a get_/set_ prefix
+    local getters, setters = {}, {}
 
-    -- we look for the value of a key
-    if type(new_value) == "nil" then
-        -- access with get_/set_ prefix means we try to access the definition function
-        if suffix then
+    if suffix == nil then -- key doesn't contain get_/set_ prefix so we try to find getter and/or setter for this key
+        for property, handler in pairs(object) do -- loops the entire inheritance chain of this object
+            local getkey = "get_"..tostring(key)
+            local setkey = "set_"..tostring(key)
+            if type(handler) == "function" then
+                if getkey:match(tostring(property)) == getkey then
+                    table.insert(getters, handler)
+                elseif setkey:match(tostring(property)) == setkey then
+                    table.insert(setters, handler)
+                end
+            end
+        end
+    end
+
+    if type(new_value) == "nil" then -- means we look for the value of key
+        if suffix ~= nil then -- means we try to access getter's definition function
             return current_value
         end
 
-        -- match key against any other property of this object and its parents
-        do local getters = {}
-            for property, get in pairs(object) do -- loops the entire inheritance chain of this object
-                local getkey = "get_"..tostring(key)
-                local union = getkey:match(tostring(property))
-                if union == getkey and type(get) == "function" then
-                    assert(#getters < 1, "failed to get value of property as too many matching getters were defined")
-                    table.insert(getters, get)
-                end
-            end
-            if #getters == 1 then
-                return getters[1](object) -- getters allowed to return any value, even nil
-            end
+        -- return value through getter, if any
+        assert(#getters < 2, "failed to get value of property as too many matching getters were defined")
+        if #getters == 1 then
+            return getters[1](object) -- getters allowed to return any value, even nil
         end
 
-        -- receive the plain value of key without any getter
+        -- no getter found, so return plain value
         if type(current_value) ~= "nil" then
             return current_value
         end
         if type(parent) == "table" then
-            return parent[key]
+            return parent[key] -- try parent, go through proxy
         end
         return current_value
     end
 
-    -- we want to assign a value to a key
-    if suffix then -- key has get_/set_ prefix means we try to re-define it
-        assert(type(rawget(object, suffix)) == "nil", "getter/setter assignment failed due to conflict with existing property")
-        assert(type(new_value) == "function", "getter/setter assignment must be a function value")
+    if suffix ~= nil then -- means we want to (re-)assing key (specifically the setter definition in this context)
+        assert(type(rawget(object, suffix)) == "nil", "getter/setter assignment failed, conflict with already existing property")
+        assert(type(new_value) == "function", "getter/setter must be a function value")
         rawset(object, key, new_value)
         return new_value
     end
 
-    -- match key against any other property of this object and its parents
-    do local setters = {}
-        for property, set in pairs(object) do -- loops the entire inheritance chain of this object
-            local setkey = "set_"..tostring(key)
-            local union = setkey:match(tostring(property))
-            if union == setkey and type(set) == "function" then
-                assert(#setters < 1, "failed to set value of property as too many matching setters were defined")
-                table.insert(setters, set)
-            end
-        end
-        if #setters == 1 then
-            return setters[1](object, new_value) or new_value -- return value of setter or implicit return of new_value
-        end
+    -- set value through setter, if any
+    assert(#setters < 2, "property assignment failed, too many matching setters were defined")
+    if #setters == 1 then
+        return setters[1](object, new_value) or new_value -- return value of setter or implicit return of new_value
     end
 
     -- assing the new value to key without any setter
-    assert(type(rawget(object, "get_"..tostring(key))) == "nil", "property assignment failed due to conflict with existing getter")
+    assert(type(rawget(object, "get_"..tostring(key))) == "nil", "property assignment failed, conflict with another existing getter")
     rawset(object, key, new_value)
     return new_value
 end

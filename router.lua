@@ -114,7 +114,7 @@ local function preload(handler)
     end
     local file_name, file_extension = handler:match("(.+)(%.%w%w%w+)$")
     if file_extension ~= ".lua" then file_extension = file_extension..".lua" end
-    local status, delegate = pcall(dofile, file_name:gsub("%.", "/")..file_extension)
+    local status, delegate = pcall(dofile, file_name:gsub("%.", "/")..file_extension) -- TODO when hotswapper works correctly, then use require("<file>", true) to force-realod the view delegates because they use same method of dofile()
     if status and type(delegate) == "function" then
         return delegate
     end

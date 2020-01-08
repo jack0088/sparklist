@@ -117,8 +117,6 @@ local function replica(object, ...)
 end
 
 
-
-
 -- This wrapper adds a proxy to a class instance to maintain getter/setter support
 -- @... (required arguments) the list starts with the class to instanciate from,
 -- and is fallowed by optional number and type of arguments to that the instance constructor might need

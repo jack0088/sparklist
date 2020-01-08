@@ -40,9 +40,9 @@ local function proxy(object, key, new_value)
 
     local parent = rawget(object, "__parent")
     local current_value = rawget(object, key)
-    local get = rawget(object, "get_"..key)
-    local set = rawget(object, "set_"..key)
-    local getset = key:lower():match("^[gs]et_(.+)")
+    local get = rawget(object, "get_"..tostring(key))
+    local set = rawget(object, "set_"..tostring(key))
+    local getset = tostring(key):lower():match("^[gs]et_(.+)")
 
     -- we look for the value of a key
     if type(new_value) == "nil" then
@@ -54,7 +54,7 @@ local function proxy(object, key, new_value)
         if type(get) == "function" then
             return get(object)
         elseif type(parent) == "table" then -- try use __parent getter if any
-            get = parent["get_"..key] -- go through proxy as well
+            get = parent["get_"..tostring(key)] -- go through proxy as well
             if type(get) == "function" then
                 return get(object)
             end
@@ -81,7 +81,7 @@ local function proxy(object, key, new_value)
     if type(set) == "function" then
         return set(object, new_value) or new_value -- return value of setter or implicit return of new_value
     elseif type(parent) == "table" then -- try use __parent setter if it has one
-        set = parent["set_"..key] -- go through proxy
+        set = parent["set_"..tostring(key)] -- go through proxy
         if type(set) == "function" then
             return set(object, new_value) or new_value
         end
@@ -140,8 +140,8 @@ local function class(parent)
 end
 
 
-class_mt = {__index = proxy, __newindex = proxy, __call = cast}
 cast_mt = {__index = proxy, __newindex = proxy}
+class_mt = {__index = proxy, __newindex = proxy, __call = cast}
 
 
 return class

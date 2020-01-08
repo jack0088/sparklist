@@ -37,29 +37,34 @@ local function proxy(object, key, new_value)
     if type(object) == "nil" or type(key) == "nil" then
         return nil
     end
-
-    local parent = rawget(object, "__parent")
+    
     local current_value = rawget(object, key)
-    local get = rawget(object, "get_"..tostring(key))
-    local set = rawget(object, "set_"..tostring(key))
-    local getset = tostring(key):lower():match("^[gs]et_(.+)")
+    local parent = rawget(object, "__parent")
+    local suffix = tostring(key):lower():match("^[gs]et_(.+)") -- suffix == key but useful to identify how the key was passed, with or without a get_/set_ prefix
 
     -- we look for the value of a key
     if type(new_value) == "nil" then
-        -- access with getter/setter prefix
-        if getset then
+        -- access with get_/set_ prefix means we try to access the definition function
+        if suffix then
             return current_value
         end
-        -- try find own getter on prefixless access, however ignore non-function getter
-        if type(get) == "function" then
-            return get(object)
-        elseif type(parent) == "table" then -- try use __parent getter if any
-            get = parent["get_"..tostring(key)] -- go through proxy as well
-            if type(get) == "function" then
-                return get(object)
+
+        -- match key against any other property of this object and its parents
+        do local getters = {}
+            for property, get in pairs(object) do -- loops the entire inheritance chain of this object
+                local getkey = "get_"..tostring(key)
+                local union = getkey:match(tostring(property))
+                if union == getkey and type(get) == "function" then
+                    assert(#getters < 1, "failed to get value of property as too many matching getters were defined")
+                    table.insert(getters, get)
+                end
+            end
+            if #getters == 1 then
+                return getters[1](object) -- getters allowed to return any value, even nil
             end
         end
-        -- receive the value of key without any getter
+
+        -- receive the plain value of key without any getter
         if type(current_value) ~= "nil" then
             return current_value
         end
@@ -70,25 +75,30 @@ local function proxy(object, key, new_value)
     end
 
     -- we want to assign a value to a key
-    if getset then -- with getter/setter prefix
-        assert(type(rawget(object, getset)) == "nil", "getter/setter assignment failed due to conflict with existing property")
+    if suffix then -- key has get_/set_ prefix means we try to re-define it
+        assert(type(rawget(object, suffix)) == "nil", "getter/setter assignment failed due to conflict with existing property")
         assert(type(new_value) == "function", "getter/setter assignment must be a function value")
         rawset(object, key, new_value)
         return new_value
     end
 
-    -- try find own setter and use it
-    if type(set) == "function" then
-        return set(object, new_value) or new_value -- return value of setter or implicit return of new_value
-    elseif type(parent) == "table" then -- try use __parent setter if it has one
-        set = parent["set_"..tostring(key)] -- go through proxy
-        if type(set) == "function" then
-            return set(object, new_value) or new_value
+    -- match key against any other property of this object and its parents
+    do local setters = {}
+        for property, set in pairs(object) do -- loops the entire inheritance chain of this object
+            local setkey = "set_"..tostring(key)
+            local union = setkey:match(tostring(property))
+            if union == setkey and type(set) == "function" then
+                assert(#setters < 1, "failed to set value of property as too many matching setters were defined")
+                table.insert(setters, set)
+            end
+        end
+        if #setters == 1 then
+            return setters[1](object, new_value) or new_value -- return value of setter or implicit return of new_value
         end
     end
 
     -- assing the new value to key without any setter
-    assert(type(get) == "nil", "property assignment failed due to conflict with existing getter")
+    assert(type(rawget(object, "get_"..tostring(key))) == "nil", "property assignment failed due to conflict with existing getter")
     rawset(object, key, new_value)
     return new_value
 end

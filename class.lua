@@ -2,7 +2,8 @@
 
 
 -- Providing object inheritance, the correct way!
--- Getters and setters are supported as well!
+-- Support for getters and setters!
+-- (Getter/Setter name can even be a regex expression! - But be careful your namin as "get_%w+" for example would override the entire standard proxy behaviour of class_mt.__index or cast_mt.__index - This can be either a powerful feature or produce unintended results.)
 -- Classes are linked through __parent objects inside of each (sub-)class until they finally get instanciated
 -- (the base-class is assigned as the __index metatable)
 -- This way we can extend parent classes or change their methods even after their creation while still being able to see these changes in the sub-classes

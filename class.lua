@@ -9,12 +9,16 @@
 -- Instances of classes are deep-copies down their entire inheritance chain
 -- (At which point they become unique objects without any relation to their previous parents)
 
+local unpack = unpack or table.unpack -- Lua > 5.1
+
+-- Cache of the metatables we need for proxies to support inheritance and getters/setters
+-- they will be set at later time, but need to reference earlier in code, thus this workaround
+local class_mt
+local cast_mt
 
 -- Base class for all new (parentless) class objects
 -- Only useful to provide important methods across all (sub-)classes
 -- Properties and methods of this object are NOT copied to instances of classes!
-local class_mt
-local cast_mt
 local super = {}
 super.__index = super
 
@@ -34,7 +38,7 @@ super.derivant = function(child, parent) return child:parent() == parent end
 -- @value (optional of any type) is the new value we want to assign to that @object[@key]
 -- returns (any type) the value that the getter, setter or the propery returned
 local function proxy(object, key, new_value)
-    if type(object) == "nil" or type(key) == "nil" then
+    if type(object) ~= "table" or type(key) == "nil" then
         return nil
     end
     
@@ -48,10 +52,14 @@ local function proxy(object, key, new_value)
             local getkey = "get_"..tostring(key)
             local setkey = "set_"..tostring(key)
             if type(handler) == "function" then
-                if getkey:match(tostring(property)) == getkey then
-                    table.insert(getters, handler)
-                elseif setkey:match(tostring(property)) == setkey then
-                    table.insert(setters, handler)
+                local params = {getkey:match(tostring(property))}
+                if #params > 0 then
+                    table.insert(getters, {func = handler, params = params})
+                else
+                    params = {setkey:match(tostring(property))}
+                    if #params > 0 then
+                        table.insert(setters, {func = handler, params = params})
+                    end
                 end
             end
         end
@@ -61,16 +69,12 @@ local function proxy(object, key, new_value)
         if suffix ~= nil then -- means we try to access getter's definition function
             return current_value
         end
-
-        -- return value through getter, if any
         assert(#getters < 2, "failed to get value of property as too many matching getters were defined")
         if #getters == 1 then
-            return getters[1](object, key) -- getters allowed to return any value, even nil
+            return getters[1].func(object, unpack(getters[1].params)) -- getters allowed to return any value, even nil
         end
-
-        -- no getter found, so return plain value
         if type(current_value) ~= "nil" then
-            return current_value
+            return current_value -- plain value
         end
         if type(parent) == "table" then
             return parent[key] -- try parent, go through proxy
@@ -84,16 +88,12 @@ local function proxy(object, key, new_value)
         rawset(object, key, new_value)
         return new_value
     end
-
-    -- set value through setter, if any
     assert(#setters < 2, "property assignment failed, too many matching setters were defined")
     if #setters == 1 then
-        return setters[1](object, new_value) or new_value -- return value of setter or implicit return of new_value
+        return setters[1].func(object, new_value, unpack(setters[1].params)) or new_value -- return value of setter or implicit return of new_value
     end
-
-    -- assing the new value to key without any setter
     assert(type(rawget(object, "get_"..tostring(key))) == "nil", "property assignment failed, conflict with another existing getter")
-    rawset(object, key, new_value)
+    rawset(object, key, new_value) -- plain value assignment
     return new_value
 end
 

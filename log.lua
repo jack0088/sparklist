@@ -7,7 +7,7 @@ local _print = print
 
 function print(...)
     local dump = ""
-    for _, argument in ipairs{...} do dump = dump.."    "..tostring(argument) end
-    log("logs/"..os.date("%Y-%m-%d")..".txt", dump.."\n", "a")
+    for _, argument in ipairs{...} do dump = dump..tostring(argument).."    " end
+    log("logs/"..os.date("%Y-%m-%d")..".txt", dump:sub(1, -4).."\n", "a")
     _print(...)
 end

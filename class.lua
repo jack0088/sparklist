@@ -65,7 +65,7 @@ local function proxy(object, key, new_value)
         -- return value through getter, if any
         assert(#getters < 2, "failed to get value of property as too many matching getters were defined")
         if #getters == 1 then
-            return getters[1](object) -- getters allowed to return any value, even nil
+            return getters[1](object, key) -- getters allowed to return any value, even nil
         end
 
         -- no getter found, so return plain value

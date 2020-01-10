@@ -53,7 +53,7 @@ function Response:new(receiver, request)
 end
 
 
-function Response:sendHeaders()
+function Response:sendHeader()
     if not self.headers_send then
         assert(self.header:get "Date", "date header missing")
         assert(self.header:get "Content-Type", "http content type undefined")
@@ -124,7 +124,7 @@ function Response:submit(content, mime, status, ...)
         status = status or 404
         mime = mime or "text/html"
         content = assert(dofile("view/404.lua"))(
-            self.request.query,
+            self.request.path,
             self.request.method,
             status,
             self.header.HTTP_STATUS_MESSAGE[status]
@@ -133,7 +133,7 @@ function Response:submit(content, mime, status, ...)
     self.header:set("Date", self.GTM()) -- update/assign
     self.header:set("Content-Type", mime or "text/plain")
     self.header:set("Content-Length", #content)
-    self:sendHeaders()
+    self:sendHeader()
     return self:sendMessage(content)
 end
 

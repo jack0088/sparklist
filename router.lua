@@ -79,7 +79,7 @@ end
 function Router:onDispatch(request, response)
     -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
     for _, entry in ipairs(self.map) do
-        local wildcards = {string.match(request.method:upper()..request.query, "^"..entry.route.."$")}
+        local wildcards = {string.match(request.method:upper()..request.path, "^"..entry.route.."$")}
         if #wildcards > 0 then
             print(string.format(
                 "%s client dispatched to route '%s'",

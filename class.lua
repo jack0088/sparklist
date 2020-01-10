@@ -45,34 +45,16 @@ local function proxy(object, key, new_value)
     
     local current_value = rawget(object, key)
     local parent = rawget(object, "__parent")
-    local suffix = tostring(key):lower():match("^[gs]et_(.+)") -- suffix == key but is useful to identify how the key was passed, with or without a get_/set_ prefix
-    local getters, setters = {}, {}
-
-    if suffix == nil then -- key doesn't contain get_/set_ prefix so we try to find getter and/or setter for this key
-        for property, handler in pairs(object) do -- loops the entire inheritance chain of this object
-            local getkey = "get_"..tostring(key)
-            local setkey = "set_"..tostring(key)
-            if type(handler) == "function" then
-                local params = {getkey:match(tostring(property))}
-                if #params > 0 then
-                    table.insert(getters, {func = handler, params = params})
-                else
-                    params = {setkey:match(tostring(property))}
-                    if #params > 0 then
-                        table.insert(setters, {func = handler, params = params})
-                    end
-                end
-            end
-        end
-    end
+    local prefix = tostring(key):sub(1, 4):lower():match("^[gs]et_$") -- "get_" or "set_" or nil
+    local getter = rawget(object, "get_"..tostring(key))
+    local setter = rawget(object, "set_"..tostring(key))
 
     if type(new_value) == "nil" then -- means we look for the value of key
-        if suffix ~= nil then -- means we try to access getter's definition function
+        if prefix ~= nil then -- means we try to access getter's or setter's definition function
             return current_value
         end
-        assert(#getters < 2, "failed to get value of property as too many matching getters were defined")
-        if #getters == 1 then
-            return getters[1].func(object, unpack(getters[1].params)) -- getters allowed to return any value, even nil
+        if type(getter) == "function" then
+            return getter(object) -- getters allowed to return any value, even nil
         end
         if type(current_value) ~= "nil" then
             return current_value -- plain value
@@ -83,17 +65,18 @@ local function proxy(object, key, new_value)
         return current_value
     end
 
-    if suffix ~= nil then -- means we want to (re-)assing key (specifically the setter definition in this context)
-        assert(type(rawget(object, suffix)) == "nil", "getter/setter assignment failed, conflict with already existing property")
-        assert(type(new_value) == "function", "getter/setter must be a function value")
+    if prefix ~= nil then -- means we want to (re-)assing getter or setter
+        local whois = prefix == "get_" and "getter" or "setter"
+        local property = tostring(key):sub(4) -- suffix
+        assert(type(rawget(object, property)) == "nil", whois.." assignment failed, conflict with already existing property")
+        assert(type(new_value) == "function", whois.." must be a function value")
         rawset(object, key, new_value)
         return new_value
     end
-    assert(#setters < 2, "property assignment failed, too many matching setters were defined")
-    if #setters == 1 then
-        return setters[1].func(object, new_value, unpack(setters[1].params)) or new_value -- return value of setter or implicit return of new_value
+    if type(setter) == "function" then
+        return setter(object, new_value) or new_value -- return value of setter or implicit return of new_value
     end
-    assert(type(rawget(object, "get_"..tostring(key))) == "nil", "property assignment failed, conflict with another existing getter")
+    assert(type(getter) == "nil", "property assignment failed, conflict with existing getter")
     rawset(object, key, new_value) -- plain value assignment
     return new_value
 end

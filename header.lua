@@ -52,8 +52,8 @@ end
 
 
 function Header:set(header_name, header_value)
-    assert(type(header_name) == "string", "invalid type of header field name")
-    assert(type(header_value) == "string" or type(header_value) == "nil", "invalid type of header value")
+    assert(type(header_name) == "string", "invalid header field type")
+    assert(type(header_value) == "string" or type(header_value) == "number" or type(header_value) == "nil", "invalid header value type")
     
     if header_name == "Set-Cookie" and type(header_value) == "string" then -- we optionally append some security settings to cookies
         local function unpack_attributes(cookie)
@@ -117,7 +117,7 @@ end
 
 function Header:parse(header_query)
     if type(header_query) == "string" then
-        for header_name, header_value in query:gmatch("([%w%p]+): ([%w%p ]+)") do
+        for header_name, header_value in header_query:gmatch("([%w%p]+): ([%w%p ]+)") do
             self:set(header_name, header_value)
         end
     end

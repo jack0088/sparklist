@@ -8,17 +8,26 @@ local Header = require "header"
 local Request = class()
 
 
-Request.PATTERN_METHOD = "^(.-)%s"
-Request.PATTERN_PATH = "(%S+)%s*"
-Request.PATTERN_PROTOCOL = "(HTTP%/%d%.%d)"
-Request.PATTERN_REQUEST = (Request.PATTERN_METHOD..Request.PATTERN_PATH..Request.PATTERN_PROTOCOL)
-Request.PATTERN_HEADER = "([%w-]+): ([%w %p]+=?)"
-Request.PATTERN_QUERY_STRING = "([^=]*)=([^&]*)&?"
-Request.PATTERN_COOKIE_STRING = "([^=]*)=([^;]*);?%s?"
-Request.PATTERN_PARAMETER_STRING = "^([^#?]+)[#|?]?(.*)"
 
 
-Request.normalize = function(path)
+Request.decodeUrlEncoded = function(percent_encoded) -- application/x-www-form-urlencoded
+    local function character(hex)
+        return string.char(tonumber(hex, 16))
+    end
+    return percent_encoded:gsub("%+", "%%20"):gsub("%%(%x%x)", character) -- [+|%20] for space
+end
+
+
+Request.explodePath = function(query)
+    local list = {}
+    for name, value in string.gmatch(query, "([^=]*)=([^&]*)&?") do
+        list[name] = Request.decodeUrlEncoded(value)
+    end
+    return list
+end
+
+
+Request.normalizePath = function(path)
     local url = string.gsub(path, "\\", "/")
     url = string.gsub(url, "^/*", "/")
     url = string.gsub(url, "(/%.%.?)$", "%1/")
@@ -43,58 +52,49 @@ Request.normalize = function(path)
 end
 
 
-Request.parseURLEncoded = function(query)
-    local parameters = {}
-    for name, value in string.gmatch(query, Request.PATTERN_QUERY_STRING) do
-        parameters[name] = value
-    end
-    return parameters
-end
-
-
 function Request:new(transmitter)
     self.transmitter = transmitter -- client socket object
     self.headers_received = false
     self.message_received = false
-    self:receiveHeaders()
+    self:receiveHeader()
 end
 
 
-function Request:receiveHeaders()
+function Request:receiveHeader()
     if not self.headers_received then
         local firstline, status, partial = self.transmitter:receive()
         if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
             return false
         end
-        local method, path, protocol = string.match(firstline, self.PATTERN_REQUEST)
+        local method, path, protocol = string.match(firstline, "(.-)%s(%S+)%s(HTTP/%d%.%d)$")
         if not method then
             return false
         end
         local resource, urlquery = ""
         if #path > 0 then
-            resource, urlquery = string.match(path, self.PATTERN_PARAMETER_STRING)
-            resource = self.normalize(resource)
+            resource, urlquery = string.match(path, "^([^#?]+)[#|?]?(.*)")
         end
         local headerquery, header = ""
         repeat
             header = self.transmitter:receive() or ""
-            headerquery = headerquery..header.."\r\n"
+            headerquery = headerquery..(#header > 0 and header.."\r\n" or "")
         until #header <= 0
 
-        -- NOTE some browsers send multiple requests to the same url because they try to get the .favicon or other resources up front. Safari even triggers urls while auto-completing them. Just don't wonder when you read the logfile...
+        -- Some browsers send multiple requests to the same url because they try to obtain the .favicon; Safari even trigger request while auto-completing you input. Just don't wonder when you read these in the log file...
         print(string.format(
             "%s %s\n%s",
             os.date("%d.%m.%Y %H:%M:%S"),
             firstline,
-            headerquery:gsub("([^\r\n]+)", "    %1"):match("(.+)\r\n$")
+            headerquery:gsub("([^\r\n]+)", "    %1"):match("(.+)[\r\n]+$")
         ))
 
         self.protocol = protocol
         self.method = method:upper()
+        self.url = path -- raw
+        self.path = self.normalizePath(resource)
+        self.query = self.explodePath(urlquery)
+        -- self.fragment = nil -- browser only feature
         self.header = Header(headerquery)
-        self.url = resource or path
-        self.query = path -- raw url
-        self.parameter = self.parseURLEncoded(urlquery)
         self.headers_received = true
     end
     return true
@@ -103,11 +103,11 @@ end
 
 function Request:receiveMessage(stream_sink)
     if not self.message_received then
+        self:receiveHeader()
         self.message = ""
-        self:receiveHeaders()
         local threaded = type(coroutine.running()) == "thread"
-        local chunked = self.header["Transfer-Encoding"] ~= nil
-        local length = tonumber(self.header["Content-Length"] or 0)
+        local chunked = self.header:get "Transfer-Encoding" ~= nil
+        local length = tonumber(self.header:get "Content-Length" or 0)
         repeat
             if chunked then length = tonumber(self.transmitter:receive(), 16) end -- hexadecimal value
             if length > 0 then
@@ -116,7 +116,7 @@ function Request:receiveMessage(stream_sink)
                 if not chunked then length = 0 end -- signal to break the loop
                 if type(stream_sink) == "function" then stream_sink(stream) end
             end
-        until length <= 0 -- 0\r\n
+        until length <= 0 -- 0\r\n\r\n
         if threaded then self.message = "" end
         self.message_received = true
     end
@@ -126,7 +126,7 @@ end
 
 function Request:receiveFile()
     local stream_sink
-    if self.method == "POST" and self.header["Content-Disposition"] then
+    if self.method == "POST" and self.header:get "Content-Disposition" then
         stream_sink = function(stream)
             -- TODO we need to parse POST data
             -- then, implement receiving file attachments as described in
@@ -144,14 +144,14 @@ function Request:hotswap()
         transmitter = self.transmitter,
         protocol = self.protocol,
         method = self.method,
-        header = self.header,
         url = self.url,
+        path = self.path,
         query = self.query,
-        parameter = self.parameter,
+        header = self.header,
         message = self.message,
         headers_received = self.headers_received,
         message_received = self.message_received,
-        route_controller = self.route_controller -- generated by the router
+        route_controller = self.route_controller -- generated and injected by the router
     }
 end
 

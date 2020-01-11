@@ -3,6 +3,7 @@
 -- NOTE Be careful with this code in production as it's very expensive in terms of CPU ressources!
 -- Its first bottleneck is the file modfification observer (a shell script)
 -- and its second bottleneck is the recursive, deep-traversing routine of _G and all available upvalues (for updating pointers)
+
 -- NOTE Always think about preserving state of table members when hot-reloading packages
 -- use <table>:hotswap() method to provide the members that need to be preserved
 

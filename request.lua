@@ -8,8 +8,6 @@ local Header = require "header"
 local Request = class()
 
 
-
-
 Request.decodeUrlEncoded = function(percent_encoded) -- application/x-www-form-urlencoded
     local function character(hex)
         return string.char(tonumber(hex, 16))

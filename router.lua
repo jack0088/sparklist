@@ -79,8 +79,8 @@ end
 function Router:onDispatch(request, response)
     -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
     for _, entry in ipairs(self.map) do
-        local wildcards = {string.match(request.method:upper()..request.path, "^"..entry.route.."$")}
-        if #wildcards > 0 then
+        local captures = {string.match(request.method:upper()..request.path, "^"..entry.route.."$")}
+        if #captures > 0 then
             print(string.format(
                 "%s client dispatched to route '%s'",
                 os.date("%d.%m.%Y %H:%M:%S"),
@@ -91,14 +91,14 @@ function Router:onDispatch(request, response)
             end
             if coroutine.status(request.route_controller) ~= "dead" then
                 -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
-                if wildcards[1] == entry.route then
-                    table.remove(wildcards, 1)
+                if captures[1] == entry.route then
+                    table.remove(captures, 1)
                 end
                 local status, message = assert(coroutine.resume(
                     request.route_controller,
                     request,
                     response,
-                    unpack(wildcards)
+                    unpack(captures)
                 ))
                 if status and message ~= nil then break end
             end
@@ -112,11 +112,9 @@ local function preload(handler)
     if type(handler) == "function" then
         return handler
     end
-    local file_name, file_extension = handler:match("(.+)(%.%w%w%w+)$")
-    if file_extension ~= ".lua" then file_extension = file_extension..".lua" end
-    local status, delegate = pcall(dofile, file_name:gsub("%.", "/")..file_extension) -- TODO when hotswapper works correctly, then use require("<file>", true) to force-realod the view delegates because they use same method of dofile()
-    if status and type(delegate) == "function" then
-        return delegate
+    local file_name, file_extension = handler:match("(.+)(%.[%w%p][%w%p][%w%p]+)$")
+    if not file_extension or file_extension == ".lua" then
+        return require(file_name:gsub("/", "."))
     end
     return function(request, response)
         return response:submit(handler)

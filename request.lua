@@ -137,21 +137,4 @@ function Request:receiveFile()
 end
 
 
-function Request:hotswap()
-    return {
-        transmitter = self.transmitter,
-        protocol = self.protocol,
-        method = self.method,
-        url = self.url,
-        path = self.path,
-        query = self.query,
-        header = self.header,
-        message = self.message,
-        headers_received = self.headers_received,
-        message_received = self.message_received,
-        route_controller = self.route_controller -- generated and injected by the router
-    }
-end
-
-
 return Request

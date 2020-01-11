@@ -153,15 +153,4 @@ function Response:attach(location, name) -- attach file and force client browser
 end
 
 
-function Response:hotswap()
-    return {
-        receiver = self.receiver,
-        request = self.request,
-        header = self.header,
-        headers_send = self.headers_send,
-        message_send = self.message_send
-    }
-end
-
-
 return Response

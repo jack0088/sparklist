@@ -71,7 +71,7 @@ function Response:sendMessage(stream)
         assert(self.headers_send, "send http header first")
         stream = stream or ""
         local threaded = type(coroutine.running()) == "thread"
-        local chunked = self.header:get "Transfer-Encoding" ~= nil
+        local chunked = self.header:get("Transfer-Encoding"):match("chunked") == "chunked"
         local length = #stream
         if threaded then
             self.message = stream

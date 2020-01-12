@@ -71,7 +71,7 @@ function Response:sendMessage(stream)
         assert(self.headers_send, "send http header first")
         stream = stream or ""
         local threaded = type(coroutine.running()) == "thread"
-        local chunked = self.header:get("Transfer-Encoding"):match("chunked") == "chunked"
+        local chunked = tostring(self.header:get("Transfer-Encoding")):match("chunked") == "chunked"
         local length = #stream
         if threaded then
             self.message = stream
@@ -138,9 +138,16 @@ function Response:submit(content, mime, status, ...)
 end
 
 
+function Response:refresh(url, timeout, ...)
+    assert(not self.headers_send, "incomplete header sent too early")
+    self.header:set("Refresh", (timeout or 0)"; URL="..(url or self.request.path)) -- no browser back-button support
+    return self:submit(...)
+end
+
+
 function Response:redirect(url)
     assert(not self.headers_send, "incomplete header sent too early")
-    self.header:set("Location", url)
+    self.header:set("Location", url) -- with browser back-button support
     return self:submit(nil, nil, 307) -- automatic request forward with unchanged request method and body
 end
 

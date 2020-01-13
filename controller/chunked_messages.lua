@@ -24,8 +24,8 @@ return function(request, response)
     response.header:set("Content-Type", "text/plain; charset=utf-8")
     response.header:set("Transfer-Encoding", "chunked")
 
-    print(response.header:get "Transfer-Encoding", response.header:get "Transfer-Encoding" == "chunked")
-    response:sendHeader()
+    print("-->", response.header:get "Transfer-Encoding", response.header:get "Transfer-Encoding" == "chunked")
+    response:sendHeader(200)
 
     local f, line = io.open("uploads/lol.txt", "rb")
     repeat
@@ -40,5 +40,6 @@ return function(request, response)
     f:close()
     print("response.message:", response.message)
     print("done req/res!")
+
     return response:submit()
 end

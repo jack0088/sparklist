@@ -88,11 +88,11 @@ local function rereference(absolete, new, namespace, whitelist)
                                 name
                             ))
                         end
-                    elseif type(value) == "table" then
+                    elseif type(value) == "table" and not whitelist[value] then
                         rereference(absolete, new, value, whitelist)
                     end
                 end
-            until name == nil
+            until not name
             thread = thread + 1
         end
     end
@@ -159,11 +159,6 @@ function hotswap:onEnterFrame()
         self.timeout = os.time() + self.interval
         self:run()
     end
-end
-
-
-function hotswap:hotswap() -- preserve state hook, see require() above
-    return {registry = self.registry}
 end
 
 

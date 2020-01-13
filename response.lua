@@ -25,9 +25,17 @@ Response.GTM = function() return Response.UTC(0, "GTM") end -- Europe
 Response.CET = function() return Response.UTC(1, "CET") end -- Germany, among others
 
 
-Response.serializeURLEncoded = function(parameters)
+Response.encodeUrlEncoded = function(raw_url) -- handles application/x-www-form-urlencoded, returns percent encoded url, opposite of Request.decodeUrlEncoded
+    -- TODO
+    return percent_encoded
+end
+
+
+Response.implodePath = function(attributes_list) -- opposite of Request.explodePath
     local query = ""
-    for k, v in pairs(parameters) do query = query..k.."="..v.."&" end
+    for name, value in pairs(attributes_list) do
+        query = query..name.."="..value.."&"
+    end
     return query:sub(1, -2)
 end
 

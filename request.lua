@@ -8,7 +8,7 @@ local Header = require "header"
 local Request = class()
 
 
-Request.decodeUrlEncoded = function(percent_encoded) -- application/x-www-form-urlencoded
+Request.decodeUrlEncoded = function(percent_encoded) -- handles application/x-www-form-urlencoded, returns raw url
     local function character(hex)
         return string.char(tonumber(hex, 16))
     end
@@ -17,11 +17,11 @@ end
 
 
 Request.explodePath = function(query)
-    local list = {}
-    for name, value in string.gmatch(query, "([^=]*)=([^&]*)&?") do
-        list[name] = Request.decodeUrlEncoded(value)
+    local attributes_list = {}
+    for name, value in query:gmatch("([^=]*)=([^&]*)&?") do
+        attributes_list[name] = Request.decodeUrlEncoded(value)
     end
-    return list
+    return attributes_list
 end
 
 

@@ -4,7 +4,7 @@
 -- a response runs after every request from client to server
 
 local runstring = loadstring or load -- Lua > 5.1
-local mimeguess = require "mimetype".guess
+local mimeguess = require "utilities".filemime
 local class = require "class"
 local Header = require "header"
 local Response = class()
@@ -37,7 +37,7 @@ Response.file = function(url)
     if handle then
         local content = handle:read("*a")
         handle:close()
-        return content, mimeguess(url), 200 -- binary content, mime type, status code
+        return content, mimeguess(url), 200 -- (binary) content, mime-type, status code
     end
     return nil, nil, 404
 end

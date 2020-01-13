@@ -136,19 +136,4 @@ function Xors:whois() -- works even without internet
 end
 
 
-function Xors:hotswap()
-    return {
-        socket = self.socket,
-        host = self.host,
-        port = self.port,
-        ip = self.ip,
-        name = self.name,
-        timeput = self.timeout,
-        backlog = self.backlog,
-        clients = self.clients,
-        plugins = self.plugins
-    }
-end
-
-
 return Xors

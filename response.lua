@@ -3,7 +3,6 @@
 -- client response generator
 -- a response runs after every request from client to server
 
--- local utf8len = require "utf8".len
 local runstring = loadstring or load -- Lua > 5.1
 local mimeguess = require "mimetype".guess
 local class = require "class"
@@ -152,7 +151,7 @@ function Response:redirect(url)
 end
 
 
-function Response:attach(location, name) -- attach file and force client browser to download it from given location [with custom name]
+function Response:attach(location, name) -- attach file and force client/browser to download it from given location [with custom name]
     assert(not self.headers_send, "incomplete header sent too early")
     local filename, extension = location:match("([^%p]+)%.(%a%a%a+)$")
     self.header:add("Content-Disposition", string.format("attachment; filename=%s", name or filename))

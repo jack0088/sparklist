@@ -6,7 +6,7 @@
 -- xors should run fine on any machine supporting fallowing dependencies:
 ---> Lua >= 5.1
 ---> luasocket
----> openssl (or luasec or lua-http, which both bundle it)
+---> luasec
 
 local class = require "class"
 local socket = require "socket"

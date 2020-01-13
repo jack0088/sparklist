@@ -64,7 +64,7 @@ local function rereference(absolete, new, namespace, whitelist)
             if value == absolete then
                 namespace[name] = new
                 print(string.format(
-                    "%s global variable '%s' has been re-referenced",
+                    "%s global property '%s' has been re-referenced",
                     os.date("%d.%m.%Y %H:%M:%S"),
                     name
                 ))

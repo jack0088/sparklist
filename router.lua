@@ -112,7 +112,7 @@ local function preload(handler)
     if type(handler) == "function" then
         return handler
     end
-    local file_name, file_extension = handler:match("(.+)(%.[%w%p][%w%p][%w%p]+)$")
+    local file_name, file_extension = handler:match("(.+)(%.%w%w[%w%p]*)$")
     if not file_extension or file_extension == ".lua" then
         return require(file_name:gsub("/", "."))
     end

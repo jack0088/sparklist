@@ -52,12 +52,13 @@ function Response:new(receiver, request)
 end
 
 
-function Response:sendHeader()
+function Response:sendHeader(status)
     if not self.headers_send then
+        assert(type(status) == "number" or type(status) == "string", "response status code missing")
         assert(self.header:get "Date", "date header missing")
         assert(self.header:get "Content-Type", "http content type undefined")
         assert(self.header:get "Transfer-Encoding" or self.header:get "Content-Length", "http content length undefined")
-        self.receiver:send(self.header:serialize(status or 200))
+        self.receiver:send(self.header:serialize(status))
         self.headers_send = true
     end
     return true
@@ -96,26 +97,25 @@ end
 
 
 function Response:submit(content, mime, status, ...)
+    if self.headers_send then
+        return self:sendMessage() -- finish up response
+    end
     assert(not self.headers_send, "incomplete header sent too early")
-    if type(content) == "string" then
-        if #content < 1 then
-            self:sendMessage()
-        else
-            local file_extension = content:match(".+(%.%w%w%w+)$")
-            if file_extension then
-                local file_content, file_mime, response_status = self.file(content:gsub("^[%./]+", ""))
-                if file_extension == ".lua" and type(file_content) == "string" and (mime or ""):match("^text/html.*") ~= nil then
-                    -- response with *.lua file and explicit @mime of "text/html" means we want a view template
-                    local view_loader = assert(runstring(file_content))()
-                    local html_content = assert(view_loader(...))
-                    content = html_content
-                else
-                    -- resond with file contents
-                    -- NOTE @mime must match its actual file encoding, e.g. *.txt file saved in charset=utf-8 must be passed with "text/plain; charset=utf-8"
-                    content = file_content
-                    mime = mime or file_mime
-                    status = status or response_status
-                end
+    if type(content) == "string" and #content > 0 then
+        local file_extension = content:match("%.%w%w[%w%p]*$")
+        if file_extension then
+            local file_content, file_mime, response_status = self.file(content:gsub("^[%./]+", ""))
+            if file_extension == ".lua" and type(file_content) == "string" and (mime or ""):match("^text/html.*") ~= nil then
+                -- response with *.lua file and explicit @mime of "text/html" means we want a view template
+                local view_loader = assert(runstring(file_content))()
+                local html_content = assert(view_loader(...))
+                content = html_content
+            else
+                -- resond with file contents
+                -- NOTE @mime must match its actual file encoding, e.g. *.txt file saved in charset=utf-8 must be passed with "text/plain; charset=utf-8"
+                content = file_content
+                mime = mime or file_mime
+                status = status or response_status
             end
         end
     end
@@ -132,15 +132,16 @@ function Response:submit(content, mime, status, ...)
     self.header:set("Date", self.GTM()) -- update/assign
     self.header:set("Content-Type", mime or "text/plain")
     self.header:set("Content-Length", #content)
-    self:sendHeader()
+    self:sendHeader(status or 200)
     return self:sendMessage(content)
 end
 
 
-function Response:refresh(url, timeout, ...)
+function Response:refresh(view, url, timeout, ...)
     assert(not self.headers_send, "incomplete header sent too early")
+    assert(view:match("%.%w%w[%w%p]*$") == ".lua", "response is not view template")
     self.header:set("Refresh", tostring(timeout or 0).."; URL="..(url or self.request.path)) -- no browser back-button support
-    return self:submit(...)
+    return self:submit(view, "text/html", 200, ...)
 end
 
 
@@ -153,7 +154,7 @@ end
 
 function Response:attach(location, name) -- attach file and force client/browser to download it from given location [with custom name]
     assert(not self.headers_send, "incomplete header sent too early")
-    local filename, extension = location:match("([^%p]+)%.(%a%a%a+)$")
+    local filename, extension = location:match("(.+)(%.%w%w[%w%p]*)$")
     self.header:add("Content-Disposition", string.format("attachment; filename=%s", name or filename))
     return self:submit(location)
 end

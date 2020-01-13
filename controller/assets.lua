@@ -8,7 +8,8 @@ return function(request, response, filename, extension) -- requests to files
         "gif",
         "svg",
         "eps",
-        "pdf"
+        "pdf",
+        "txt"
     }
     if table.concat(allowed_extensions, " "):find(extension) then -- whitelist look-up
         return response:submit(request.url)

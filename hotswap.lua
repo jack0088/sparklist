@@ -59,12 +59,17 @@ end
 local function rereference(absolete, new, namespace, whitelist)
     if type(whitelist) ~= "table" then whitelist = {} end
     if type(namespace) == "table" then
-        whitelist[namespace] = true
-        for k, v in pairs(namespace) do
-            if v == absolete then
-                namespace[k] = new
-            elseif type(v) == "table" and not whitelist[v] then
-                rereference(absolete, new, v, whitelist)
+        whitelist[namespace] = true -- mark as visited
+        for name, value in pairs(namespace) do
+            if value == absolete then
+                namespace[name] = new
+                print(string.format(
+                    "%s global variable '%s' has been re-referenced",
+                    os.date("%d.%m.%Y %H:%M:%S"),
+                    name
+                ))
+            elseif type(value) == "table" and not whitelist[value] then
+                rereference(absolete, new, value, whitelist)
             end
         end
     else
@@ -74,10 +79,7 @@ local function rereference(absolete, new, namespace, whitelist)
             repeat
                 index = index + 1
                 name, value = debug.getlocal(thread, index)
-                if name ~= nil
-                and name ~= "absolete"
-                and name ~= "new"
-                then
+                if name ~= nil and name ~= "absolete" and name ~= "new" then
                     if value == absolete then
                         if debug.setlocal(thread, index, new) == name then
                             print(string.format(
@@ -119,15 +121,15 @@ function require(resource, force_reload) -- override standard Lua function!
                 end
             end
         end
-        rereference(package.loaded[resource], message) -- update module references of local upvalues
-        rereference(package.loaded[resource], message, _G) -- update module references of globals
-        package.loaded[resource] = message -- update the absolete package
         print(string.format(
             "%s module '%s' has been hot-reloaded %s",
             os.date("%d.%m.%Y %H:%M:%S"),
             hotswap.registry[resource].url,
             state_message
         ))
+        rereference(package.loaded[resource], message) -- update module references of local upvalues
+        rereference(package.loaded[resource], message, _G) -- update module references of globals
+        package.loaded[resource] = message -- update the absolete package
         return message
     end
     if not success and message ~= nil then

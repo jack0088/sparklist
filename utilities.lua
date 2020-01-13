@@ -43,11 +43,13 @@ local function cmd(...)
     local tmpfile = "/tmp/shlua"
     local exitcode = "; echo $? >>"..tmpfile
     local command = os.execute(toquery{...}.." >>"..tmpfile..exitcode)
-    local console = io.open(tmpfile, "r")
-    local report, status = console:read("*a"):match("(.*)(%d+)[\r\n]*$") -- response, exitcode
-    report = trim(report)
-    status = tonumber(status) == 0
-    console:close()
+    local console, report, status = io.open(tmpfile, "r")
+    if console then
+        report, status = console:read("*a"):match("(.*)(%d+)[\r\n]*$") -- response, exitcode
+        report = trim(report)
+        status = tonumber(status) == 0
+        console:close()
+    end
     os.remove(tmpfile)
     return report ~= "" and report or nil, status
 end

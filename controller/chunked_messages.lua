@@ -31,7 +31,7 @@ return function(request, response)
     repeat
         line = f:read("*l")
         if line then
-            response:sendMessage(line)
+            response:sendMessage(line.."\n")
             print("response chunk send:", line)
             print "yielded.."
             coroutine.yield(line)

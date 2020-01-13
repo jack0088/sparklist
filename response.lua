@@ -26,8 +26,10 @@ Response.CET = function() return Response.UTC(1, "CET") end -- Germany, among ot
 
 
 Response.encodeUrlEncoded = function(raw_url) -- handles application/x-www-form-urlencoded, returns percent encoded url, opposite of Request.decodeUrlEncoded
-    -- TODO
-    return percent_encoded
+    local function hex(character)
+        return string.format("%%%02X", string.byte(character))
+    end
+    return raw_url:gsub("\n", "\r\n"):gsub("[^%w%%%-%.~_ ]", hex):gsub(" ", "+")
 end
 
 

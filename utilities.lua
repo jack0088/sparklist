@@ -94,6 +94,30 @@ end
 
 
 -- @path (string) relative- or absolute path to a file
+-- returns (string) mime-encoding of the resource
+function filesystem.filecharset(path)
+    if filesystem.isfile(path) then
+        return trim(shell.file("--mime-encoding", "-b", path))
+    end
+    return nil
+end
+
+
+-- @path (string) relative- or absolute path to a file
+-- returns (string) mime-type; mime-encoding of the resource in one go
+function filesystem.filemime(path)
+    if filesystem.isfile(path) then
+        if filesystem.os("darwin") then -- MacOS
+            return trim(shell.file("-bI", path))
+        elseif filesystem.os("linux") then -- Linux
+            return trim(shell.file("-bi", path))
+        end
+    end
+    return nil
+end
+
+
+-- @path (string) relative- or absolute path to a file
 -- returns (boolean)
 function filesystem.isfile(path)
     return filesystem.exists(path) and select(2, shell.test("-f", path))
@@ -297,6 +321,8 @@ function filesystem.fileinfo(path)
     t.url = path
     t.mimetype, t.path, t.name, t.extension = mime.guess(t.url)
     t.filetype = filesystem.filetype(t.url)
+    t.filecharset = filesystem.filecharset(t.url)
+    t.filemime = filesystem.filemime(t.url)
     t.exists = filesystem.exists(t.url)
     t.isfile = filesystem.isfile(t.url)
     t.isfolder = filesystem.isfolder(t.url)

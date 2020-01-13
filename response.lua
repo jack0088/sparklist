@@ -147,15 +147,17 @@ function Response:submit(content, mime, status, ...)
 end
 
 
-function Response:refresh(content, url, timeout, ...)
-    self.header:set("Refresh", tostring(timeout or 0).."; URL="..(url or self.request.path)) -- no browser back-button support
-    return self:submit(content, nil, nil, ...)
+function Response:refresh(url, timeout, content, mime, ...)
+    self.header:set("Refresh", tostring(timeout or 0).."; URL="..(url or self.request.path))
+    if content then
+        return self:submit(content, mime, nil, ...)
+    end
 end
 
 
 function Response:redirect(url)
     self.header:set("Location", url) -- with browser back-button support
-    return self:submit(nil, nil, 307) -- automatic request forward with unchanged request method and body
+    return self:submit(nil, nil, 307) -- instant, automatic request forward with unchanged request method and body
 end
 
 

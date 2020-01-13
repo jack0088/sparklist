@@ -147,9 +147,9 @@ function Response:submit(content, mime, status, ...)
 end
 
 
-function Response:refresh(view, url, timeout, ...)
+function Response:refresh(content, url, timeout, ...)
     self.header:set("Refresh", tostring(timeout or 0).."; URL="..(url or self.request.path)) -- no browser back-button support
-    return self:submit(view, nil, nil, ...)
+    return self:submit(content, nil, nil, ...)
 end
 
 

@@ -107,8 +107,8 @@ end
 
 
 function Response:submit(content, mime, status, ...)
-    if self.headers_send then
-        return self:sendMessage() -- finish up response
+    if (self.headers_send or self.message_send) and content == nil and mime == nil and status == nil then
+        return self:sendMessage() -- finish up ongoing response
     end
     assert(not self.headers_send, "incomplete header sent too early")
     if type(content) == "string" and #content > 0 then
@@ -132,7 +132,7 @@ function Response:submit(content, mime, status, ...)
     if not content then
         status = status or 404
         mime = mime or "text/html"
-        content = assert(dofile("view/404.lua"))(
+        content = assert(dofile("view/error.lua"))(
             self.request.path,
             self.request.method,
             status,
@@ -148,22 +148,18 @@ end
 
 
 function Response:refresh(view, url, timeout, ...)
-    assert(not self.headers_send, "incomplete header sent too early")
-    assert(view:match("%.%w%w[%w%p]*$") == ".lua", "response is not view template")
     self.header:set("Refresh", tostring(timeout or 0).."; URL="..(url or self.request.path)) -- no browser back-button support
-    return self:submit(view, "text/html", 200, ...)
+    return self:submit(view, nil, nil, ...)
 end
 
 
 function Response:redirect(url)
-    assert(not self.headers_send, "incomplete header sent too early")
     self.header:set("Location", url) -- with browser back-button support
     return self:submit(nil, nil, 307) -- automatic request forward with unchanged request method and body
 end
 
 
 function Response:attach(location, name) -- attach file and force client/browser to download it from given location [with custom name]
-    assert(not self.headers_send, "incomplete header sent too early")
     local filename, extension = location:match("(.+)(%.%w%w[%w%p]*)$")
     self.header:add("Content-Disposition", string.format("attachment; filename=%s", name or filename))
     return self:submit(location)

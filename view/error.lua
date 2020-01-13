@@ -6,7 +6,7 @@ return function(path, method, status, message)
         dom["!doctype"] "html",
         dom.html{
             dom.header{
-                dom.title "404",
+                dom.title(tostring(status or "error")),
                 dom.meta{charset = "utf-8"}
             },
             dom.body{

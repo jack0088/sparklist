@@ -8,13 +8,13 @@ local api = require "router"()
 
 api:get("/chunked%-message", "controller/chunked_messages.lua")
 api:get("/refresh", function(request, response)
-    response:refresh("view/404.lua", "/", 5, request.path, request.method)
+    response:refresh("view/error.lua", "/", 5, request.path, request.method)
 end)
 
 api:get("/auth", "controller/auth.lua")
 api:get("/auth%?id=(.+)", "controller/auth.lua")
 api:get("/uploads/([%w%p]+)%.(%a%a%a+)", "controller/assets.lua")
 api:get("/?", "controller/index.lua")
-api:any(".*", "controller/404.lua")
+api:any(".*", "controller/error.lua")
 
 return api

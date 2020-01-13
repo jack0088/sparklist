@@ -139,7 +139,7 @@ end
 
 function Response:refresh(url, timeout, ...)
     assert(not self.headers_send, "incomplete header sent too early")
-    self.header:set("Refresh", (timeout or 0)"; URL="..(url or self.request.path)) -- no browser back-button support
+    self.header:set("Refresh", tostring(timeout or 0).."; URL="..(url or self.request.path)) -- no browser back-button support
     return self:submit(...)
 end
 

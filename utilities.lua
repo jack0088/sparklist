@@ -321,10 +321,10 @@ end
 function filesystem.fileinfo(path)
     local t = {}
     t.url = path
-    t.mimetype, t.path, t.name, t.extension = mimetypeguess(t.url)
+    t.mimetype, t.path, t.name, t.extension = mimetypeguess(t.url) -- same as .filemime but hardcoded
+    t.filemime = filesystem.filemime(t.url) -- .filetype + .filecharset
     t.filetype = filesystem.filetype(t.url)
     t.filecharset = filesystem.filecharset(t.url)
-    t.filemime = filesystem.filemime(t.url)
     t.exists = filesystem.exists(t.url)
     t.isfile = filesystem.isfile(t.url)
     t.isfolder = filesystem.isfolder(t.url)

@@ -8,5 +8,7 @@ local server = require "xors"{
     port = 80,
     timeout = 0.1,
     backlog = 100,
-	plugins = require "plugins"
+	plugins = {
+        require "dispatcher"
+    }
 }:run()

@@ -1,7 +1,7 @@
 -- 2019 (c) kontakt@herrsch.de
 
 -- namespace unix plumbing utilities to access (file)system tools at low-level
-local mime = require "mimetype"
+local mimetypeguess = require "mimetype"
 local filesystem = {shell = shell}
 
 
@@ -321,7 +321,7 @@ end
 function filesystem.fileinfo(path)
     local t = {}
     t.url = path
-    t.mimetype, t.path, t.name, t.extension = mime.guess(t.url)
+    t.mimetype, t.path, t.name, t.extension = mimetypeguess(t.url)
     t.filetype = filesystem.filetype(t.url)
     t.filecharset = filesystem.filecharset(t.url)
     t.filemime = filesystem.filemime(t.url)

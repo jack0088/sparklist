@@ -4,7 +4,8 @@
 -- NOTE Any route should return true on successful handling of request and false on failing!
 -- NOTE Any route that returns nil (void) will fall-through to next possible match!
 
-local api = require "router"()
+local aquire = require "hotswap"
+local api = aquire "router"()
 
 api:get("/chunked%-message", "controller/chunked_messages.lua")
 api:get("/refresh", function(request, response)

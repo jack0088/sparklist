@@ -10,8 +10,9 @@
 
 local class = require "class"
 local socket = require "socket"
-local Request = require "request"
-local Response = require "response"
+local aquire = require "hotswap"
+local Request = aquire "request"
+local Response = aquire "response"
 local Xors = class()
 
 

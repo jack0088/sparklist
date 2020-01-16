@@ -6,7 +6,8 @@
 local runstring = loadstring or load -- Lua > 5.1
 local mimeguess = require "utilities".filemime
 local class = require "class"
-local Header = require "header"
+local aquire = require "hotswap"
+local Header = aquire "header"
 local Response = class()
 
 

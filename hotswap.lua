@@ -86,7 +86,6 @@ hotload = setmetatable(
             local timestamp = utilities.modifiedat(proxy.__swap.path)
             if proxy.__swap.timestamp ~= timestamp then
                 local mname, mpath, mvalue = self:__heap(proxy.__swap.name)
-                -- TODO? each hotswappable object should have a :hotswap method for transfering state or re-instanciating itself
                 proxy.__swap.value = mvalue
                 proxy.__swap.timestamp = timestamp
                 print(string.format(
@@ -94,6 +93,7 @@ hotload = setmetatable(
                     os.date("%d.%m.%Y %H:%M:%S"),
                     mname
                 ))
+                -- TODO? each hotswappable object should have a :hotswap function for transfering state its to the swapped object?
             end
         end;
 

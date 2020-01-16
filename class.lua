@@ -37,8 +37,9 @@ super.derivant = function(child, parent) return child:parent() == parent end
 -- @object (required table) is a class object whose property we want to (re-)assign or to read
 -- @key (required string) is the property we try to access
 -- @value (optional of any type) is the new value we want to assign to that @object[@key]
+-- @read_mode (boolean) flag to identify __index vs __newindex
 -- returns (any type) the value that the getter, setter or the propery returned
-local function proxy(object, key, new_value)
+local function proxy(object, key, new_value, read_mode)
     if type(object) ~= "table" or type(key) == "nil" then
         return nil
     end
@@ -49,9 +50,7 @@ local function proxy(object, key, new_value)
     local getter = rawget(object, "get_"..tostring(key))
     local setter = rawget(object, "set_"..tostring(key))
 
-    -- TODO fix this checking bug, because new_value = nil could also mean, reset the key / garbagecollect() it!
-
-    if type(new_value) == "nil" then -- means we look for the value of key
+    if read_mode == true then -- means we look for the value of key
         if prefix ~= nil then -- means we try to access getter's or setter's definition function
             return current_value
         end
@@ -129,9 +128,9 @@ local function class(parent)
     return setmetatable({__parent = parent or super}, class_mt)
 end
 
-
-cast_mt = {__index = proxy, __newindex = proxy}
-class_mt = {__index = proxy, __newindex = proxy, __call = cast}
+local readproxy = function(t, k) return proxy(t, k, nil, true) end
+cast_mt = {__index = readproxy, __newindex = proxy}
+class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
 
 
 return class

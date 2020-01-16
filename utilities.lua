@@ -321,6 +321,7 @@ end
 function filesystem.fileinfo(path)
     local t = {}
     t.url = path
+    -- TODO remove mimetypeguess() in favor of .filemime()
     t.mimetype, t.path, t.name, t.extension = mimetypeguess(t.url) -- same as .filemime but hardcoded
     t.filemime = filesystem.filemime(t.url) -- .filetype + .filecharset
     t.filetype = filesystem.filetype(t.url)

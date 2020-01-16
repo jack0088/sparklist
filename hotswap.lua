@@ -94,14 +94,14 @@ aquire = setmetatable(
         end;
 
         __heap = function(self, module)
-            local path = self:__url(module)
+            local path = self:__path(module)
             assert(type(path) == "string", "can't find module '"..module.."'")
             local ok, msg = pcall(dofile, path)
             if ok then return module, path, msg end
             return nil, nil, msg
         end;
 
-        __url = function(self, resource)
+        __path = function(self, resource)
             local file_path = resource:gsub("%.", "/")
             if file_path:sub(1, 1) == "/" then file_path = "."..file_path end
             if file_path:sub(-4) ~= ".lua" then file_path = file_path..".lua" end

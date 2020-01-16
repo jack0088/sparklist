@@ -8,7 +8,7 @@ local _type = type
 local INDEX = function(t, k) return getmetatable(t).__swap.value[k] end
 local NEWINDEX = function(t, k, v) getmetatable(t).__swap.value[k] = v end
 local CALL = function(t, ...) return getmetatable(t).__swap.value(...) end
-local TYPE = function(t) return _type(getmetatable(t).__swap.value) end
+local TYPE = function(t) return type(getmetatable(t).__swap.value) end
 
 local utilities = {} -- placeholder, see monkeypatch below
 
@@ -137,7 +137,7 @@ end
 
 function type(obj)
     local proxy = getmetatable(obj)
-    if proxy then
+    if proxy and proxy.__type then
         if _type(proxy.__type) == "string" then
             return proxy.__type
         elseif _type(proxy.__type) == "function" then

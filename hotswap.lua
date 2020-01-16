@@ -98,6 +98,7 @@ aquire = setmetatable(
                         os.date("%d.%m.%Y %H:%M:%S"),
                         mname
                     ))
+                    -- TODO? each hotswappable object should have a :hotswap method for transfering state or re-instanciating itself
                 end
             end
         end;

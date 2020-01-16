@@ -50,7 +50,7 @@ EXAMPLE (respond with html layout shorthand; taken care by preload() function, s
 --]]
 
 local unpack = unpack or table.unpack -- Lua > 5.1
-local aquire = require "hotswap"
+local hotload = require "hotswap"
 local class = require "class"
 local Router = class()
 
@@ -115,7 +115,7 @@ local function preload(handler)
     end
     local file_name, file_extension = handler:match("(.+)(%.%w%w[%w%p]*)$")
     if not file_extension or file_extension == ".lua" then
-        local controller = aquire(file_name:gsub("/", "."))
+        local controller = hotload(file_name:gsub("/", "."))
         return function(...)
             -- NOTE this wrapping function is needed for coroutine.create
             -- couroutine needs a function parameter but controller is a hot-swappable object of type table

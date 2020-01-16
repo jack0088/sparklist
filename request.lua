@@ -4,8 +4,8 @@
 -- runs on every request coming from client to server
 
 local class = require "class"
-local aquire = require "hotswap"
-local Header = aquire "header"
+local hotload = require "hotswap"
+local Header = hotload "header"
 local Request = class()
 
 

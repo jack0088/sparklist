@@ -38,14 +38,17 @@ aquire = setmetatable(
         __call = function(self, module)
             package.loaded[module] = nil -- clean require registry
             if self.package_loaded[module] then
+                local value = getmetatable(self.package_loaded[module]).__swap.value
+                if type(value) ~= "table" and type(value) ~= "function" then
+                    return value
+                end
                 return self.package_loaded[module]
             end
             return getmetatable(self).__new(self, module)
         end;
 
         __new = function(self, module)
-            local proxy = getmetatable(self)
-            local mname, mpath, mvalue = proxy:__heap(module)
+            local mname, mpath, mvalue = getmetatable(self):__heap(module)
             if not mname or not mpath then
                 print(string.format(
                     "%s module '%s' could not be loaded\n%s",
@@ -53,11 +56,7 @@ aquire = setmetatable(
                     module,
                     mvalue
                 ))
-                return self.package_loaded[module] -- if anything
-            end
-            if type(mvalue) ~= "table" and type(mvalue) ~= "function" then
-                self.package_loaded[mname] = mvalue
-                return mvalue
+                return nil
             end
             self.package_loaded[mname] = setmetatable({}, {
                 __index = type(mvalue) == "table" and INDEX or nil,
@@ -76,32 +75,21 @@ aquire = setmetatable(
                 os.date("%d.%m.%Y %H:%M:%S"),
                 mname
             ))
-            return self.package_loaded[mname]
+            return self(module) -- __call()
         end;
 
         __update = function(self, proxy)
             local timestamp = utilities.modifiedat(proxy.__swap.path)
             if proxy.__swap.timestamp ~= timestamp then
                 local mname, mpath, mvalue = self:__heap(proxy.__swap.name)
-                if type(proxy.__swap.value) ~= type(mvalue) then
-                    print(string.format(
-                        "%s can't hot-reload module '%s' because its type changed from '%s' to '%s' during runtime (please restart the server)",
-                        os.date("%d.%m.%Y %H:%M:%S"),
-                        mname,
-                        type(proxy.__swap.value),
-                        type(mvalue)
-                    ))
-                    -- TODO? support reloading with another retunvalue as the existing one?
-                else
-                    proxy.__swap.value = mvalue
-                    proxy.__swap.timestamp = timestamp
-                    print(string.format(
-                        "%s module '%s' has been hot-reloaded",
-                        os.date("%d.%m.%Y %H:%M:%S"),
-                        mname
-                    ))
-                    -- TODO? each hotswappable object should have a :hotswap method for transfering state or re-instanciating itself
-                end
+                -- TODO? each hotswappable object should have a :hotswap method for transfering state or re-instanciating itself
+                proxy.__swap.value = mvalue
+                proxy.__swap.timestamp = timestamp
+                print(string.format(
+                    "%s module '%s' has been hot-reloaded",
+                    os.date("%d.%m.%Y %H:%M:%S"),
+                    mname
+                ))
             end
         end;
 
@@ -140,7 +128,7 @@ end
 
 
 function require(module)
-    if aquire.package_loaded[module] then
+    if aquire and aquire.package_loaded[module] then
         return aquire.package_loaded[module]
     end
     return _require(module)
@@ -170,13 +158,15 @@ end
 -- end
 
 
+
+
+
+
+
 -- local zero = "nothing"
 -- local a = aquire "_tests.doublerequire"
 -- local b = aquire "_tests.doublerequire"
 -- local c = a
-
-
--- print(type(zero))
 
 
 -- local term
@@ -186,7 +176,12 @@ end
 --         count = count + 1
 --         term = os.time() + 1
 --         aquire:run()
---         c(count.."x hello world")
+--         print(type(aquire "_tests.doublerequire"))
+--         if type(c) == "function" then
+--             c(count.."x hello world")
+--         else
+--             print("str:", c)
+--         end
 --     end
 -- end
 

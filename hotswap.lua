@@ -1,10 +1,5 @@
 -- 2019 (c) kontakt@herrsch.de
 
-local util = dofile "utilities.lua"
-local isfile = util.isfile
-local modifiedat = util.modifiedat
-util = nil
-
 local _require = require
 local _ipairs = ipairs
 local _pairs = pairs
@@ -13,6 +8,8 @@ local _type = type
 local INDEX = function(t, k) return getmetatable(t).__swap.value[k] end
 local NEWINDEX = function(t, k, v) getmetatable(t).__swap.value[k] = v end
 local CALL = function(t, ...) return getmetatable(t).__swap.value(...) end
+
+local utilities = {} -- placeholder, see monkeypatch below
 
 aquire = setmetatable(
     {
@@ -69,7 +66,7 @@ aquire = setmetatable(
                     name = mname,
                     path = mpath,
                     value = mvalue,
-                    timestamp = modifiedat(mpath)
+                    timestamp = utilities.modifiedat(mpath)
                 }
             })
             print(string.format(
@@ -81,7 +78,7 @@ aquire = setmetatable(
         end;
 
         __update = function(self, proxy)
-            local timestamp = modifiedat(proxy.__swap.path)
+            local timestamp = utilities.modifiedat(proxy.__swap.path)
             if proxy.__swap.timestamp ~= timestamp then
                 local mname, mpath, mvalue = self:__heap(proxy.__swap.name)
                 if type(proxy.__swap.value) ~= type(mvalue) then
@@ -97,7 +94,7 @@ aquire = setmetatable(
                     proxy.__swap.value = mvalue
                     proxy.__swap.timestamp = timestamp
                     print(string.format(
-                        "%s module '%s' has hot-reloaded",
+                        "%s module '%s' has been hot-reloaded",
                         os.date("%d.%m.%Y %H:%M:%S"),
                         mname
                     ))
@@ -117,9 +114,9 @@ aquire = setmetatable(
             local file_path = resource:gsub("%.", "/")
             if file_path:sub(1, 1) == "/" then file_path = "."..file_path end
             if file_path:sub(-4) ~= ".lua" then file_path = file_path..".lua" end
-            if not isfile(file_path) then
+            if not utilities.isfile(file_path) then
                 file_path = file_path:sub(1, -4).."init.lua"
-                if not isfile(file_path) then
+                if not utilities.isfile(file_path) then
                     file_path = nil
                 end
             end
@@ -149,6 +146,17 @@ aquire = setmetatable(
 --         c(count.."x hello world")
 --     end
 -- end
+
+
+
+do
+    -- monkeypatch to convert utilities module into hot-swappable object
+    -- 1. load the real, working methods from the utilities module
+    -- 2. at this point we can actually use aquire() to its full extent
+    -- 3. update the entire utilities module by aquiring it, which makes it hot-reload-able
+    utilities = dofile "utilities.lua"
+    utilities = aquire "utilities"
+end
 
 
 return aquire

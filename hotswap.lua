@@ -9,10 +9,12 @@ local INDEX = function(t, k) return getmetatable(t).__swap.value[k] end
 local NEWINDEX = function(t, k, v) getmetatable(t).__swap.value[k] = v end
 local CALL = function(t, ...) return getmetatable(t).__swap.value(...) end
 local TYPE = function(t) return type(getmetatable(t).__swap.value) end
+local IPAIRS = function(t) return _ipairs(getmetatable(t).__swap.value) end
+local PAIRS = function(t) return _pairs(getmetatable(t).__swap.value) end
 
 local utilities = {} -- placeholder, see monkeypatch below
 
-aquire = setmetatable(
+hotload = setmetatable(
     {
         package_loaded = {};
         reload_interval = 3;
@@ -63,6 +65,8 @@ aquire = setmetatable(
                 __newindex = type(mvalue) == "table" and NEWINDEX or nil,
                 __call = (type(mvalue) == "function" or (type(mvalue) == "table" and mvalue.new)) and CALL or nil,
                 __type = TYPE,
+                __ipairs = IPAIRS,
+                __pairs = PAIRS,
                 __swap = {
                     name = mname,
                     path = mpath,
@@ -120,16 +124,16 @@ aquire = setmetatable(
 do
     -- monkeypatch to convert utilities module into hot-swappable object
     -- 1. load the real, working methods from the utilities module
-    -- 2. at this point we can actually use aquire() to its full extent
+    -- 2. at this point we can actually use hotload() to its full extent
     -- 3. update the entire utilities module by aquiring it, which makes it hot-reload-able
     utilities = dofile "utilities.lua"
-    utilities = aquire "utilities"
+    utilities = hotload "utilities"
 end
 
 
 function require(module)
-    if aquire and aquire.package_loaded[module] then
-        return aquire(module)
+    if hotload and hotload.package_loaded[module] then
+        return hotload(module)
     end
     return _require(module)
 end
@@ -148,44 +152,22 @@ function type(obj)
 end
 
 
--- function iparis(obj)
---     -- TODO!!!!!
--- end
+function iparis(obj)
+    local proxy = getmetatable(obj)
+    if proxy and type(proxy.__ipairs) == "function" then
+        return proxy.__ipairs(obj)
+    end
+    return _ipairs(obj)
+end
 
 
--- function pairs(obj)
---     -- TODO!!!!!
--- end
+function pairs(obj)
+    local proxy = getmetatable(obj)
+    if proxy and type(proxy.__pairs) == "function" then
+        return proxy.__pairs(obj)
+    end
+    return _pairs(obj)
+end
 
 
-
-
-
-
-
--- local zero = "nothing"
--- local a = aquire "_tests.doublerequire"
--- local b = aquire "_tests.doublerequire"
--- local c = a
-
-
--- local term
--- local count = 0
--- while true do
---     if not term or term < os.time() then
---         count = count + 1
---         term = os.time() + 1
---         aquire:run()
---         print(type(aquire "_tests.doublerequire"))
---         if type(c) == "function" then
---             c(count.."x hello world")
---         else
---             print("str:", c)
---         end
---     end
--- end
-
-
-
-
-return aquire
+return hotload

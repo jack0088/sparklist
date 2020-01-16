@@ -117,6 +117,8 @@ local function preload(handler)
     if not file_extension or file_extension == ".lua" then
         local controller = aquire(file_name:gsub("/", "."))
         return function(...)
+            -- NOTE this wrapping function is needed for coroutine.create
+            -- couroutine needs a function parameter but controller is a hot-swappable object of type table
             return controller(...)
         end
     end

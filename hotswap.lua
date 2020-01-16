@@ -92,6 +92,7 @@ aquire = setmetatable(
                         type(proxy.__swap.value),
                         type(mvalue)
                     ))
+                    -- TODO? support reloading with another retunvalue as the existing one?
                 else
                     proxy.__swap.value = mvalue
                     proxy.__swap.timestamp = timestamp

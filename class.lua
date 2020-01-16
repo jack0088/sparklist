@@ -49,6 +49,8 @@ local function proxy(object, key, new_value)
     local getter = rawget(object, "get_"..tostring(key))
     local setter = rawget(object, "set_"..tostring(key))
 
+    -- TODO fix this checking bug, because new_value = nil could also mean, reset the key / garbagecollect() it!
+
     if type(new_value) == "nil" then -- means we look for the value of key
         if prefix ~= nil then -- means we try to access getter's or setter's definition function
             return current_value

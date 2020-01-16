@@ -9,8 +9,8 @@ local INDEX = function(t, k) return getmetatable(t).__swap.value[k] end
 local NEWINDEX = function(t, k, v) getmetatable(t).__swap.value[k] = v end
 local CALL = function(t, ...) return getmetatable(t).__swap.value(...) end
 local TYPE = function(t) return type(getmetatable(t).__swap.value) end
-local IPAIRS = function(t) return _ipairs(getmetatable(t).__swap.value) end
-local PAIRS = function(t) return _pairs(getmetatable(t).__swap.value) end
+local IPAIRS = function(t) return ipairs(getmetatable(t).__swap.value) end
+local PAIRS = function(t) return pairs(getmetatable(t).__swap.value) end
 
 local utilities = {} -- placeholder, see monkeypatch below
 

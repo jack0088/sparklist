@@ -8,6 +8,7 @@ local _type = type
 local INDEX = function(t, k) return getmetatable(t).__swap.value[k] end
 local NEWINDEX = function(t, k, v) getmetatable(t).__swap.value[k] = v end
 local CALL = function(t, ...) return getmetatable(t).__swap.value(...) end
+local TYPE = function(t) return _type(getmetatable(t).__swap.value) end
 
 local utilities = {} -- placeholder, see monkeypatch below
 
@@ -62,6 +63,7 @@ aquire = setmetatable(
                 __index = type(mvalue) == "table" and INDEX or nil,
                 __newindex = type(mvalue) == "table" and NEWINDEX or nil,
                 __call = (type(mvalue) == "function" or (type(mvalue) == "table" and mvalue.new)) and CALL or nil,
+                __type = TYPE,
                 __swap = {
                     name = mname,
                     path = mpath,
@@ -126,15 +128,55 @@ aquire = setmetatable(
     }
 )
 
--- function require(module)
---     aquire.package_loaded[module] = nil
---     return _require(module)
+
+do
+    -- monkeypatch to convert utilities module into hot-swappable object
+    -- 1. load the real, working methods from the utilities module
+    -- 2. at this point we can actually use aquire() to its full extent
+    -- 3. update the entire utilities module by aquiring it, which makes it hot-reload-able
+    utilities = dofile "utilities.lua"
+    utilities = aquire "utilities"
+end
+
+
+function require(module)
+    if aquire.package_loaded[module] then
+        return aquire.package_loaded[module]
+    end
+    return _require(module)
+end
+
+
+function type(obj)
+    local proxy = getmetatable(obj)
+    if proxy then
+        if _type(proxy.__type) == "string" then
+            return proxy.__type
+        elseif _type(proxy.__type) == "function" then
+            return proxy.__type(obj)
+        end
+    end
+    return _type(obj)
+end
+
+
+-- function iparis(obj)
+--     -- TODO!!!!!
 -- end
 
 
+-- function pairs(obj)
+--     -- TODO!!!!!
+-- end
+
+
+-- local zero = "nothing"
 -- local a = aquire "_tests.doublerequire"
 -- local b = aquire "_tests.doublerequire"
 -- local c = a
+
+
+-- print(type(zero))
 
 
 -- local term
@@ -149,15 +191,6 @@ aquire = setmetatable(
 -- end
 
 
-
-do
-    -- monkeypatch to convert utilities module into hot-swappable object
-    -- 1. load the real, working methods from the utilities module
-    -- 2. at this point we can actually use aquire() to its full extent
-    -- 3. update the entire utilities module by aquiring it, which makes it hot-reload-able
-    utilities = dofile "utilities.lua"
-    utilities = aquire "utilities"
-end
 
 
 return aquire

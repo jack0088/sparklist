@@ -44,10 +44,10 @@ aquire = setmetatable(
                 end
                 return self.package_loaded[module]
             end
-            return getmetatable(self).__new(self, module)
+            return getmetatable(self).__create(self, module)
         end;
 
-        __new = function(self, module)
+        __create = function(self, module)
             local mname, mpath, mvalue = getmetatable(self):__heap(module)
             if not mname or not mpath then
                 print(string.format(
@@ -129,7 +129,7 @@ end
 
 function require(module)
     if aquire and aquire.package_loaded[module] then
-        return aquire.package_loaded[module]
+        return aquire(module)
     end
     return _require(module)
 end

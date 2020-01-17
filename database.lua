@@ -53,7 +53,7 @@ function Database:run(sql_query, ...)
     end
 
     print(string.format(
-        "%s execute SQL transaction with query '%s'",
+        "%s execute SQL transaction with query \"%s\"",
         os.date("%d.%m.%Y %H:%M:%S"),
         sql_statement
     ))

@@ -3,10 +3,12 @@
 -- xors (pronounced horse) is a HTTP server written in vanilla Lua
 -- its original inspiration came from Pegasus https://github.com/EvandroLG/pegasus.lua but became a complete rewrite
 
--- xors should run fine on any machine supporting fallowing dependencies:
+-- xors should run fine on any machine supporting fallowing dependencies
 ---> Lua >= 5.1
 ---> luasocket
 ---> luasec
+---> sqlite3
+---> luasql-sqlite3
 
 local class = require "class"
 local socket = require "socket"

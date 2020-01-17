@@ -1,5 +1,10 @@
 -- 2020 (c) kontakt@herrsch.de
 
+-- thin high-level wrapper around luasql-sqlite3
+-- luasql-sqlite3 itself is a wrapper around LuaSQL
+-- LuaSQL documentation at https://keplerproject.github.io/luasql/manual.html
+
+
 local sql = require "luasql.sqlite3".sqlite3()
 local class = require "class"
 local Database = class()

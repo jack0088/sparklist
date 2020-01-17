@@ -27,7 +27,7 @@ return function(request, response)
     print("-->", response.header:get "Transfer-Encoding", response.header:get "Transfer-Encoding" == "chunked")
     response:sendHeader(200)
 
-    local f, line = io.open("uploads/lol.txt", "rb")
+    local f, line = io.open("upload/lol.txt", "rb")
     repeat
         line = f:read("*l")
         if line then

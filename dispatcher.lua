@@ -14,7 +14,7 @@ end)
 
 api:get("/auth", "controller/auth.lua")
 api:get("/auth%?id=(.+)", "controller/auth.lua")
-api:get("/uploads/([%w%p]+)%.(%a%a%a+)", "controller/assets.lua")
+api:get("/upload/([%w%p]+)%.(%a%a%a+)", "controller/assets.lua")
 api:get("/?", "controller/index.lua")
 api:any(".*", "controller/error.lua")
 

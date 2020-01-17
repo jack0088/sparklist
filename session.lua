@@ -24,6 +24,12 @@ function Session:new(uuid)
 end
 
 
+function Session:empty()
+    local entries = users:run("select uuid from session where uuid = '%s' limit 1", self.uuid)
+    return (entries and #entries > 0) and true or false
+end
+
+
 function Session:set(key, value)
     assert(self.uuid, "missing session uuid")
     local records = users:run("select * from session where (uuid = '%s' and key = '%s')", self.uuid, tostring(key))

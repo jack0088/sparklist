@@ -58,8 +58,17 @@ function Response:new(receiver, request)
     self.receiver = receiver -- client socket object
     self.request = request
     self.header = Header()
+    self.header.session = self.request.header.session
     self.headers_send = false
     self.message_send = false
+
+    -- assign the client its session_uuid if he used his session at all
+    if not self.header.session:empty() then
+        self.header:set(
+            "set-cookie",
+            self.header.session.COOKIE_NAME.."="..self.header.session.uuid
+        )
+    end
 end
 
 

@@ -12,6 +12,8 @@ local users = hotload "database"("db/user.db")
 local class = require "class"
 local Session = class()
 
+Session.COOKIE_NAME = "xors-session-uuid"
+
 
 function Session:new(uuid)
     users:run [[create table if not exists session (

@@ -1,3 +1,5 @@
+local hotload = require "hotswap"
+local Session = hotload "session"
 local class = require "class"
 local Header = class()
 
@@ -45,9 +47,10 @@ Header.HTTP_STATUS_MESSAGE = {
 }
 
 
-function Header:new(query)
+function Header:new(query_string, session_uuid)
     self.registry = {}
-    self:parse(query)
+    self.session = Session(session_uuid)
+    self:parse(query_string)
 end
 
 
@@ -55,7 +58,11 @@ function Header:set(header_name, header_value)
     assert(type(header_name) == "string", "invalid header field type")
     assert(type(header_value) == "string" or type(header_value) == "number" or type(header_value) == "nil", "invalid header value type")
     
-    if header_name == "Set-Cookie" and type(header_value) == "string" then -- we optionally append some security settings to cookies
+    -- HTTP header fields are case-insensitive!
+    -- Field values may or may not be case-sensitive!
+    header_name = header_name:lower()
+
+    if header_name == "set-cookie" and type(header_value) == "string" then -- we optionally append some security settings to cookies
         local function unpack_attributes(cookie)
             local attributes = {}
             for k, v in string.gmatch(cookie, "([^=; ]+)=([^=;]+)") do
@@ -104,14 +111,20 @@ function Header:set(header_name, header_value)
 end
 
 
-function Header:get(header_name, parse_pattern)
-    if type(parse_pattern) == "string" then
-        return self.registry[header_name]:match(parse_pattern or ".+")
+function Header:get(header_name, parse_pattern, ...)
+    assert(type(header_name) == "string", "header field must be a string value")
+    header_name = header_name:lower()
+    local header_value = self.registry[header_name]
+
+    if type(header_value) == "string" then
+        if type(parse_pattern) == "string" then
+            return header_value:match(parse_pattern or ".+")
+        end
+        if type(parse_pattern) == "function" then
+            return parse_pattern(header_value, ...)
+        end
     end
-    if type(parse_pattern) == "function" then
-        return parse_pattern(self.registry[header_name])
-    end
-    return self.registry[header_name]
+    return header_value
 end
 
 
@@ -119,6 +132,11 @@ function Header:parse(header_query)
     if type(header_query) == "string" then
         for header_name, header_value in header_query:gmatch("([%w%p]+): ([%w%p ]+)") do
             self:set(header_name, header_value)
+        end
+        for key, value in self:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do
+            if key == self.session.COOKIE_NAME then
+                self.session.uuid = value
+            end
         end
     end
 end

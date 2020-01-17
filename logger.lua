@@ -3,7 +3,7 @@
 -- NOTE every day a new log file is created and filled with messages from the command line console
 
 local write = dofile "utilities.lua".writefile
-local path = "logs/"
+local path = "log/"
 local _print = print
 
 function print(...)

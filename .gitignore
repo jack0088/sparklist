@@ -2,8 +2,8 @@
 
 # custom additions go here...
 
-logs/
-uploads/
+log/
+upload/
 
 # to ignore every folder(!) at any depth-level that is prefixed with an underscore use: **_*/
 # to ignore every file and folder at any depth use: **_*

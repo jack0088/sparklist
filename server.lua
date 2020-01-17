@@ -2,7 +2,7 @@
 
 package.path = "./?/init.lua;"..package.path -- Lua <= 5.1
 
-require "log"
+require "logger"
 local hotload = require "hotswap"
 local server = require "xors"{
     port = 80,

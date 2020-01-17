@@ -1,5 +1,11 @@
 -- 2020 (c) kontakt@herrsch.de
 
+-- client sessions are an extension to cookies
+-- sessions are stored in a sqlite3 database
+-- and referenced by an uuid token
+-- that uuid, in turn, is stored in a client cookie
+
+
 local hotload = require "hotswap"
 local users = hotload "database"("db/user.db")
 local class = require "class"

@@ -38,7 +38,10 @@ hotload = setmetatable(
     },
     {
         __call = function(self, module)
-            package.loaded[module] = nil -- clean require registry
+            assert(
+                not package.loaded[module],
+                "module '"..module.."' can't be registred for hot-reload as it's already used traditionally via require()"
+            )
             if self.package_loaded[module] then
                 local value = getmetatable(self.package_loaded[module]).__swap.value
                 if type(value) ~= "table" and type(value) ~= "function" then
@@ -75,7 +78,7 @@ hotload = setmetatable(
                 }
             })
             print(string.format(
-                "%s module '%s' has been required and registred for hot-reload",
+                "%s module '%s' has been loaded and registred for hot-reload",
                 os.date("%d.%m.%Y %H:%M:%S"),
                 mname
             ))

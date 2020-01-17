@@ -35,20 +35,22 @@ function Database:run(sql_statement, request_sink)
     self:connect()
     local cursor = assert(self.connection:execute(sql_statement)) -- single transaction (auto-commit mode)
     local dataset, row
-    repeat
-        row = cursor:fetch({}, "a")
-        if row then
-            if type(request_sink) == "function" then
-                -- NOTE @request_sink works similar to Requst:receiveMessage(stream_sink)
-                -- and is advised to be used together with coroutine.yield for large requests to the database
-                request_sink(row)
-            else
-                if not dataset then dataset = {} end
-                table.insert(dataset, row)
+    if type(cursor) == "userdata" then
+        repeat
+            row = cursor:fetch({}, "a")
+            if row then
+                if type(request_sink) == "function" then
+                    -- NOTE @request_sink works similar to Requst:receiveMessage(stream_sink)
+                    -- and is advised to be used together with coroutine.yield for large requests to the database
+                    request_sink(row)
+                else
+                    if not dataset then dataset = {} end
+                    table.insert(dataset, row)
+                end
             end
-        end
-    until not row
-    cursor:close()
+        until not row or not cursor
+        cursor:close()
+    end
     self:disconnect()
     return dataset
 end

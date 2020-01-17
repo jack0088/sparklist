@@ -14,4 +14,6 @@ local function prettify(t, o)
     end
 end
 
-return prettify
+return function(t)
+    print(prettify(t))
+end

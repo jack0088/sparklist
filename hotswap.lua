@@ -1,4 +1,4 @@
--- 2019 (c) kontakt@herrsch.de
+-- 2020 (c) kontakt@herrsch.de
 
 local _require = require
 local _ipairs = ipairs

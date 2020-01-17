@@ -33,7 +33,7 @@ end
 
 function Database:run(sql_statement, request_sink)
     self:connect()
-    local cursor = assert(self.connection:execute(sql_statement)) -- single transaction (auto-commit mode)
+    local cursor = assert(self.connection:execute(sql_statement:gsub("%s+", " "))) -- single transaction (auto-commit mode)
     local dataset, row
     if type(cursor) == "userdata" then
         repeat

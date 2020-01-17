@@ -5,9 +5,9 @@ local class = require "class"
 local Database = class()
 
 
-function Database:new(file)
+function Database:new(filepath)
     self.timeout = 1
-    self.file = file
+    self.file = filepath
 end
 
 

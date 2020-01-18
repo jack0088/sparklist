@@ -66,7 +66,7 @@ hotload = setmetatable(
             self.package_loaded[mname] = setmetatable({}, {
                 __index = type(mvalue) == "table" and INDEX or nil,
                 __newindex = type(mvalue) == "table" and NEWINDEX or nil,
-                __call = (type(mvalue) == "function" or (type(mvalue) == "table" and mvalue.new)) and CALL or nil,
+                __call = (type(mvalue) == "function" or type(mvalue) == "table") and CALL or nil,
                 __type = TYPE,
                 __ipairs = IPAIRS,
                 __pairs = PAIRS,
@@ -82,7 +82,7 @@ hotload = setmetatable(
                 os.date("%d.%m.%Y %H:%M:%S"),
                 mname
             ))
-            return self(module) -- __call()
+            return getmetatable(self).__call(self, module)
         end;
 
         __update = function(self, proxy)

@@ -53,14 +53,14 @@ end
 
 function Request:new(transmitter)
     self.transmitter = transmitter -- client socket object
-    self.headers_received = false
+    self.header_received = false
     self.message_received = false
     self:receiveHeader()
 end
 
 
 function Request:receiveHeader()
-    if not self.headers_received then
+    if not self.header_received then
         local firstline, status, partial = self.transmitter:receive()
         if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
             return false
@@ -94,7 +94,7 @@ function Request:receiveHeader()
         self.query = self.explodePath(urlquery)
         -- self.fragment = nil -- browser only feature
         self.header = Header(headerquery)
-        self.headers_received = true
+        self.header_received = true
     end
     return true
 end

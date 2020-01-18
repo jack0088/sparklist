@@ -59,8 +59,8 @@ function Response:new(receiver, request)
     self.request = request
     self.header = Header()
     self.header.session = self.request.header.session
-    self.headers_send = false
-    self.message_send = false
+    self.header_sent = false
+    self.message_sent = false
 
     -- assign the client its session_uuid if he used his session at all
     if not self.header.session:empty() then
@@ -73,22 +73,22 @@ end
 
 
 function Response:sendHeader(status)
-    if not self.headers_send then
+    if not self.header_sent then
         assert(type(status) == "number" or type(status) == "string", "response status code missing")
         assert(self.header:get "Date", "date header missing")
         assert(self.header:get "Content-Type", "http content type undefined")
         assert(self.header:get "Transfer-Encoding" or self.header:get "Content-Length", "http content length undefined")
         self.receiver:send(self.header:serialize(status))
-        self.headers_send = true
+        self.header_sent = true
     end
     return true
 end
 
 
 function Response:sendMessage(stream)
-    if not self.message_send then
+    if not self.message_sent then
         assert(self.receiver, "http receiver missing")
-        assert(self.headers_send, "send http header first")
+        assert(self.header_sent, "send http header first")
         stream = stream or ""
         local threaded = type(coroutine.running()) == "thread"
         local chunked = tostring(self.header:get("Transfer-Encoding")):match("chunked") == "chunked"
@@ -106,10 +106,10 @@ function Response:sendMessage(stream)
             ))
         elseif chunked then
             self.receiver:send("0\r\n\r\n")
-            self.message_send = true
+            self.message_sent = true
         else
             self.receiver:send(string.format("%s\r\n", stream))
-            self.message_send = true
+            self.message_sent = true
         end
     end
     return true
@@ -117,10 +117,10 @@ end
 
 
 function Response:submit(content, mime, status, ...)
-    if (self.headers_send or self.message_send) and content == nil and mime == nil and status == nil then
+    if (self.header_sent or self.message_sent) and content == nil and mime == nil and status == nil then
         return self:sendMessage() -- finish up ongoing response
     end
-    assert(not self.headers_send, "incomplete header sent too early")
+    assert(not self.header_sent, "incomplete header sent too early")
     if type(content) == "string" and #content > 0 then
         local file_extension = content:match("%.%w%w[%w%p]*$")
         if file_extension then

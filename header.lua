@@ -1,6 +1,6 @@
+local class = require "class"
 local hotload = require "hotswap"
 local Session = hotload "session"
-local class = require "class"
 local Header = class()
 
 Header.HTTP_STATUS_MESSAGE = {

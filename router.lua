@@ -77,9 +77,11 @@ function Router:register(route_method, route_regex, route_handler)
 end
 
 
-function Router:onDispatch(request, response)
-    -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
+function Router:onDispatch(server, client)
+    local request = client.request
+    local response = client.response
     for _, entry in ipairs(self.map) do
+        -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
         local captures = {string.match(request.method:upper()..request.path, "^"..entry.route.."$")}
         if #captures > 0 then
             print(string.format(
@@ -117,7 +119,7 @@ local function preload(handler)
     if not file_extension or file_extension == ".lua" then
         local controller = hotload(file_name:gsub("/", "."))
         return function(...)
-            -- NOTE this wrapping function is needed for coroutine.create
+            -- NOTE the wrapping function is needed for coroutine.create inside .onDispatch above
             -- couroutine needs a function parameter but controller is a hot-swappable object of type table
             return controller(...)
         end

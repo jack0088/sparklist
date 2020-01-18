@@ -30,19 +30,6 @@ function Client:disconnect()
 end
 
 
-function Client:get_request_received()
-    return self.request_complete == true
-        or (self.request ~= nil
-        and self.request.header_received == true
-        and self.request.message_received == true)
-end
-
-
-function Client:set_request_received(flag)
-    self.request_complete = flag
-end
-
-
 function Client:get_response_sent()
     return self.response_complete == true
         or (self.response ~= nil
@@ -53,6 +40,24 @@ end
 
 function Client:set_response_sent(flag)
     self.response_complete = flag
+end
+
+
+function Client:get_request_received()
+    -- NOTE when .response_sent equals true then .request_received is considered true as well
+    -- because client Request.message may be ignored by a controller (that is the route handler defined in dispatcher)
+    return self.request_complete == true
+        or (self.request ~= nil
+        and self.request.header_received == true
+        and self.request.message_received == true)
+        or (self.request ~= nil
+        and self.request.header_received == true
+        and self.response_sent == true)
+end
+
+
+function Client:set_request_received(flag)
+    self.request_complete = flag
 end
 
 

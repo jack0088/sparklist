@@ -11,7 +11,6 @@ local hotload = require "hotswap"
 local users = hotload "database"("db/user.db")
 local class = require "class"
 local Session = class()
-
 Session.COOKIE_NAME = "xors-session-uuid"
 
 

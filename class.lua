@@ -128,6 +128,7 @@ local function class(parent)
     return setmetatable({__parent = parent or super}, class_mt)
 end
 
+
 local readproxy = function(t, k) return proxy(t, k, nil, true) end
 cast_mt = {__index = readproxy, __newindex = proxy}
 class_mt = {__index = readproxy, __newindex = proxy, __call = cast}

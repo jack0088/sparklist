@@ -33,10 +33,10 @@ function Contact:onProcess(server, client)
         then
             server:hook("onDispatch", server, client)
         end
-        if client.request.header_received and client.request.message_received then
+        if client.request_received then
             server:hook("afterRequest", server, client)
         end
-        if client.response.header_sent and client.response.message_sent then
+        if client.response_sent then
             server:hook("afterResponse", server, client)
         end
     end

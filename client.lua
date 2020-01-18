@@ -47,12 +47,22 @@ function Client:get_request_received()
     -- NOTE when .response_sent equals true then .request_received is considered true as well
     -- because client Request.message may be ignored by a controller (that is the route handler defined in dispatcher)
     return self.request_complete == true
-        or (self.request ~= nil
-        and self.request.header_received == true
-        and self.request.message_received == true)
-        or (self.request ~= nil
-        and self.request.header_received == true
-        and self.response_sent == true)
+        or (
+            self.request ~= nil
+            and self.request.header_received == true
+            and self.request.message_received == true
+        )
+        or (
+            self.request ~= nil
+            and self.request.header_received == true
+            and self.response ~= nil
+            and self.response.header_sent == true
+        )
+        or (
+            self.request ~= nil
+            and self.request.header_received == true
+            and self.response_sent == true
+        )
 end
 
 

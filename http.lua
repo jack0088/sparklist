@@ -1,3 +1,9 @@
+-- 2020 (c) kontakt@herrsch.de
+
+-- xors has only three hooks (onEnterFrame, onConnect, onDisconnect)
+-- this plugin emits additional, custom xors hook-events to trigger listening plugin-callbacks
+-- it also enriches existing Client object with Request and Response objects
+
 local Request = hotload "request"
 local Response = hotload "response"
 local Contact = {}
@@ -25,7 +31,6 @@ function Contact:onProcess(server, client)
         or not client.response.header_sent
         or not client.response.message_sent)
         then
-            -- emit xors hook event to trigger listening plugin callbacks
             server:hook("onDispatch", server, client)
         end
         if client.request.header_received and client.request.message_received then

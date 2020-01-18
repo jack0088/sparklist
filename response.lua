@@ -57,8 +57,7 @@ end
 function Response:new(receiver, request)
     self.receiver = receiver -- client socket object
     self.request = request
-    self.header = Header()
-    self.header.session = self.request.header.session
+    self.header = Header(nil, self.request.header.session.uuid)
     self.header_sent = false
     self.message_sent = false
 

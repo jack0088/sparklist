@@ -8,8 +8,5 @@ local server = require "xors"{
     port = 80,
     timeout = 0.1,
     backlog = 100,
-	plugins = {
-        hotload, -- updates via :onEnterFrame
-        hotload "dispatcher"
-    }
+	plugins = hotload "hook"
 }:run()

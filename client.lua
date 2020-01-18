@@ -31,10 +31,10 @@ end
 
 
 function Client:get_request_received()
-    return self.request_complete
-        or (self.request
-        and self.request.header_received
-        and self.request.message_received)
+    return self.request_complete == true
+        or (self.request ~= nil
+        and self.request.header_received == true
+        and self.request.message_received == true)
 end
 
 
@@ -44,10 +44,10 @@ end
 
 
 function Client:get_response_sent()
-    return self.response_complete
-        or (self.response
-        and self.response.header_sent
-        and self.response.message_sent)
+    return self.response_complete == true
+        or (self.response ~= nil
+        and self.response.header_sent == true
+        and self.response.message_sent == true)
 end
 
 

@@ -28,10 +28,10 @@ function Contact:onProcess(server, client)
             -- emit xors hook event to trigger listening plugin callbacks
             server:hook("onDispatch", server, client)
         end
-        if client.request_received then
+        if client.request.header_received and client.request.message_received then
             server:hook("afterRequest", server, client)
         end
-        if client.response_sent then
+        if client.response.header_sent and client.response.message_sent then
             server:hook("afterResponse", server, client)
         end
     end

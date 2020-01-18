@@ -13,15 +13,31 @@ local Storage = class()
 
 
 function Storage:new(common_identifier)
-    self.set_uuid = function(_, uuid)
-        assert(type(uuid) == "string", "missing common identifier string")
-        assert(not uuid:find("[^%a%-_]+"), "common identifier string must only contain [a-zA-Z%-_] characters")
-        common_identifier = uuid -- reuse the upvalue
-    end
-    self.get_uuid = function()
-        return common_identifier
-    end
     self.uuid = common_identifier
+end
+
+
+function Storage:get_uuid()
+    return self.__db_table_name
+end
+
+
+function Storage:set_uuid(common_identifier)
+    assert(type(common_identifier) == "string", "missing common identifier string")
+    assert(not common_identifier:find("[^%a%-_]+"), "common identifier string must only contain [a-zA-Z%-_] characters")
+    if common_identifier ~= self.uuid and self:empty() then
+        self:destroy()
+    end
+    self.__db_table_name = common_identifier
+    self:create()
+end
+
+
+function Storage:create()
+    -- IMPORTANT NOTE .create() is a potential memory leak! Be careful with this!
+    -- HTTP Session objects for example might never use the reserved storage space
+    -- but create one for every new client
+    -- so always .destroy() when the storage remains .empty()
     ram:run(
         [[create table if not exists '%s' (
             id integer primary key autoincrement,
@@ -30,6 +46,11 @@ function Storage:new(common_identifier)
         )]],
         self.uuid
     )
+end
+
+
+function Storage:destroy()
+    ram:run("drop table '%s'", self.uuid)
 end
 
 

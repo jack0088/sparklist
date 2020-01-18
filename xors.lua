@@ -53,7 +53,7 @@ function Xors:run()
         end
         for client_id = #self.clients, 1, -1 do
             local client = self.clients[client_id]
-            self:hook("onProcess", client, self)
+            self:hook("onProcess", self, client)
             if client.request_received and client.response_sent then
                 self:hook("onDisconnect", self, client)
                 client:disconnect()

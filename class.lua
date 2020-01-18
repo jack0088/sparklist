@@ -122,16 +122,19 @@ local function cast(object, ...)
 end
 
 
+local readproxy = function(t, k) return proxy(t, k, nil, true) end
+cast_mt = {__index = readproxy, __newindex = proxy}
+class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
+
+
+print("__CALL", cast)
+
+
 -- Create a new class object or create a sub-class from an already existing class
 -- @parent (optional table): parent class to sub-call from
 local function class(parent)
     return setmetatable({__parent = parent or super}, class_mt)
 end
-
-
-local readproxy = function(t, k) return proxy(t, k, nil, true) end
-cast_mt = {__index = readproxy, __newindex = proxy}
-class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
 
 
 return class

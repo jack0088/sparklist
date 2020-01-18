@@ -59,7 +59,7 @@ function Database:run(sql_query, ...)
     ))
 
     local cursor = assert(self.connection:execute(sql_statement)) -- single transaction (auto-commit mode)
-    local dataset, row
+    local dataset, row = {}
     if type(cursor) == "userdata" then
         repeat
             row = cursor:fetch({}, "a")
@@ -69,7 +69,6 @@ function Database:run(sql_query, ...)
                     -- and is advised to be used together with coroutine.yield for large requests to the database
                     request_sink(row)
                 else
-                    if not dataset then dataset = {} end
                     table.insert(dataset, row)
                 end
             end

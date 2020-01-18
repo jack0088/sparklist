@@ -10,11 +10,10 @@
 ---> sqlite3
 ---> luasql-sqlite3
 
-local class = require "class"
 local socket = require "socket"
+local class = require "class"
 local hotload = require "hotswap"
-local Request = hotload "request"
-local Response = hotload "response"
+local Client = hotload "client"
 local Xors = class()
 
 
@@ -47,44 +46,17 @@ function Xors:run()
 
     while true do -- main application loop
         self:hook("onEnterFrame", self)
-
         local remote = self.socket:accept()
         if remote ~= nil then
-            local client = {}
-            client.socket = remote
-            client.ip, client.port = client.socket:getpeername()
-            client.request = Request(client.socket)
-            client.response = Response(client.socket, client.request)
-            table.insert(self.clients, client)
-            print(string.format(
-                "%s xors connected to client at %s:%s",
-                os.date("%d.%m.%Y %H:%M:%S"),
-                client.ip,
-                client.port
-            ))
-            self:hook("onConnect", client, self)
+            table.insert(self.clients, Client():connect(remote))
+            self:hook("onConnect", self, self.clients[#self.clients])
         end
-
         for client_id = #self.clients, 1, -1 do
             local client = self.clients[client_id]
-            if client.request.headers_received
-            and (not client.request.message_received
-            or not client.response.headers_send
-            or not client.response.message_send)
-            then
-                self:hook("onDispatch", client.request, client.response, client, self)
-            end
-            if client.request.headers_received
-            and client.response.headers_send
-            and client.response.message_send
-            then
-                self:hook("onDisconnect", client, self)
-                print(string.format(
-                    "%s xors disconnected from client %s",
-                    os.date("%d.%m.%Y %H:%M:%S"),
-                    client.ip
-                ))
-                client.socket:close()
+            self:hook("onProcess", client, self)
+            if client.request_received and client.response_sent then
+                self:hook("onDisconnect", self, client)
+                client:disconnect()
                 table.remove(self.clients, client_id)
             end
         end

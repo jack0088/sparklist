@@ -13,22 +13,22 @@ local Storage = class()
 
 
 function Storage:new(common_identifier)
-    self.uuid = common_identifier
+    self.name = common_identifier
 end
 
 
-function Storage:get_uuid()
+function Storage:get_name()
     return self.__db_table_name
 end
 
 
-function Storage:set_uuid(common_identifier)
-    assert(type(common_identifier) == "string", "missing common identifier string")
-    assert(not common_identifier:find("[^%a%-_]+"), "common identifier string must only contain [a-zA-Z%-_] characters")
-    if common_identifier ~= self.uuid and self:empty() then
+function Storage:set_name(identifier)
+    assert(type(identifier) == "string", "missing common identifier string")
+    assert(not identifier:find("[^%a%-_]+"), "common identifier string must only contain [a-zA-Z%-_] characters")
+    if self.name and self.name ~= identifier and self:empty() then
         self:destroy()
     end
-    self.__db_table_name = common_identifier
+    self.__db_table_name = identifier
     self:create()
 end
 
@@ -44,31 +44,31 @@ function Storage:create()
             key text unique not null,
             value text not null
         )]],
-        self.uuid
+        self.name
     )
 end
 
 
 function Storage:destroy()
-    ram:run("drop table '%s'", self.uuid)
+    ram:run("drop table '%s'", self.name)
 end
 
 
 function Storage:empty()
-    local entries = ram:run("select id from '%s' limit 1", self.uuid)
+    local entries = ram:run("select id from '%s' limit 1", self.name)
     return #entries > 0 and true or false
 end
 
 
 function Storage:exists(key, value)
     if key and value then
-        local records = ram:run("select id from '%s' where (key = '%s' and value = '%s')", self.uuid, tostring(key), tostring(value))
+        local records = ram:run("select id from '%s' where (key = '%s' and value = '%s')", self.name, tostring(key), tostring(value))
         return #records > 0 and record[1].id or false
     elseif value then
-        local records = ram:run("select key from '%s' where value = '%s'", self.uuid, tostring(value))
+        local records = ram:run("select key from '%s' where value = '%s'", self.name, tostring(value))
         return #records > 0 and record[1].key or false
     elseif key then
-        local records = ram:run("select value from '%s' where key = '%s'", self.uuid, tostring(key))
+        local records = ram:run("select value from '%s' where key = '%s'", self.name, tostring(key))
         return #records > 0 and record[1].value or false
     end
     return self:empty()
@@ -77,9 +77,9 @@ end
 
 function Storage:set(key, value) -- upsert (update + insert)
     if self:exists(key) then
-        ram:run("update '%s' set value = '%s' where key = '%s'", self.uuid, tostring(value), tostring(key))
+        ram:run("update '%s' set value = '%s' where key = '%s'", self.name, tostring(value), tostring(key))
     else
-        ram:run("insert into '%s' (key, value) values ('%s', '%s')", self.uuid, tostring(key), tostring(value))
+        ram:run("insert into '%s' (key, value) values ('%s', '%s')", self.name, tostring(key), tostring(value))
     end
 end
 
@@ -89,7 +89,7 @@ function Storage:get(key)
         local value = self:exists(key)
         return value == false and nil or value
     end
-    local records = ram:run("select key, value from '%s'", self.uuid)
+    local records = ram:run("select key, value from '%s'", self.name)
     if #records > 0 then -- unpack rows
         local entries = {}
         for id, row in ipairs(records) do

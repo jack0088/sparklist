@@ -6,7 +6,7 @@ local Contact = {}
 function Contact:onConnect(server, client)
     server:hook("beforeRequest", server, client)
     client.request = Request(client.socket)
-    if client.request.headers_received then
+    if client.request.header_received then
         server:hook("beforeResponse", server, client)
         client.response = Response(client.socket, client.request)
         return -- ok

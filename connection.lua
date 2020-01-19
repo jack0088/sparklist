@@ -28,20 +28,18 @@ end
 
 
 function Contact:onProcess(server, client)
-    if client.request and client.response then
-        if client.request.header_received
-        and (not client.request.message_received
-        or not client.response.header_sent
-        or not client.response.message_sent)
-        then
-            server:hook("onDispatch", server, client)
-            if client.response.header_sent then
-                server:hook("afterRequest", server, client)
-            end
+    if client.request.header_received
+    and (not client.request.message_received
+    or not client.response.header_sent
+    or not client.response.message_sent)
+    then
+        server:hook("onDispatch", server, client)
+        if client.response.header_sent then
+            server:hook("afterRequest", server, client)
         end
-        if client.response_sent then
-            server:hook("afterResponse", server, client)
-        end
+    end
+    if client.response_sent then
+        server:hook("afterResponse", server, client)
     end
 end
 

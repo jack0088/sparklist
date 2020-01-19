@@ -32,6 +32,12 @@ function Database:disconnect()
 end
 
 
+function Database:hasTable(name)
+    local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(name))
+    return #matches > 0 and matches[1].name == tostring(name) or false
+end
+
+
 -- possible parameters are (in order)
 -- @sql_query (required string) the sql statement you want to execute on the database
 -- @... (optional any) when @sql_query uses a string with placeholders inside, e.g. %s like in string.format, then @... can be any type or amount of optional parameters that will be forwarded to string.format("", ...) to fill out the placeholders

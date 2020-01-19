@@ -88,7 +88,7 @@ end
 -- or simply return the new class instance itself, if there the instance has no constructor method
 -- @object (required table): class object to deep-copy recursevly
 -- @... (optional arguments): argements are passed to the optional class constructor
-local function replica(object, ...)
+local function replica(object)
     local copy = object.__parent and replica(object.__parent) or {}
     if object ~= super then
         for k, v in pairs(object) do
@@ -96,11 +96,6 @@ local function replica(object, ...)
                 copy[k] = type(v) == "table" and replica(v) or v
             end
         end
-    end
-    if type(copy.new) == "function" then
-        local instance = copy:new(...) or copy
-        instance.new = nil -- an instance of a class doesn't need its constructor anymore
-        return instance
     end
     return copy
 end
@@ -118,7 +113,13 @@ local function cast(object, ...)
     -- because this override could throw off getter/setter support altogether!
     local mt = getmetatable(object)
     if mt == class_mt then mt = cast_mt end
-    return setmetatable(replica(object, ...), mt)
+    local copy = setmetatable(replica(object), mt)
+    if type(copy.new) == "function" then
+        local instance = copy:new(...) or copy
+        instance.new = nil -- an instance of a class doesn't need its constructor anymore
+        return instance
+    end
+    return copy
 end
 
 

@@ -17,7 +17,10 @@ function Contact:onConnect(server, client)
     if client.request.header_received then
         server:hook("beforeResponse", server, client)
         client.response = Response(client.socket, client.request)
+
+        -- TODO Session is nil maybe because hotswapper does something weird to it
         print(">>>>>>>>", Session)
+
         client.request.header.session = Session(client.request, client.response, "sparklist-session")
         return -- ok
     end

@@ -50,7 +50,7 @@ end
 
 
 function Storage:destroy()
-    ram:run("drop table '%s'", self.name)
+    ram:run("drop table if exists '%s'", self.name)
 end
 
 
@@ -62,7 +62,7 @@ end
 
 function Storage:exists(key, value)
     if key and value then
-        local records = ram:run("select id from '%s' where (key = '%s' and value = '%s')", self.name, tostring(key), tostring(value))
+        local records = ram:run("select id from '%s' where key = '%s' and value = '%s'", self.name, tostring(key), tostring(value))
         return #records > 0 and record[1].id or false
     elseif value then
         local records = ram:run("select key from '%s' where value = '%s'", self.name, tostring(value))

@@ -12,8 +12,9 @@ local hotload = require "hotswap"
 local Storage = hotload "local_storage"
 local Session = class(Storage)
 
-Session.get_uuid = Storage.get_uuid
-Session.set_uuid = Storage.set_uuid
+
+Session.get_name = Storage.get_name
+Session.set_name = Storage.set_name
 Session.COOKIE_NAME = "xors-session-identifier"
 Session.COOKIE_LIFETIME = 604800 -- 7 days (in seconds)
 

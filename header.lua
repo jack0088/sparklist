@@ -1,6 +1,4 @@
 local class = require "class"
-local hotload = require "hotswap"
-local Session = hotload "session"
 local Header = class()
 
 Header.HTTP_STATUS_MESSAGE = {
@@ -47,9 +45,8 @@ Header.HTTP_STATUS_MESSAGE = {
 }
 
 
-function Header:new(query_string, session_uuid)
+function Header:new(query_string)
     self.registry = {}
-    self.session = Session(session_uuid)
     self:parse(query_string)
 end
 
@@ -132,11 +129,6 @@ function Header:parse(header_query)
     if type(header_query) == "string" then
         for header_name, header_value in header_query:gmatch("([%w%p]+): ([%w%p ]+)") do
             self:set(header_name, header_value)
-        end
-        for key, value in self:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do
-            if key == self.session.COOKIE_NAME then
-                self.session.uuid = value
-            end
         end
     end
 end

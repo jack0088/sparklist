@@ -14,21 +14,16 @@ local Contact = {}
 function Contact:onConnect(server, client)
     server:hook("beforeRequest", server, client)
     client.request = Request(client.socket)
-    if client.request.header_received then
-        server:hook("beforeResponse", server, client)
-        client.response = Response(client.socket, client.request)
-        client.request.header.session = Session(client.request, client.response, "sparklist-session")
-        return -- ok
-    end
-    client.request = nil
-    -- NOTE could not parse HTTP header of client request
-    -- seem the client request can not be handled by this plugin
-    -- leave it alone, another plugin may handle the request instead...
+    server:hook("beforeResponse", server, client)
+    client.response = Response(client.socket, client.request)
+    client.request.header.session = Session(client.request, client.response, "sparklist-session")
 end
 
 
 function Contact:onDisconnect(server, client)
-    client.request.header.session:destroy()
+    if not client.request.header.session:exists() then
+        client.request.header.session:destroy()
+    end
 end
 
 
@@ -40,9 +35,9 @@ function Contact:onProcess(server, client)
         or not client.response.message_sent)
         then
             server:hook("onDispatch", server, client)
-        end
-        if client.request_received then
-            server:hook("afterRequest", server, client)
+            if client.response.header_sent then
+                server:hook("afterRequest", server, client)
+            end
         end
         if client.response_sent then
             server:hook("afterResponse", server, client)

@@ -24,39 +24,46 @@ end
 
 function Storage:set_name(identifier)
     assert(type(identifier) == "string", "missing common identifier string")
-    assert(not identifier:find("[^%a%-_]+"), "common identifier string must only contain [a-zA-Z%-_] characters")
-    if self.name and self.name ~= identifier and self:empty() then
+    assert(not identifier:find("[^%a%d%-_]+"), "common identifier string '"..identifier.."' must only contain [a-zA-Z0-9%-_] characters")
+    if self.name ~= nil and self.name ~= identifier and self:empty() then -- switched Storage.name
         self:destroy()
     end
-    self.__db_table_name = identifier
-    self:create()
+    if identifier ~= nil then
+        self.__db_table_name = tostring(identifier)
+        self:create()
+    end
 end
 
 
 function Storage:create()
     -- IMPORTANT NOTE .create() is a potential memory leak! Be careful with this!
     -- HTTP Session objects for example might never use the reserved storage space
-    -- but create one for every new client
-    -- so always .destroy() when the storage remains .empty()
-    ram:run(
-        [[create table if not exists '%s' (
-            id integer primary key autoincrement,
-            key text unique not null,
-            value text not null
-        )]],
-        self.name
-    )
+    -- but create a new one for every new client (because of different session-identifier)
+    -- thus, be sure to always .destroy() when the storage remains .empty()
+    if self.name ~= nil then
+        ram:run(
+            [[create table if not exists '%s' (
+                id integer primary key autoincrement,
+                key text unique not null,
+                value text not null
+            )]],
+            self.name
+        )
+    end
 end
 
 
 function Storage:destroy()
-    ram:run("drop table if exists '%s'", self.name)
+    if self.name ~= nil then
+        ram:run("drop table if exists '%s'", self.name)
+    end
 end
 
 
 function Storage:empty()
-    local entries = ram:run("select id from '%s' limit 1", self.name)
-    return #entries > 0 and true or false
+    if not ram:hasTable(self.name) then return true end
+    local entries = ram:run("select count(id) as count from '%s' limit 1", self.name)
+    return entries[1].count < 1
 end
 
 
@@ -71,7 +78,7 @@ function Storage:exists(key, value)
         local records = ram:run("select value from '%s' where key = '%s'", self.name, tostring(key))
         return #records > 0 and record[1].value or false
     end
-    return self:empty()
+    return not self:empty()
 end
 
 

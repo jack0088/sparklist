@@ -6,7 +6,7 @@
 -- that uuid, in turn, is stored in a client cookie
 
 
-local hash = require "hash"
+local hash = require "randomseed"
 local class = require "class"
 local hotload = require "hotswap"
 local Storage = hotload "local_storage"

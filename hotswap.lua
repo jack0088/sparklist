@@ -55,8 +55,8 @@ hotload = setmetatable(
         __create = function(self, module)
             local mname, mpath, mvalue = getmetatable(self):__heap(module)
             if not mname or not mpath then
-                print(string.format(
-                    "%s module '%s' could not be loaded\n%s",
+                error(string.format(
+                    "%s module '%s' could not be loaded, nor registred\n%s",
                     os.date("%d.%m.%Y %H:%M:%S"),
                     module,
                     mvalue

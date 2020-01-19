@@ -9,54 +9,31 @@
 local hash = require "hash"
 local class = require "class"
 local hotload = require "hotswap"
-local users = hotload "database"("db/user.db")
-local Session = class()
-Session.COOKIE_NAME = "xors-session-uuid"
+local Storage = hotload "local_storage"
+local Session = class(Storage)
+
+Session.get_uuid = Storage.get_uuid
+Session.set_uuid = Storage.set_uuid
+Session.COOKIE_NAME = "xors-session-identifier"
+Session.COOKIE_LIFETIME = 604800 -- 7 days (in seconds)
 
 
-function Session:new(uuid)
-    users:run [[create table if not exists session (
-        id integer primary key autoincrement,
-        uuid text not null,
-        key text not null,
-        value text not null
-    )]]
-    self.uuid = uuid or hash(32)
-end
-
-
-function Session:empty()
-    local entries = users:run("select uuid from session where uuid = '%s' limit 1", self.uuid)
-    return (entries and #entries > 0) and true or false
-end
-
-
-function Session:set(key, value)
-    assert(self.uuid, "missing session uuid")
-    local records = users:run("select * from session where (uuid = '%s' and key = '%s')", self.uuid, tostring(key))
-    if records and #records > 0 then
-        users:run("update session set value = '%s' where (uuid = '%s' and key = '%s')", tostring(value), self.uuid, tostring(key))
-    else
-        users:run("insert into session (uuid, key, value) values ('%s', '%s', '%s')", self.uuid, tostring(key), tostring(value))
+function Session:new(request, response, cookie, lifetime)
+    if type(cookie) == "string" then
+        self.COOKIE_NAME = cookie
     end
-    return self.uuid
-end
-
-
-function Session:get(key)
-    assert(self.uuid, "missing session uuid")
-    if type(key) == "string" then
-        local record = users:run("select value from session where (uuid = '%s' and key = '%s')", self.uuid, key)
-        return record[1].value
+    if type(lifetime) == "number" then
+        self.COOKIE_LIFETIME = lifetime
     end
-    local records = users:run("select key, value from session where uuid = '%s'", self.uuid)
-    if records and #records > 0 then
-        local entries = {}
-        for id, row in ipairs(records) do
-            entries[row.key] = row.value
+    local session_identifier = hash(32)
+    for key, value in request.header:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do
+        if key == self.COOKIE_NAME then
+            session_identifier = value
+            break
         end
-        return entries
     end
+    response.header:set("set-cookie", self.COOKIE_NAME.."="..session_identifier.."; Max-Age="..self.COOKIE_LIFETIME)
+    self.name = "session_"..session_identifier
 end
 
 

@@ -27,6 +27,8 @@ return function(request, response, token)
     -- the server (xors) requests the swoopjs API with the token https://app.swoopnow.com/api/inbound_emails/d98fc8d31ceb2bf9208dae120530e2bf
     -- if the user is- or has been logged-in successfully then out respose is a plain/text containing the email of the user and a status code of 200, otherwise status code of 404 and no message
 
+    -- dependencies ---> luasec
+
     print "auth route fired..."
 
     local cookie = request.header["cookie: swoopid"] -- TODO!!!!

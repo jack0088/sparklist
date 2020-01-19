@@ -6,9 +6,7 @@
 -- xors should run fine on any machine supporting fallowing dependencies
 ---> Lua >= 5.1
 ---> luasocket
----> luasec
----> sqlite3
----> luasql-sqlite3
+
 
 local socket = require "socket"
 local class = require "class"

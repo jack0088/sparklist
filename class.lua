@@ -69,15 +69,15 @@ local function proxy(object, key, new_value, read_mode)
     if prefix ~= nil then -- means we want to (re-)assing getter or setter
         local whois = prefix == "get_" and "getter" or "setter"
         local property = tostring(key):sub(4) -- suffix
-        assert(type(rawget(object, property)) == "nil", whois.." assignment failed, conflict with already existing property")
-        assert(type(new_value) == "function", whois.." must be a function value")
+        assert(type(rawget(object, property)) == "nil", debug.traceback(whois.." assignment failed, conflict with already existing property"))
+        assert(type(new_value) == "function", debug.traceback(whois.." must be a function value"))
         rawset(object, key, new_value)
         return new_value
     end
     if type(setter) == "function" then
         return setter(object, new_value) or new_value -- return value of setter or implicit return of new_value
     end
-    assert(type(getter) == "nil", "property assignment failed, conflict with existing getter")
+    assert(type(getter) == "nil", debug.traceback("property assignment failed, conflict with existing getter"))
     rawset(object, key, new_value) -- plain value assignment
     return new_value
 end

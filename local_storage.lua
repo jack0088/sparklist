@@ -62,8 +62,8 @@ end
 
 function Storage:empty()
     if not ram:hasTable(self.name) then return true end
-    local entries = ram:run("select count(id) as count from '%s' limit 1", self.name)
-    return entries[1].count < 1
+    local records = ram:run("select count(id) as count from '%s' limit 1", self.name)
+    return records[1].count < 1
 end
 
 
@@ -73,10 +73,10 @@ function Storage:exists(key, value)
         return #records > 0 and record[1].id or false
     elseif value then
         local records = ram:run("select key from '%s' where value = '%s'", self.name, tostring(value))
-        return #records > 0 and record[1].key or false
+        return #records > 0 and records[1].key or false
     elseif key then
         local records = ram:run("select value from '%s' where key = '%s'", self.name, tostring(key))
-        return #records > 0 and record[1].value or false
+        return #records > 0 and records[1].value or false
     end
     return not self:empty()
 end

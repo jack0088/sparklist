@@ -33,7 +33,7 @@ function Storage:set_table(identifier) -- setter for Storage.table
         self.db:destroy(self.table)
     end
     self.__tablename = tostring(identifier)
-    self.db:create(self.table)
+    self.db:createTable(self.table)
 end
 
 

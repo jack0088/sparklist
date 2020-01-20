@@ -32,9 +32,14 @@ function Database:disconnect()
 end
 
 
-function Database:hasTable(name)
-    local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(name))
-    return #matches > 0 and matches[1].name == tostring(name) or false
+-- check if table @name exists and return true or false
+-- if @name is nil then return all existing tables in that database
+function Database:table(name)
+    if type(name) == "string" then
+        local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(name))
+        return #matches > 0 and matches[1].name == tostring(name) or false
+    end
+    return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
 end
 
 

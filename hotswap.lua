@@ -40,7 +40,7 @@ hotload = setmetatable(
         __call = function(self, module)
             assert(
                 not package.loaded[module],
-                "module '"..module.."' can't be registred for hot-reload as it's already used traditionally via require()"
+                "module '"..module.."' can't be registred for hot-reload as it has been already loaded traditionally via require()"
             )
             if self.package_loaded[module] then
                 local value = getmetatable(self.package_loaded[module]).__swap.value
@@ -89,14 +89,23 @@ hotload = setmetatable(
             local timestamp = utilities.modifiedat(proxy.__swap.path)
             if proxy.__swap.timestamp ~= timestamp then
                 local mname, mpath, mvalue = self:__heap(proxy.__swap.name)
-                proxy.__swap.value = mvalue
-                proxy.__swap.timestamp = timestamp
-                print(string.format(
-                    "%s module '%s' has been hot-reloaded",
-                    os.date("%d.%m.%Y %H:%M:%S"),
-                    mname
-                ))
-                -- TODO? each hotswappable object should have a :hotswap function for transfering state its to the swapped object?
+                if mname and mpath and mvalue then
+                    proxy.__swap.value = mvalue
+                    proxy.__swap.timestamp = timestamp
+                    print(string.format(
+                        "%s module '%s' has been hot-reloaded",
+                        os.date("%d.%m.%Y %H:%M:%S"),
+                        mname
+                    ))
+                    -- TODO? each hotswappable object should have a :hotswap function for transfering state its to the swapped object?
+                else
+                    print(string.format(
+                        "%s module '%s' could not be hot-re-loaded\n%s",
+                        os.date("%d.%m.%Y %H:%M:%S"),
+                        module,
+                        mvalue
+                    ))
+                end
             end
         end;
 

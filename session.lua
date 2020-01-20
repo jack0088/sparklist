@@ -33,8 +33,8 @@ function Session:new(request, response, cookie, lifetime)
             break
         end
     end
-    response.header:set("set-cookie", self.COOKIE_NAME.."="..session_identifier.."; Max-Age="..self.COOKIE_LIFETIME)
-    self.name = "session_"..session_identifier
+    response.header:set("set-cookie", self.COOKIE_NAME.."="..session_identifier.."; Max-Age="..self.COOKIE_LIFETIME) -- create/update
+    Storage.new(self, "session_"..session_identifier)
 end
 
 

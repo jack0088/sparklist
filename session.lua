@@ -13,8 +13,8 @@ local Storage = hotload "local_storage"
 local Session = class(Storage)
 
 
-Session.get_name = Storage.get_name
-Session.set_name = Storage.set_name
+Session.get_table = Storage.get_table
+Session.set_table = Storage.set_table
 Session.COOKIE_NAME = "xors-session-identifier"
 Session.COOKIE_LIFETIME = 604800 -- 7 days (in seconds)
 

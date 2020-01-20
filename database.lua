@@ -82,12 +82,46 @@ end
 
 -- check if table @name exists and return true or false
 -- if @name is nil then return all existing tables in that database
-function Database:table(name)
+function Database:hasTable(name)
     if type(name) == "string" then
         local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(name))
         return #matches > 0 and matches[1].name == tostring(name) or false
     end
     return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
+end
+
+
+-- returns the number of records in table @name
+-- .countTable(@name) == 0 means is empty
+function Database:countTable(name)
+    if not self:hasTable(name) then return 0 end
+    local records = self:run("select count(id) as count from '%s'", name)
+    return records[1].count
+end
+
+
+-- create table with @name (if not yet created)
+-- IMPORTANT NOTE .create() is a potential memory leak! Be careful with this!
+-- Make sure to always use .destroyTable() on reserved but unused or .isEmtpyTable() tables
+function Database:createTable(name)
+    if type(name) == "string" then
+        self:run(
+            [[create table if not exists '%s' (
+                id integer primary key autoincrement,
+                key text unique not null,
+                value text not null
+            )]],
+            name
+        )
+    end
+end
+
+
+-- delete table @name and all of its contents
+function Database:destroyTable(name)
+    if type(name) == "string" then
+        self:run("drop table if exists '%s'", name)
+    end
 end
 
 

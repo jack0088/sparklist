@@ -106,7 +106,10 @@ end
 function Database:createTable(name)
     if type(name) == "string" then
         self:run(
+
             -- TODO map Lua table to key = value their requirements!!!!!!!!
+            -- this must map to every type of table
+
             [[create table if not exists '%s' (
                 id integer primary key autoincrement,
                 key text unique not null,

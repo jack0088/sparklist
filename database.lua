@@ -32,17 +32,6 @@ function Database:disconnect()
 end
 
 
--- check if table @name exists and return true or false
--- if @name is nil then return all existing tables in that database
-function Database:table(name)
-    if type(name) == "string" then
-        local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(name))
-        return #matches > 0 and matches[1].name == tostring(name) or false
-    end
-    return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
-end
-
-
 -- possible parameters are (in order)
 -- @sql_query (required string) the sql statement you want to execute on the database
 -- @... (optional any) when @sql_query uses a string with placeholders inside, e.g. %s like in string.format, then @... can be any type or amount of optional parameters that will be forwarded to string.format("", ...) to fill out the placeholders
@@ -88,6 +77,17 @@ function Database:run(sql_query, ...)
     end
     self:disconnect()
     return dataset
+end
+
+
+-- check if table @name exists and return true or false
+-- if @name is nil then return all existing tables in that database
+function Database:table(name)
+    if type(name) == "string" then
+        local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(name))
+        return #matches > 0 and matches[1].name == tostring(name) or false
+    end
+    return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
 end
 
 

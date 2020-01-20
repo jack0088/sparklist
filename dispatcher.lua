@@ -9,7 +9,7 @@ local api = hotload "router"()
 
 api:get("/chunked%-message", "controller/chunked_messages.lua")
 api:get("/refresh", function(request, response)
-    return response:refresh("/", 5, "view/error.lua", "text/html", request.path, request.method)
+    return response:refresh("/", 5, "view/error.lua", "text/html", request.header.path, request.header.method)
 end)
 
 api:get("/auth", "controller/auth.lua")

@@ -31,7 +31,7 @@ return function(request, response, token)
 
     print "auth route fired..."
 
-    local cookie = request.header["cookie: swoopid"] -- TODO!!!!
+    local cookie = request.header:get "cookie: swoopid" -- TODO!!!!
     local identity = token or cookie
     print(identity, token, cookie)
 
@@ -46,7 +46,7 @@ return function(request, response, token)
         ))
         if status == 200 and type(email) == "string" and #email > 0 then
             response:addHeader("Set-Cookie", "swoopid="..identity) -- create new or update existing
-            return response:submit("view/profile.lua", "text/html", 200, email, request.url)
+            return response:submit("view/profile.lua", "text/html", 200, email, request.header.url)
         end
     end
     return response:submit("no swoopid token found in either cookie or url")

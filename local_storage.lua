@@ -33,10 +33,8 @@ function Storage:set_table(identifier) -- setter for Storage.table
         -- switched Storage.name
         self.db:destroy(self.table)
     end
-    if identifier ~= nil then
-        self.__tablename = tostring(identifier)
-        self.db:create(self.table)
-    end
+    self.__tablename = tostring(identifier)
+    self.db:create(self.table)
 end
 
 

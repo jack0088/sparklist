@@ -29,8 +29,7 @@ function Storage:set_table(identifier) -- setter for Storage.table
     if self.table ~= nil
     and self.table ~= identifier
     and self.db:countTable(self.table) == 0
-    then
-        -- switched Storage.name
+    then -- switched Storage.name
         self.db:destroy(self.table)
     end
     self.__tablename = tostring(identifier)

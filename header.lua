@@ -242,11 +242,11 @@ function Header:receive(transmitter)
 
     local firstline, status, partial = transmitter:receive()
     if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
-        return false
+        return
     end
     local method, path, protocol = string.match(firstline, "(.-)%s(%S+)%s(HTTP/%d%.%d)$")
     if not method then
-        return false
+        return
     end
     local resource, urlquery = ""
     if #path > 0 then

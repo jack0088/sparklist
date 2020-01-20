@@ -71,7 +71,7 @@ function Response:submit(content, mime, status, ...)
         status = status or 404
         mime = mime or "text/html"
         content = assert(dofile("view/error.lua"))(
-            self.request.header,path,
+            self.request.header.path,
             self.request.header.method,
             status,
             self.header.HTTP_STATUS_MESSAGE[status]

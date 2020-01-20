@@ -20,7 +20,7 @@ return function(request, response)
     print("request.message:", request.message)
 
     print "responding with chunked response:"
-    response.header:set("Date", response.GTM())
+    response.header:set("Date", response.header.dateGTM())
     response.header:set("Content-Type", "text/plain; charset=utf-8")
     response.header:set("Transfer-Encoding", "chunked")
 

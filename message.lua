@@ -1,6 +1,7 @@
 -- 2019 (c) kontakt@herrsch.de
 
 -- HTTP/1.1
+-- NOTE could also be used for any kind of regular messages as an alternative to socket:receive() or socket:send()
 
 
 local class = require "class"

@@ -21,9 +21,11 @@ end
 
 
 function Contact:onDisconnect(server, client)
-    if not client.request.header.session:exists() then
-        client.request.header.session:destroy()
-    end
+    -- if not client.request.header.session:exists() then
+    --     client.request.header.session:destroy()
+    -- end
+
+    -- TODO check expired sessions and delete them instead of just created and yet empty ones
 end
 
 

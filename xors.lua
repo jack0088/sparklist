@@ -47,10 +47,12 @@ function Xors:run()
         local remote = self.socket:accept()
         if remote ~= nil then
             table.insert(self.clients, Client():connect(remote))
-            self:hook("onConnect", self, self.clients[#self.clients])
         end
         for client_id = #self.clients, 1, -1 do
             local client = self.clients[client_id]
+            if not client.request or not client.response then
+                self:hook("onConnect", self, self.clients[#self.clients])
+            end
             self:hook("onProcess", self, client)
             if client.request_received and client.response_sent then
                 self:hook("onDisconnect", self, client)

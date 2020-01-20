@@ -33,8 +33,8 @@ end
 function Client:get_response_sent()
     return self.response_complete == true
         or (self.response ~= nil
-        and self.response.header_sent == true
-        and self.response.message_sent == true)
+        and self.response.header.sent == true
+        and self.response.message.sent == true)
 end
 
 
@@ -49,18 +49,18 @@ function Client:get_request_received()
     return self.request_complete == true
         or (
             self.request ~= nil
-            and self.request.header_received == true
-            and self.request.message_received == true
+            and self.request.header.received == true
+            and self.request.message.received == true
         )
         or (
             self.request ~= nil
-            and self.request.header_received == true
+            and self.request.header.received == true
             and self.response ~= nil
-            and self.response.header_sent == true
+            and self.response.header.sent == true
         )
         or (
             self.request ~= nil
-            and self.request.header_received == true
+            and self.request.header.received == true
             and self.response_sent == true
         )
 end

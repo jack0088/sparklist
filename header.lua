@@ -1,3 +1,7 @@
+-- 2019 (c) kontakt@herrsch.de
+
+-- HTTP/1.1
+
 local class = require "class"
 local Header = class()
 
@@ -45,13 +49,96 @@ Header.HTTP_STATUS_MESSAGE = {
 }
 
 
-function Header:new(query_string)
+Header.dateUTC = function(offset, zone) -- Coordinated Universal Time
+    -- @offset number in hours
+    -- @zone string, e.g.:
+    -- "GTM" = Greenwich Mean Time (offset = 0)
+    -- "CET" = Central European (Standard) Time (offset = +1)
+    offset = type(offset) == "number" and offset * 60 * 60 or 0
+    zone = offset ~= 0 and zone or "GTM"
+    return os.date("!%a, %d %b %Y %H:%M:%S "..zone, os.time() + offset)
+end
+
+
+Header.dateGTM = function() return Header.dateUTC(0, "GTM") end -- Europe
+Header.dateCET = function() return Header.dateUTC(1, "CET") end -- Germany, among others
+
+
+-- handles application/x-www-form-urlencoded
+-- returns raw url by converting percentage-encoded strings back into acii
+Header.decodeUrlEncoded = function(percent_encoded)
+    local function character(hex)
+        return string.char(tonumber(hex, 16))
+    end
+    return percent_encoded:gsub("%+", "%%20"):gsub("%%(%x%x)", character) -- [+|%20] for space
+end
+
+
+-- handles application/x-www-form-urlencoded
+-- returns percent encoded url, opposite of .decodeUrlEncoded()
+Header.encodeUrlEncoded = function(raw_url)
+    local function hex(character)
+        return string.format("%%%02X", string.byte(character))
+    end
+    return raw_url:gsub("\n", "\r\n"):gsub("[^%w%%%-%.~_ ]", hex):gsub(" ", "+")
+end
+
+
+-- breaks an url query into single attribues and values
+Header.explodePath = function(query)
+    local attributes_list = {}
+    for name, value in query:gmatch("([^=]*)=([^&]*)&?") do
+        attributes_list[name] = Header.decodeUrlEncoded(value)
+    end
+    return attributes_list
+end
+
+
+-- opposite of .explodePath()
+Header.implodePath = function(attributes_list)
+    local query = ""
+    for name, value in pairs(attributes_list) do
+        query = query..name.."="..value.."&"
+    end
+    return query:sub(1, -2)
+end
+
+
+-- converts unsafe path urls into safe once by fixing their malformations
+Header.normalizePath = function(path)
+    local url = string.gsub(path, "\\", "/")
+    url = string.gsub(url, "^/*", "/")
+    url = string.gsub(url, "(/%.%.?)$", "%1/")
+    url = string.gsub(url, "/%./", "/")
+    url = string.gsub(url, "/+", "/")
+    while true do
+        local first, last = string.find(url, "/[^/]+/%.%./")
+        if not first then break end
+        url = string.sub(url, 1, first)..string.sub(url, last + 1)
+    end
+    while true do
+        local n
+        url, n = string.gsub(url, "^/%.%.?/", "/")
+        if n == 0 then break end
+    end
+    while true do
+        local n
+        url, n = string.gsub(url, "/%.%.?$", "/")
+        if n == 0 then break end
+    end
+    return url
+end
+
+
+function Header:new()
     self.registry = {}
-    self:parse(query_string)
+    self.received = false
+    self.sent = false
 end
 
 
 function Header:set(header_name, header_value)
+    assert(self.sent, "headers already sent")
     assert(type(header_name) == "string", "invalid header field type")
     assert(type(header_value) == "string" or type(header_value) == "number" or type(header_value) == "nil", "invalid header value type")
     
@@ -146,6 +233,61 @@ function Header:serialize(http_status_code)
         self.HTTP_STATUS_MESSAGE[http_status_code],
         header_query
     )
+end
+
+
+function Header:receive(transmitter)
+    assert(not self.received, "http header already received")
+    assert(transmitter, "http transmitter socket missing")
+
+    local firstline, status, partial = transmitter:receive()
+    if firstline == nil or status == "timeout" or partial == "" or status == "closed" then
+        return false
+    end
+    local method, path, protocol = string.match(firstline, "(.-)%s(%S+)%s(HTTP/%d%.%d)$")
+    if not method then
+        return false
+    end
+    local resource, urlquery = ""
+    if #path > 0 then
+        resource, urlquery = string.match(path, "^([^#?]+)[#|?]?(.*)")
+    end
+    local headerquery, header = ""
+    repeat
+        header = transmitter:receive() or ""
+        headerquery = headerquery..(#header > 0 and header.."\r\n" or "")
+    until #header <= 0
+
+    -- Some browsers send multiple requests to the same url because they try to obtain the .favicon; Safari even trigger request while auto-completing you input. Just don't wonder when you read these in the log file...
+    print(string.format(
+        "%s %s\n%s",
+        os.date("%d.%m.%Y %H:%M:%S"),
+        firstline,
+        headerquery:gsub("([^\r\n]+)", "    %1"):match("(.+)[\r\n]+$")
+    ))
+
+    self.protocol = protocol
+    self.method = method:upper()
+    self.url = path -- raw
+    self.path = self.normalizePath(resource)
+    self.query = self.explodePath(urlquery)
+    -- self.fragment = nil -- browser only feature (e.g. #url-fragment-part)
+
+    self:parse(headerquery)
+    self.received = true
+    return self
+end
+
+
+function Header:send(receiver, status)
+    assert(not self.sent, "http header already sent")
+    assert(receiver, "http receiver socket missing")
+    assert(type(status) == "number" or type(status) == "string", "response status code missing")
+    assert(self.header:get "Date", "date header missing")
+    assert(self.header:get "Content-Type", "http content type undefined")
+    assert(self.header:get "Transfer-Encoding" or self:get "Content-Length", "http content length and/or encoding undefined")
+    receiver:send(self:serialize(status))
+    self.sent = true
 end
 
 

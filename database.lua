@@ -125,4 +125,7 @@ function Database:destroyTable(name)
 end
 
 
+-- TODO insert, update, upsert, delete wrappers that work natevly with Lua tables
+
+
 return Database

@@ -4,13 +4,15 @@ local _require = require
 local _ipairs = ipairs
 local _pairs = pairs
 local _type = type
+local _getn = table.getn
 
 local INDEX = function(t, k) return getmetatable(t).__swap.value[k] end
 local NEWINDEX = function(t, k, v) getmetatable(t).__swap.value[k] = v end
 local CALL = function(t, ...) return getmetatable(t).__swap.value(...) end
-local TYPE = function(t) return type(getmetatable(t).__swap.value) end
-local IPAIRS = function(t) return ipairs(getmetatable(t).__swap.value) end
-local PAIRS = function(t) return pairs(getmetatable(t).__swap.value) end
+local TYPE = function(t) return _type(getmetatable(t).__swap.value) end
+local IPAIRS = function(t) return _ipairs(getmetatable(t).__swap.value) end
+local PAIRS = function(t) return _pairs(getmetatable(t).__swap.value) end
+local LEN = function(t) return _getn(getmetatable(t).__swap.value) end
 
 local utilities = {} -- placeholder, see monkeypatch below
 
@@ -40,14 +42,14 @@ hotload = setmetatable(
         __call = function(self, module)
             assert(
                 not package.loaded[module],
-                "module '"..module.."' can't be registred for hot-reload as it has already been loaded traditionally via require()"
+                "module '"..tostring(module).."' can't be registred for hot-reload as it has already been loaded traditionally via require()"
             )
             if self.package_loaded[module] then
                 local value = getmetatable(self.package_loaded[module]).__swap.value
-                if type(value) ~= "table" and type(value) ~= "function" then
-                    return value
+                if type(value) == "function" or type(value) == "table" then
+                    return self.package_loaded[module] -- via proxy wrapper
                 end
-                return self.package_loaded[module] -- proxy
+                return value
             end
             return getmetatable(self).__create(self, module)
         end;
@@ -56,8 +58,7 @@ hotload = setmetatable(
             local mname, mpath, mvalue = getmetatable(self):__heap(module)
             if not mname or not mpath then
                 error(string.format(
-                    "%s module '%s' could neither be loaded nor registred %s",
-                    os.date("%d.%m.%Y %H:%M:%S"),
+                    "module '%s' could neither be loaded nor registred (seems having errors) %s",
                     module,
                     type(mvalue) == "nil" and "because it returns nil" or "\n"..tostring(mvalue)
                 ))
@@ -67,9 +68,10 @@ hotload = setmetatable(
                 __index = type(mvalue) == "table" and INDEX or nil,
                 __newindex = type(mvalue) == "table" and NEWINDEX or nil,
                 __call = (type(mvalue) == "function" or type(mvalue) == "table") and CALL or nil,
+                __ipairs = type(mvalue) == "table" and IPAIRS or nil,
+                __pairs = type(mvalue) == "table" and PAIRS or nil,
+                __len = type(mvalue) == "table" and LEN or nil,
                 __type = TYPE,
-                __ipairs = IPAIRS,
-                __pairs = PAIRS,
                 __swap = {
                     name = mname,
                     path = mpath,
@@ -77,11 +79,7 @@ hotload = setmetatable(
                     timestamp = utilities.modifiedat(mpath)
                 }
             })
-            print(string.format(
-                "%s module '%s' has been loaded and registred for hot-reload",
-                os.date("%d.%m.%Y %H:%M:%S"),
-                mname
-            ))
+            print(string.format("module '%s' has been loaded and registred for hot-reload", mname))
             return getmetatable(self).__call(self, module)
         end;
 
@@ -92,19 +90,12 @@ hotload = setmetatable(
                 if mname and mpath and mvalue then
                     proxy.__swap.value = mvalue
                     proxy.__swap.timestamp = timestamp
-                    print(string.format(
-                        "%s module '%s' has been hot-reloaded",
-                        os.date("%d.%m.%Y %H:%M:%S"),
-                        mname
-                    ))
-                    -- TODO? each hotswappable object should have a :hotswap function for transfering state its to the swapped object?
+                    print(string.format("module '%s' has been hot-reloaded", mname))
+                    -- TODO? preserve state of hotswappable objects
+                    -- by providing :hotswap class method for transfering state
+                    -- onto the swapped objects?
                 else
-                    print(string.format(
-                        "%s module '%s' could not be hot-re-loaded\n%s",
-                        os.date("%d.%m.%Y %H:%M:%S"),
-                        module,
-                        mvalue
-                    ))
+                    print(string.format("module '%s' could not be hot-re-loaded\n%s", module, mvalue))
                 end
             end
         end;
@@ -113,7 +104,9 @@ hotload = setmetatable(
             local path = self:__path(module)
             assert(type(path) == "string", "can't find module '"..module.."'")
             local ok, msg = pcall(dofile, path)
-            if ok and msg ~= nil then return module, path, msg end
+            if ok == true and msg ~= nil then
+                return module, path, msg
+            end
             return nil, nil, msg
         end;
 
@@ -161,9 +154,9 @@ function type(obj)
 end
 
 
-function iparis(obj)
+function ipairs(obj)
     local proxy = getmetatable(obj)
-    if proxy and type(proxy.__ipairs) == "function" then
+    if proxy and _type(proxy.__ipairs) == "function" then
         return proxy.__ipairs(obj)
     end
     return _ipairs(obj)
@@ -172,10 +165,19 @@ end
 
 function pairs(obj)
     local proxy = getmetatable(obj)
-    if proxy and type(proxy.__pairs) == "function" then
+    if proxy and _type(proxy.__pairs) == "function" then
         return proxy.__pairs(obj)
     end
     return _pairs(obj)
+end
+
+
+function table.getn(obj)
+    local proxy = getmetatable(obj)
+    if proxy and _type(proxy.__len) == "function" then
+        return proxy.__len(obj)
+    end
+    return _getn(obj)
 end
 
 

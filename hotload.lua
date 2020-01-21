@@ -1,5 +1,10 @@
 -- 2020 (c) kontakt@herrsch.de
 
+-- IMPORTANT NOTE for Lua <5.1
+-- When using this class to hotload other modules, be sure to count tables WITH table.getn and NOT with # !!!
+-- Lua 5.1 and prior don't support overriding # via .__len metamethod - so our best bet here is to modify table.getn
+-- and use table.getn whenever we have to check the number of entires in numerical tables
+
 local _require = require
 local _ipairs = ipairs
 local _pairs = pairs

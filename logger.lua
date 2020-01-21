@@ -10,7 +10,7 @@ function print(...)
     local time = os.date("%H:%M:%S")
     local dump = time
     for _, argument in ipairs{...} do dump = dump.."    "..tostring(argument) end
-    write(path..os.date("%Y-%m-%d")..".txt", dump:sub(1, -4).."\n", "a")
+    write(path..os.date("%Y-%m-%d")..".txt", dump.."\n", "a")
     _print(time, ...)
 end
 

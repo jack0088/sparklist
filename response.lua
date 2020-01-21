@@ -5,6 +5,7 @@
 
 
 local runstring = loadstring or load -- Lua > 5.1
+local date = require "datetime"
 local class = require "class"
 local hotload = require "hotswap"
 local utilities = hotload "utilities"
@@ -77,7 +78,7 @@ function Response:submit(content, mime, status, ...)
             self.header.HTTP_STATUS_MESSAGE[status]
         )
     end
-    self.header:set("Date", self.header.dateGTM()) -- update/assign
+    self.header:set("Date", date.GTM()) -- update/assign
     self.header:set("Content-Type", mime or "text/plain")
     self.header:set("Content-Length", #content)
     self:sendHeader(status or 200)

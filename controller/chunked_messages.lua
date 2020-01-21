@@ -10,6 +10,8 @@
 -- similar applies to responses - they blocking as well, but when writing only chunk by chunk you can use a while loop for example
 -- now, that loop can be yielded as well as you can guess :)
 
+local date = require "datetime"
+
 return function(request, response)
     print "receiving chunked request (if any):"
     request:receiveMessage(function(chunk) -- :receiveMessage() also calls :receiveHeader() if omitted
@@ -20,7 +22,7 @@ return function(request, response)
     print("request.message:", request.message)
 
     print "responding with chunked response:"
-    response.header:set("Date", response.header.dateGTM())
+    response.header:set("Date", date.GTM())
     response.header:set("Content-Type", "text/plain; charset=utf-8")
     response.header:set("Transfer-Encoding", "chunked")
 

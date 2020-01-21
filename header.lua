@@ -49,21 +49,6 @@ Header.HTTP_STATUS_MESSAGE = {
 }
 
 
-Header.dateUTC = function(offset, zone) -- Coordinated Universal Time
-    -- @offset number in hours
-    -- @zone string, e.g.:
-    -- "GTM" = Greenwich Mean Time (offset = 0)
-    -- "CET" = Central European (Standard) Time (offset = +1)
-    offset = type(offset) == "number" and offset * 60 * 60 or 0
-    zone = offset ~= 0 and zone or "GTM"
-    return os.date("!%a, %d %b %Y %H:%M:%S "..zone, os.time() + offset)
-end
-
-
-Header.dateGTM = function() return Header.dateUTC(0, "GTM") end -- Europe
-Header.dateCET = function() return Header.dateUTC(1, "CET") end -- Germany, among others
-
-
 -- handles application/x-www-form-urlencoded
 -- returns raw url by converting percentage-encoded strings back into acii
 Header.decodeUrlEncoded = function(percent_encoded)

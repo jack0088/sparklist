@@ -7,7 +7,7 @@
 local hotload = require "hotswap"
 local Request = hotload "request"
 local Response = hotload "response"
-local Session = hotload "session"
+local Session = hotload "model.session"
 local Contact = {}
 
 

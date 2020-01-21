@@ -7,72 +7,72 @@ local Database = hotload "database"
 local LocalStorage = class()
 
 
-function LocalStorage:new(namespace)
+function LocalStorage:new(name)
     self.db = Database "db/local_storage.db"
-    self.namespace = namespace
+    self.table = name
 end
 
 
-function LocalStorage:get_namespace() -- getter for LocalStorage.table
+function LocalStorage:get_table() -- getter for LocalStorage.table
     return self.__tablename
 end
 
 
-function LocalStorage:set_namespace(new) -- setter for LocalStorage.table
-    assert(type(new) == "string", "missing common identifier string")
-    assert(not new:find("[^%a%d%-_]+"), "common identifier string '"..new.."' must only contain [a-zA-Z0-9%-_] characters")
-    if self.namespace ~= nil and self.namespace ~= new then
-        if self.db:count(self.namespace) == 0 then
+function LocalStorage:set_table(name) -- setter for LocalStorage.table
+    assert(type(name) == "string", "missing common identifier string")
+    assert(not name:find("[^%a%d%-_]+"), "common identifier string '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
+    if self.table ~= nil and self.table ~= name then
+        if not self:exists() then
             -- before switching to new db table delete the current one if it remains empty
             self:destroy()
         end
     end
-    self.__tablename = new
+    self.__tablename = name
     self:create()
 end
 
 
 function LocalStorage:create()
-    if type(self.namespace) == "string" then
+    if type(self.table) == "string" then
         self.db:run(
             [[create table if not exists '%s' (
                 id integer primary key autoincrement,
                 key text unique not null,
                 value text not null
             )]],
-            self.namespace
+            self.table
         )
     end
 end
 
 
 function LocalStorage:destory()
-    if type(self.namespace) == "string" then
-        self.db:run("drop table if exists '%s'", self.namespace)
+    if type(self.table) == "string" then
+        self.db:run("drop table if exists '%s'", self.table)
     end
 end
 
 
 function LocalStorage:exists(key, value)
     if key and value then
-        local records = self.db:run("select id from '%s' where key = '%s' and value = '%s'", self.namespace, tostring(key), tostring(value))
+        local records = self.db:run("select id from '%s' where key = '%s' and value = '%s'", self.table, tostring(key), tostring(value))
         return table.getn(records) > 0 and record[1].id or false
     elseif value then
-        local records = self.db:run("select key from '%s' where value = '%s'", self.namespace, tostring(value))
+        local records = self.db:run("select key from '%s' where value = '%s'", self.table, tostring(value))
         return table.getn(records) > 0 and records[1].key or false
     elseif key then
-        local records = self.db:run("select value from '%s' where key = '%s'", self.namespace, tostring(key))
+        local records = self.db:run("select value from '%s' where key = '%s'", self.table, tostring(key))
         return table.getn(records) > 0 and records[1].value or false
     end
-    return self.db:countTable(self.namespace) > 0
+    return self.db:countTable(self.table) > 0
 end
 
 
 function LocalStorage:set(key, value) -- upsert (update + insert)
     if self:exists(key) then
-        self.db:run("update '%s' set value = '%s' where key = '%s'", self.namespace, tostring(value), tostring(key))
+        self.db:run("update '%s' set value = '%s' where key = '%s'", self.table, tostring(value), tostring(key))
     else
-        self.db:run("insert into '%s' (key, value) values ('%s', '%s')", self.namespace, tostring(key), tostring(value))
+        self.db:run("insert into '%s' (key, value) values ('%s', '%s')", self.table, tostring(key), tostring(value))
     end
 end
 
@@ -82,7 +82,7 @@ function LocalStorage:get(key)
         local value = self:exists(key)
         return value == false and nil or value
     end
-    local records = self.db:run("select key, value from '%s'", self.namespace)
+    local records = self.db:run("select key, value from '%s'", self.table)
     if table.getn(records) > 0 then -- unpack rows
         local entries = {}
         for id, row in ipairs(records) do

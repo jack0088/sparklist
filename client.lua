@@ -7,23 +7,14 @@ function Client:connect(socket)
     assert(not self.socket, "client already bound")
     self.socket = socket
     self.ip, self.port = self.socket:getpeername()
-    print(string.format(
-        "%s xors connected to client at %s:%s",
-        os.date("%d.%m.%Y %H:%M:%S"),
-        self.ip,
-        self.port
-    ))
+    print(string.format("xors connected to client at %s:%s", self.ip, self.port))
     return self
 end
 
 
 function Client:disconnect()
     if self.socket then
-        print(string.format(
-            "%s xors disconnected from client %s",
-            os.date("%d.%m.%Y %H:%M:%S"),
-            self.ip
-        ))
+        print(string.format("xors disconnected from client %s", self.ip))
         self.socket:close()
         self.socket = nil
         self.ip = nil

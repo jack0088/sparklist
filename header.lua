@@ -246,8 +246,7 @@ function Header:receive(transmitter)
 
     -- Some browsers send multiple requests to the same url because they try to obtain the .favicon; Safari even trigger request while auto-completing you input. Just don't wonder when you read these in the log file...
     print(string.format(
-        "%s %s\n%s",
-        os.date("%d.%m.%Y %H:%M:%S"),
+        "%s\n%s",
         firstline,
         headerquery:gsub("([^\r\n]+)", "    %1"):match("(.+)[\r\n]+$")
     ))

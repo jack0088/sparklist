@@ -37,13 +37,7 @@ return function(request, response, token)
 
     if identity then
         local email, status = https.request("https://app.swoopnow.com/api/inbound_emails/"..identity) -- TODO add timeout of 1s
-        print(string.format(
-            "%s swoopjs responded with token=%s, state=%s, email=%s",
-            os.date("%d.%m.%Y %H:%M:%S"),
-            identity,
-            status,
-            email
-        ))
+        print(string.format("swoopjs responded with token=%s, state=%s, email=%s", identity, status, email))
         if status == 200 and type(email) == "string" and #email > 0 then
             response:addHeader("Set-Cookie", "swoopid="..identity) -- create new or update existing
             return response:submit("view/profile.lua", "text/html", 200, email, request.header.url)

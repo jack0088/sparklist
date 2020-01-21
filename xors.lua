@@ -44,8 +44,7 @@ function Xors:run()
     --self.ip = self.socket:getsockname()
     self.name, self.ip = self:whois()
     print(string.format(
-        "%s xors is listening to clients at %s:%s alias %s:%s",
-        os.date("%d.%m.%Y %H:%M:%S"),
+        "xors is listening to clients at %s:%s alias %s:%s",
         self.ip,
         self.port,
         self.name,
@@ -74,10 +73,7 @@ function Xors:run()
     
     -- TODO we never reach this statement because of pkill that breaks the main loop from above and terminates the running process. Need to find a way around this to peacefully close the server socket over here!
     if self.socket then self.socket:close() end
-    print(string.format(
-        "%s xors shut down",
-        os.date("%d.%m.%Y %H:%M:%S")
-    ))
+    print(string.format("xors shut down"))
 end
 
 

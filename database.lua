@@ -53,11 +53,7 @@ function Database:run(sql_query, ...)
         sql_statement = string.format(sql_statement, unpack(variables))
     end
 
-    print(string.format(
-        "%s executed SQL transaction with query \"%s\"",
-        os.date("%d.%m.%Y %H:%M:%S"),
-        sql_statement
-    ))
+    print(string.format("executed SQL transaction with query \"%s\"", sql_statement))
 
     local cursor = assert(self.connection:execute(sql_statement)) -- single transaction (auto-commit mode)
     local dataset, row = {}

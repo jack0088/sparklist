@@ -13,8 +13,8 @@ local Contact = {}
 
 function Contact:onConnect(server, client)
     server:hook("beforeRequest", server, client)
-    client.request = Request(client.socket)
     server:hook("beforeResponse", server, client)
+    client.request = Request(client.socket)
     client.response = Response(client.socket, client.request)
     client.request.header.session = Session(client.request, client.response, "sparklist-session")
 end

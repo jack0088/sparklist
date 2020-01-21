@@ -1,4 +1,4 @@
-local hotload = require "hotswap"
+local hotload = require "hotload"
 
 return {
     hotload, -- run watcher via :onEnterFrame

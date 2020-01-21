@@ -2,7 +2,7 @@
 
 -- HTTP/1.1
 
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local class = hotload "class"
 local Header = class()
 

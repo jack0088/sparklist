@@ -1,4 +1,4 @@
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local dom = hotload "dom"
 
 return function(path, method, status, message)

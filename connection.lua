@@ -4,7 +4,7 @@
 -- this plugin emits additional, custom xors hook-events to trigger listening plugin-callbacks
 -- it also enriches existing Client object with Request and Response objects
 
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local Request = hotload "request"
 local Response = hotload "response"
 local Session = hotload "model.session"

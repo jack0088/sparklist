@@ -4,7 +4,7 @@
 -- NOTE Any route should return true on successful handling of request and false on failing!
 -- NOTE Any route that returns nil (void) will fall-through to next possible match!
 
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local api = hotload "router"()
 
 api:get("/chunked%-message", "controller/chunked_messages.lua")

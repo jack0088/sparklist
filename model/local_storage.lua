@@ -1,7 +1,7 @@
 -- 2020 (c) kontakt@herrsch.de
 
 
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local class = hotload "class"
 local Database = hotload "database"
 local LocalStorage = class()

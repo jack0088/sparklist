@@ -50,7 +50,7 @@ EXAMPLE (respond with html layout shorthand; taken care by preload() function, s
 --]]
 
 local unpack = unpack or table.unpack -- Lua > 5.1
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local class = hotload "class"
 local Router = class()
 

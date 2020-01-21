@@ -9,7 +9,7 @@
 
 
 local socket = require "socket"
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local class = hotload "class"
 local Client = hotload "client"
 local Xors = class()

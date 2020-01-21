@@ -7,7 +7,7 @@
 
 local unpack = unpack or table.unpack -- Lua > 5.1
 local sql = require "luasql.sqlite3".sqlite3()
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local class = hotload "class"
 local Database = class()
 

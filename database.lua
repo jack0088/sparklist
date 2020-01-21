@@ -38,7 +38,7 @@ end
 -- @request_sink (optional function) handler that can process each row of the returned database records; it works pretty much the same as Requst:receiveMessage(stream_sink); the idea is to allow Database.run to be executed in a threaded manner
 function Database:run(sql_query, ...)
     self:connect()
-    local sql_statement = sql_query:gsub("%s+", " ")
+    local sql_statement = sql_query:gsub("%s+", " ") -- trim whitespaces
     local variables = {...}
     local request_sink = variables[#variables]
 
@@ -81,55 +81,24 @@ end
 
 
 -- check if table @name exists and return true or false
--- if @name is nil then return all existing tables in that database
-function Database:hasTable(name)
-    if type(name) == "string" then
-        local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(name))
-        return #matches > 0 and matches[1].name == tostring(name) or false
+-- if @table_name is nil then returns all existing tables in that database
+function Database:has(table_name)
+    if type(table_name) == "string" then
+        local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(table_name))
+        return #matches > 0 and matches[1].name == tostring(table_name) or false
     end
     return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
 end
 
 
--- returns the number of records in table @name
--- .countTable(@name) == 0 means is empty
-function Database:countTable(name)
-    if not self:hasTable(name) then return 0 end
-    local records = self:run("select count(id) as count from '%s'", name)
+-- returns the number of counted records in table @name
+-- Database.count(@table_name) == 0 means it is empty
+function Database:count(table_name)
+    local exists = self:has(table_name)
+    if type(exists) == "table" or not exists then return 0 end
+    local records = self:run("select count(id) as count from '%s'", table_name)
     return records[1].count
 end
-
-
--- create table with @name (if not yet created)
--- IMPORTANT NOTE .create() is a potential memory leak! Be careful with this!
--- Make sure to always use .destroyTable() on reserved but unused or .isEmtpyTable() tables
-function Database:createTable(name)
-    if type(name) == "string" then
-        self:run(
-
-            -- TODO map Lua table to key = value their requirements!!!!!!!!
-            -- this must map to every type of table
-
-            [[create table if not exists '%s' (
-                id integer primary key autoincrement,
-                key text unique not null,
-                value text not null
-            )]],
-            name
-        )
-    end
-end
-
-
--- delete table @name and all of its contents
-function Database:destroyTable(name)
-    if type(name) == "string" then
-        self:run("drop table if exists '%s'", name)
-    end
-end
-
-
--- TODO insert, update, upsert, delete wrappers that work natevly with Lua tables
 
 
 return Database

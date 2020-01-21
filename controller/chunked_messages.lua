@@ -10,7 +10,8 @@
 -- similar applies to responses - they blocking as well, but when writing only chunk by chunk you can use a while loop for example
 -- now, that loop can be yielded as well as you can guess :)
 
-local date = require "datetime"
+local hotload = require "hotswap"
+local date = hotload "datetime"
 
 return function(request, response)
     print "receiving chunked request (if any):"

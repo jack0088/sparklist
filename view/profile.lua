@@ -1,4 +1,5 @@
-local dom = require "dom"
+local hotload = require "hotswap"
+local dom = hotload "dom"
 
 return function(email, url)
     local message = "sorry fellow, i dont know you."

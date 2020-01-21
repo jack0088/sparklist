@@ -1,4 +1,5 @@
-local dom = require "dom"
+local hotload = require "hotswap"
+local dom = hotload "dom"
 
 return function(path, method, status, message)
     assert(type(path) == "string", "view is missing parameters")

@@ -1,4 +1,5 @@
-local dom = require "dom"
+local hotload = require "hotswap"
+local dom = hotload "dom"
 
 local page = dom{
     dom["!doctype"] "html",

@@ -25,6 +25,16 @@ function Xors:new(settings)
 end
 
 
+function Xors:whois() -- works even without internet
+    local connection, server, client, port = socket.udp()
+    connection:setpeername("74.125.115.104", self.port or 80) -- connect client to host (google placeholder, host ip and port are non-relevant here)
+    server = connection:getsockname()
+    client, port = connection:getpeername()
+    connection:close()
+    return socket.dns.gethostname(), server, port
+end
+
+
 function Xors:run()
     self.clients = {}
     self.socket = socket.tcp()
@@ -98,16 +108,6 @@ function Xors:removePlugin(reference)
         end
     end
     return false
-end
-
-
-function Xors:whois() -- works even without internet
-    local connection, server, client, port = socket.udp()
-    connection:setpeername("74.125.115.104", self.port or 80) -- connect client to host (google placeholder, host ip and port are non-relevant here)
-    server = connection:getsockname()
-    client, port = connection:getpeername()
-    connection:close()
-    return socket.dns.gethostname(), server, port
 end
 
 

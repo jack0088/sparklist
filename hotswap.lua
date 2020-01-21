@@ -47,7 +47,7 @@ hotload = setmetatable(
                 if type(value) ~= "table" and type(value) ~= "function" then
                     return value
                 end
-                return self.package_loaded[module]
+                return self.package_loaded[module] -- proxy
             end
             return getmetatable(self).__create(self, module)
         end;
@@ -56,10 +56,10 @@ hotload = setmetatable(
             local mname, mpath, mvalue = getmetatable(self):__heap(module)
             if not mname or not mpath then
                 error(string.format(
-                    "%s module '%s' could neither be loaded nor registred\n%s",
+                    "%s module '%s' could neither be loaded nor registred %s",
                     os.date("%d.%m.%Y %H:%M:%S"),
                     module,
-                    mvalue
+                    type(mvalue) == "nil" and "because it returns nil" or "\n"..tostring(mvalue)
                 ))
                 return nil
             end
@@ -144,10 +144,7 @@ end
 
 
 function require(module)
-    if hotload and hotload.package_loaded[module] then
-        return hotload(module)
-    end
-    return _require(module)
+    return (type(hotload) == "table" and hotload.package_loaded[module]) and hotload(module) or _require(module)
 end
 
 

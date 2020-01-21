@@ -20,7 +20,7 @@ end
 
 function LocalStorage:set_namespace(new) -- setter for LocalStorage.table
     assert(type(new) == "string", "missing common identifier string")
-    assert(not new:find("[^%a%d%-_]+"), "common identifier string '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
+    assert(not new:find("[^%a%d%-_]+"), "common identifier string '"..new.."' must only contain [a-zA-Z0-9%-_] characters")
     if self.namespace ~= nil and self.namespace ~= new then
         if self.db:count(self.namespace) == 0 then
             -- before switching to new db table delete the current one if it remains empty

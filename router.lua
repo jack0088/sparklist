@@ -83,7 +83,7 @@ function Router:onDispatch(server, client)
     for _, entry in ipairs(self.map) do
         -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
         local captures = {(request.header.method:upper()..request.header.path):match("^"..entry.route.."$")}
-        if #captures > 0 then
+        if table.getn(captures) > 0 then
             print(string.format("client dispatched to route '%s'", entry.route))
             if type(request.route_controller) ~= "thread" then
                 request.route_controller = coroutine.create(entry.controller)

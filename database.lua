@@ -41,15 +41,15 @@ function Database:run(sql_query, ...)
     self:connect()
     local sql_statement = sql_query:gsub("%s+", " ") -- trim whitespaces
     local variables = {...}
-    local request_sink = variables[#variables]
+    local request_sink = variables[table.getn(variables)]
 
     if type(request_sink) == "function" then
-        table.remove(variables, #variables)
+        table.remove(variables, table.getn(variables))
     else
         request_sink = nil
     end
 
-    if #variables > 0 then
+    if table.getn(variables) > 0 then
         sql_statement = string.format(sql_statement, unpack(variables))
     end
 
@@ -82,7 +82,7 @@ end
 function Database:has(table_name)
     if type(table_name) == "string" then
         local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(table_name))
-        return #matches > 0 and matches[1].name == tostring(table_name) or false
+        return table.getn(matches) > 0 and matches[1].name == tostring(table_name) or false
     end
     return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
 end

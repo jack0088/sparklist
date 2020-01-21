@@ -57,7 +57,7 @@ function Xors:run()
         if remote ~= nil then
             table.insert(self.clients, Client():connect(remote))
         end
-        for client_id = #self.clients, 1, -1 do
+        for client_id = table.getn(self.clients), 1, -1 do
             local client = self.clients[client_id]
             if not client.request or not client.response then
                 self:hook("onConnect", self, client)
@@ -97,7 +97,7 @@ function Xors:removePlugin(reference)
         table.remove(self.plugins, reference)
         return true
     end
-    for id = #self.plugins, 1, -1 do
+    for id = table.getn(self.plugins), 1, -1 do
         if self.plugins[id] == reference then
             table.remove(self.plugins, id)
             return true

@@ -56,13 +56,13 @@ end
 function LocalStorage:exists(key, value)
     if key and value then
         local records = self.db:run("select id from '%s' where key = '%s' and value = '%s'", self.namespace, tostring(key), tostring(value))
-        return #records > 0 and record[1].id or false
+        return table.getn(records) > 0 and record[1].id or false
     elseif value then
         local records = self.db:run("select key from '%s' where value = '%s'", self.namespace, tostring(value))
-        return #records > 0 and records[1].key or false
+        return table.getn(records) > 0 and records[1].key or false
     elseif key then
         local records = self.db:run("select value from '%s' where key = '%s'", self.namespace, tostring(key))
-        return #records > 0 and records[1].value or false
+        return table.getn(records) > 0 and records[1].value or false
     end
     return self.db:countTable(self.namespace) > 0
 end
@@ -83,7 +83,7 @@ function LocalStorage:get(key)
         return value == false and nil or value
     end
     local records = self.db:run("select key, value from '%s'", self.namespace)
-    if #records > 0 then -- unpack rows
+    if table.getn(records) > 0 then -- unpack rows
         local entries = {}
         for id, row in ipairs(records) do
             entries[row.key] = row.value

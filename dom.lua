@@ -122,7 +122,7 @@ end
 local function source(node) -- generate and serialize a html tag from a descriptor node
     if not node then return end
     if type(node) == "string" then return node end
-    if #node > 0 then
+    if table.getn(node) > 0 then
         local src = ''
         for _, n in ipairs(node) do
             src = src..source(n)

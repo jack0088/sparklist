@@ -56,7 +56,7 @@ hotload = setmetatable(
             local mname, mpath, mvalue = getmetatable(self):__heap(module)
             if not mname or not mpath then
                 error(string.format(
-                    "%s module '%s' could not be loaded, nor registred\n%s",
+                    "%s module '%s' could neither be loaded nor registred\n%s",
                     os.date("%d.%m.%Y %H:%M:%S"),
                     module,
                     mvalue
@@ -113,7 +113,7 @@ hotload = setmetatable(
             local path = self:__path(module)
             assert(type(path) == "string", "can't find module '"..module.."'")
             local ok, msg = pcall(dofile, path)
-            if ok then return module, path, msg end
+            if ok and msg ~= nil then return module, path, msg end
             return nil, nil, msg
         end;
 

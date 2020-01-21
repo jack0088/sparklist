@@ -9,10 +9,9 @@ local _print = print
 function print(...)
     local dump = os.date("%H:%M:%S")
     for _, argument in ipairs{...} do
-        dump = dump.."    "..tostring(argument):gsub("(\n)", "\n    ")
+        dump = dump..tostring(argument):gsub("([^\r\n]+)", "    %1")
     end
-    dum = dump:gsub("\r", "").."\n"
-    write(path..os.date("%Y-%m-%d")..".txt", dump, "a")
+    write(path..os.date("%Y-%m-%d")..".txt", dump.."\n", "a")
     _print(dump)
 end
 

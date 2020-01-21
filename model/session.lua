@@ -4,6 +4,7 @@
 local hotload = require "hotload"
 local class = hotload "class"
 local hash = hotload "randomseed"
+local Database = hotload "database"
 local Storage = hotload "model.local_storage"
 local Session = class(Storage)
 Session.get_uuid = Storage.get_namespace

@@ -51,7 +51,7 @@ function Xors:run()
         for client_id = #self.clients, 1, -1 do
             local client = self.clients[client_id]
             if not client.request or not client.response then
-                self:hook("onConnect", self, self.clients[#self.clients])
+                self:hook("onConnect", self, client)
             end
             self:hook("onProcess", self, client)
             if client.request_received and client.response_sent then

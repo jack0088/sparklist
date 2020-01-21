@@ -12,3 +12,5 @@ function print(...)
     write(path..os.date("%Y-%m-%d")..".txt", dump:sub(1, -4).."\n", "a")
     _print(...)
 end
+
+return print

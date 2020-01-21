@@ -16,7 +16,7 @@ function Contact:onConnect(server, client)
     server:hook("beforeResponse", server, client)
     client.request = Request(client.socket)
     client.response = Response(client.socket, client.request)
-    client.request.header.session = Session(client.request, client.response, "sparklist-session")
+    client.request.header.session = Session(client, "sparklist-session")
 end
 
 

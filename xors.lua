@@ -22,6 +22,7 @@ function Xors:new(settings)
     self.timeout = settings.timeout or 1
     self.backlog = settings.backlog or 100 -- max queue size of waiting clients
     self.plugins = settings.plugins or {}
+    print(#self.plugins)
 end
 
 

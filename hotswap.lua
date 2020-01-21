@@ -40,7 +40,7 @@ hotload = setmetatable(
         __call = function(self, module)
             assert(
                 not package.loaded[module],
-                "module '"..module.."' can't be registred for hot-reload as it has been already loaded traditionally via require()"
+                "module '"..module.."' can't be registred for hot-reload as it has already been loaded traditionally via require()"
             )
             if self.package_loaded[module] then
                 local value = getmetatable(self.package_loaded[module]).__swap.value

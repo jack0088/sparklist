@@ -7,11 +7,13 @@ local path = "log/"
 local _print = print
 
 function print(...)
-    local time = os.date("%H:%M:%S")
-    local dump = time
-    for _, argument in ipairs{...} do dump = dump.."    "..tostring(argument) end
-    write(path..os.date("%Y-%m-%d")..".txt", dump.."\n", "a")
-    _print(time, ...)
+    local dump = os.date("%H:%M:%S")
+    for _, argument in ipairs{...} do
+        dump = dump.."    "..tostring(argument):gsub("(\n)", "\n    ")
+    end
+    dum = dump:gsub("\r", "").."\n"
+    write(path..os.date("%Y-%m-%d")..".txt", dump, "a")
+    _print(dump)
 end
 
 return print

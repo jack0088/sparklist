@@ -248,7 +248,7 @@ function Header:receive(transmitter)
     print(string.format(
         "%s\n%s",
         firstline,
-        headerquery:gsub("([^\r\n]+)", "    %1"):match("(.+)[\r\n]+$")
+        headerquery:match("(.+)[\r\n]+$")
     ))
 
     self.protocol = protocol

@@ -3,8 +3,8 @@
 -- client request parser
 -- runs on every request coming from client to server
 
-local class = require "class"
 local hotload = require "hotswap"
+local class = hotload "class"
 local Header = hotload "header"
 local Message = hotload "message"
 local Request = class()

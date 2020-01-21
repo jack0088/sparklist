@@ -2,7 +2,8 @@
 
 -- HTTP/1.1
 
-local class = require "class"
+local hotload = require "hotswap"
+local class = hotload "class"
 local Header = class()
 
 Header.HTTP_STATUS_MESSAGE = {

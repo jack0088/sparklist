@@ -9,8 +9,8 @@
 
 
 local socket = require "socket"
-local class = require "class"
 local hotload = require "hotswap"
+local class = hotload "class"
 local Client = hotload "client"
 local Xors = class()
 
@@ -22,7 +22,6 @@ function Xors:new(settings)
     self.timeout = settings.timeout or 1
     self.backlog = settings.backlog or 100 -- max queue size of waiting clients
     self.plugins = settings.plugins or {}
-    print(#self.plugins)
 end
 
 

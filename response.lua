@@ -5,9 +5,9 @@
 
 
 local runstring = loadstring or load -- Lua > 5.1
-local date = require "datetime"
-local class = require "class"
 local hotload = require "hotswap"
+local class = hotload "class"
+local date = hotload "datetime"
 local utilities = hotload "utilities"
 local Header = hotload "header"
 local Message = hotload "message"

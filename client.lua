@@ -1,4 +1,5 @@
-local class = require "class"
+local hotload = require "hotswap"
+local class = hotload "class"
 local Client = class()
 
 

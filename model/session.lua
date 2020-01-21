@@ -1,9 +1,9 @@
 -- 2020 (c) kontakt@herrsch.de
 
 
-local hash = require "randomseed"
-local class = require "class"
 local hotload = require "hotswap"
+local class = hotload "class"
+local hash = hotload "randomseed"
 local Storage = hotload "model.local_storage"
 local Session = class(Storage)
 Session.get_uuid = Storage.get_namespace

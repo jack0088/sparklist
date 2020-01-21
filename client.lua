@@ -17,16 +17,20 @@ end
 
 
 function Client:disconnect()
-    assert(self.socket, "missing client socket")
-    self.request_received = true -- unfinished requests/responses will be dropped
-    self.response_sent = true
-    self.socket:close()
-    print(string.format(
-        "%s xors disconnected from client %s",
-        os.date("%d.%m.%Y %H:%M:%S"),
-        self.ip
-    ))
-    return self
+    if self.socket then
+        print(string.format(
+            "%s xors disconnected from client %s",
+            os.date("%d.%m.%Y %H:%M:%S"),
+            self.ip
+        ))
+        self.socket:close()
+        self.socket = nil
+        self.ip = nil
+        self.port = nil
+        self.request_received = true -- unfinished requests/responses will be dropped
+        self.response_sent = true
+        return self
+    end
 end
 
 

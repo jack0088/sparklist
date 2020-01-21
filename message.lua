@@ -4,7 +4,7 @@
 -- NOTE could also be used for any kind of regular messages as an alternative to socket:receive() or socket:send()
 
 
-local hotload = require "hotswap"
+local hotload = require "hotload"
 local class = hotload "class"
 local Message = class()
 

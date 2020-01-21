@@ -39,7 +39,7 @@ end
 -- @request_sink (optional function) handler that can process each row of the returned database records; it works pretty much the same as Requst:receiveMessage(stream_sink); the idea is to allow Database.run to be executed in a threaded manner
 function Database:run(sql_query, ...)
     self:connect()
-    local sql_statement = sql_query:gsub("%s+", " ") -- trim whitespaces
+    local sql_statement = sql_query:gsub("[\r\n%s]+", " ") -- trim whitespaces and newlines
     local variables = {...}
     local request_sink = variables[table.getn(variables)]
 
@@ -53,7 +53,7 @@ function Database:run(sql_query, ...)
         sql_statement = string.format(sql_statement, unpack(variables))
     end
 
-    print(string.format("executed SQL transaction with query \"%s\"", sql_statement))
+    print(string.format("executed SQL transaction\n    in database: %s\n    with query: %s", self.file, sql_statement))
 
     local cursor = assert(self.connection:execute(sql_statement)) -- single transaction (auto-commit mode)
     local dataset, row = {}

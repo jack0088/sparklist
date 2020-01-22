@@ -22,7 +22,7 @@ function LocalStorage:set_table(name) -- setter for LocalStorage.table
     assert(type(name) == "string", "missing common identifier string")
     assert(not name:find("[^%a%d%-_]+"), "common identifier string '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
     if self.table ~= nil and self.table ~= name then
-        if not self:exists() then
+        if self.db:count(self.table) < 1 then
             -- before switching to new db table delete the current one if it remains empty
             self:destroy()
         end

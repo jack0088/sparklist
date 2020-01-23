@@ -20,15 +20,6 @@ function Contact:onConnect(server, client)
 end
 
 
-function Contact:onDisconnect(server, client)
-    -- if not client.request.header.session:exists() then
-    --     client.request.header.session:destroy()
-    -- end
-
-    -- TODO check expired sessions and delete them instead of just created and yet empty ones
-end
-
-
 function Contact:onProcess(server, client)
     if client.request and client.response then
         if client.request.header.received

@@ -149,20 +149,20 @@ function Header:set(header_name, header_value)
             -- add security recomendations for cookies, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie and https://tools.ietf.org/html/rfc6265#page-7
             assert(cookie.name, cookie.value, "cookie header is missing attributes")
             cookie.name = cookie.name:gsub("[^a-zA-Z%-_]*", "") -- trim control characters, separator character, spaces and tabs
-            cookie.httponly = cookie.httponly == false and false or true -- nil defaults to true
-            cookie.samesite = cookie.samesite or "Lax"
+            cookie["HttpOnly"] = cookie["HttpOnly"] == false and false or true -- nil defaults to true
+            cookie["SameSite"] = cookie["SameSite"] or "Lax"
             return cookie
         end
 
         local function pack_attributes(cookie)
             local query = string.format("%s=%s", cookie.name, cookie.value)
-            if cookie.expires then query = query.."; Expires="..cookie.expires end
-            if cookie.maxage then query = query.."; Max-Age="..cookie.maxage end
-            if cookie.domain then query = query.."; Domain="..cookie.domain end
-            if cookie.path then query = query.."; Path="..cookie.path end
-            if cookie.secure then query = query.."; Secure" end
-            if cookie.httponly then query = query.."; HttpOnly" end
-            if cookie.samesite then query = query.."; SameSite="..cookie.samesite end
+            if cookie["Expires"]  then query = query.."; Expires="..cookie["Expires"] end
+            if cookie["Max-Age"]  then query = query.."; Max-Age="..cookie["Max-Age"] end
+            if cookie["Domain"]   then query = query.."; Domain="..cookie["Domain"] end
+            if cookie["Path"]     then query = query.."; Path="..cookie["Path"] end
+            if cookie["Secure"]   then query = query.."; Secure" end
+            if cookie["HttpOnly"] then query = query.."; HttpOnly" end
+            if cookie["SameSite"] then query = query.."; SameSite="..cookie["SameSite"] end
             return query
         end
 

@@ -15,7 +15,7 @@ Session.set_table = Storage.set_table
 function Session:new(client, cookie, lifetime)
     assert(client.request and client.response, "client request/response object missing")
     
-    self.cookie_name = cookie or "xors-session-id"
+    self.cookie_name = cookie or "xors_session_id"
     local session_uuid = hash(32)
     for key, value in client.request.header:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do
         if key == self.cookie_name then

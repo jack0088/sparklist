@@ -11,7 +11,7 @@
 -- now, that loop can be yielded as well as you can guess :)
 
 local hotload = require "hotload"
-local date = hotload "datetime"
+local dt = hotload "datetime"
 
 return function(request, response)
     print "receiving chunked request (if any):"
@@ -23,7 +23,7 @@ return function(request, response)
     print("request.message:", request.message)
 
     print "responding with chunked response:"
-    response.header:set("Date", date.GTM())
+    response.header:set("Date", dt.date())
     response.header:set("Content-Type", "text/plain; charset=utf-8")
     response.header:set("Transfer-Encoding", "chunked")
 

@@ -64,7 +64,7 @@ function LocalStorage:exists(key, value)
         local records = self.db:run("select value from '%s' where key = '%s'", self.table, tostring(key))
         return table.getn(records) > 0 and records[1].value or false
     end
-    return self.db:countTable(self.table) > 0
+    return self.db:count(self.table) > 0
 end
 
 

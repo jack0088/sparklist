@@ -5,11 +5,18 @@
 -- it also enriches existing Client object with Request and Response objects
 
 local hotload = require "hotload"
+local dt = hotload "datetime"
 local Request = hotload "request"
 local Response = hotload "response"
 local Session = hotload "session"
-local SessionGarbageCollector = hotload "garbagecollect"("session")
+local session_gc = hotload "garbagecollect"("session")
 local Contact = {}
+
+
+function Contact:onStartup(server)
+    -- server:insertPlugin(session_gc) -- if not yet done
+    -- print("session_gs plugin inserted onStartup? count >>>>>>>>>>", table.gen(server.plugins))
+end
 
 
 function Contact:onConnect(server, client)
@@ -18,7 +25,14 @@ function Contact:onConnect(server, client)
     client.request = Request(client.socket)
     client.response = Response(client.socket, client.request)
     client.request.header.session = Session(client, "sparklist_session")
-    server:insertPlugin(SessionGarbageCollector) -- if not yet done so
+    
+    local session_database = client.request.header.session.db.file
+    local session_table = client.request.header.session.table
+    local current_time = dt.timestamp()
+    local cookie_expiry = current_time + client.request.header.session.cookie_lifetime
+    if cookie_expiry > current_time then
+        session_gc:queue(session_database, session_table, nil, cookie_expiry)
+    end
 end
 
 

@@ -31,9 +31,9 @@ function Contact:onProcess(server, client)
             if client.response.header.sent then
                 server:hook("afterRequest", server, client)
             end
-        end
-        if client.response_sent then
-            server:hook("afterResponse", server, client)
+            if client.response.message.sent then
+                server:hook("afterResponse", server, client)
+            end
         end
     end
 end

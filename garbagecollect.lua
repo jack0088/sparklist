@@ -29,7 +29,6 @@ end
 
 
 function GarbageCollector:queue(database, table, row, date)
-    -- TODO do not fail when needed database or table or row is missing!
     local matching_jobs = self.db:run(
         "select id from '%s' where dbname = '%s' and tbname %s and row_id %s",
         self.name,

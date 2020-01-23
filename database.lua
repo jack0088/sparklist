@@ -5,6 +5,7 @@
 -- LuaSQL documentation at https://keplerproject.github.io/luasql/manual.html
 
 
+local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
 local unpack = unpack or table.unpack -- Lua > 5.1
 local sql = require "luasql.sqlite3".sqlite3()
 local hotload = require "hotload"
@@ -41,15 +42,15 @@ function Database:run(sql_query, ...)
     self:connect()
     local sql_statement = sql_query:gsub("[\r\n%s]+", " ") -- trim whitespaces and newlines
     local variables = {...}
-    local request_sink = variables[table.getn(variables)]
+    local request_sink = variables[getn(variables)]
 
     if type(request_sink) == "function" then
-        table.remove(variables, table.getn(variables))
+        table.remove(variables, getn(variables))
     else
         request_sink = nil
     end
 
-    if table.getn(variables) > 0 then
+    if getn(variables) > 0 then
         sql_statement = string.format(sql_statement, unpack(variables))
     end
 
@@ -82,7 +83,7 @@ end
 function Database:has(table_name)
     if type(table_name) == "string" then
         local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(table_name))
-        return table.getn(matches) > 0 and matches[1].name == tostring(table_name) or false
+        return getn(matches) > 0 and matches[1].name == tostring(table_name) or false
     end
     return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
 end

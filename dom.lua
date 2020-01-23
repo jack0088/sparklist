@@ -62,6 +62,7 @@ EXAMPLE (append a html element after the fact)
 
 --]]
 
+local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
 
 local SELF_CLOSING_TAGS = { -- sorted alphabetically
     "area",
@@ -122,7 +123,7 @@ end
 local function source(node) -- generate and serialize a html tag from a descriptor node
     if not node then return end
     if type(node) == "string" then return node end
-    if table.getn(node) > 0 then
+    if getn(node) > 0 then
         local src = ''
         for _, n in ipairs(node) do
             src = src..source(n)

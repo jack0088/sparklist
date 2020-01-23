@@ -1,6 +1,7 @@
 -- 2020 (c) kontakt@herrsch.de
 
 
+local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
 local hotload = require "hotload"
 local class = hotload "class"
 local Database = hotload "database"
@@ -56,13 +57,13 @@ end
 function LocalStorage:exists(key, value)
     if key and value then
         local records = self.db:run("select id from '%s' where key = '%s' and value = '%s'", self.table, tostring(key), tostring(value))
-        return table.getn(records) > 0 and record[1].id or false
+        return getn(records) > 0 and record[1].id or false
     elseif value then
         local records = self.db:run("select key from '%s' where value = '%s'", self.table, tostring(value))
-        return table.getn(records) > 0 and records[1].key or false
+        return getn(records) > 0 and records[1].key or false
     elseif key then
         local records = self.db:run("select value from '%s' where key = '%s'", self.table, tostring(key))
-        return table.getn(records) > 0 and records[1].value or false
+        return getn(records) > 0 and records[1].value or false
     end
     return self.db:count(self.table) > 0
 end
@@ -83,7 +84,7 @@ function LocalStorage:get(key)
         return value == false and nil or value
     end
     local records = self.db:run("select key, value from '%s'", self.table)
-    if table.getn(records) > 0 then -- unpack rows
+    if getn(records) > 0 then -- unpack rows
         local entries = {}
         for id, row in ipairs(records) do
             entries[row.key] = row.value

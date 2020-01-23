@@ -8,6 +8,7 @@
 ---> luasocket
 
 
+local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
 local socket = require "socket"
 local hotload = require "hotload"
 local class = hotload "class"
@@ -43,6 +44,7 @@ function Xors:run()
     self.socket:listen(self.backlog)
     --self.ip = self.socket:getsockname()
     self.name, self.ip = self:whois()
+    self:hook("onStartup", self)
     print(string.format(
         "xors is listening to clients at %s:%s alias %s:%s",
         self.ip,
@@ -57,7 +59,7 @@ function Xors:run()
         if remote ~= nil then
             table.insert(self.clients, Client():connect(remote))
         end
-        for client_id = table.getn(self.clients), 1, -1 do
+        for client_id = getn(self.clients), 1, -1 do
             local client = self.clients[client_id]
             if not client.request or not client.response then
                 self:hook("onConnect", self, client)
@@ -72,6 +74,7 @@ function Xors:run()
     end
     
     -- TODO we never reach this statement because of pkill that breaks the main loop from above and terminates the running process. Need to find a way around this to peacefully close the server socket over here!
+    self:hook("onShutdown", self)
     if self.socket then self.socket:close() end
     print(string.format("xors shut down"))
 end
@@ -106,7 +109,7 @@ function Xors:removePlugin(reference)
         table.remove(self.plugins, reference)
         return true
     end
-    for id = table.getn(self.plugins), 1, -1 do
+    for id = getn(self.plugins), 1, -1 do
         if self.plugins[id] == reference then
             table.remove(self.plugins, id)
             return true

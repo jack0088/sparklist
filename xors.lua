@@ -87,7 +87,16 @@ end
 
 
 function Xors:insertPlugin(reference)
-    table.insert(self.plugins, reference)
+    local existing_plugin = false
+    for _, plugin in ipairs(self.plugins) do
+        if plugin == reference then
+            existing_plugin = true
+            break
+        end
+    end
+    if not existing_plugin then
+        table.insert(self.plugins, reference)
+    end
     return true
 end
 

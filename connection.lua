@@ -8,6 +8,7 @@ local hotload = require "hotload"
 local Request = hotload "request"
 local Response = hotload "response"
 local Session = hotload "session"
+local SessionGarbageCollector = hotload "garbagecollect"("session")
 local Contact = {}
 
 
@@ -17,6 +18,7 @@ function Contact:onConnect(server, client)
     client.request = Request(client.socket)
     client.response = Response(client.socket, client.request)
     client.request.header.session = Session(client, "sparklist_session")
+    server:insertPlugin(SessionGarbageCollector) -- if not yet done so
 end
 
 

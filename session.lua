@@ -2,8 +2,9 @@
 
 
 local hotload = require "hotload"
-local class = hotload "class"
+local dt = hotload "datetime"
 local hash = hotload "randomseed"
+local class = hotload "class"
 local Database = hotload "database"
 local Storage = hotload "local_storage"
 local Session = class(Storage)
@@ -26,7 +27,8 @@ function Session:new(client, cookie, lifetime)
     self.db = Database "db/client_session.db"
     self.table = session_uuid
     self.cookie_lifetime = lifetime or 604800 -- 7 days (in seconds)
-    client.response.header:set("set-cookie", self.cookie_name.."="..self.table.."; Max-Age="..self.cookie_lifetime) -- update or create new
+    local death_date = dt.date(dt.timestamp() + self.cookie_lifetime)
+    client.response.header:set("set-cookie", self.cookie_name.."="..self.table.."; Expires="..death_date) -- update or create new
 end
 
 

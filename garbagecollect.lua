@@ -31,13 +31,13 @@ end
 
 
 function GarbageCollector:get_verbose()
-    return self.settings.db.debuglog and self.db.debuglog
+    return self.settings.db.verbose and self.db.verbose
 end
 
 
 function GarbageCollector:set_verbose(flag)
-    self.settings.db.debuglog = flag
-    self.db.debuglog = flag
+    self.settings.db.verbose = flag
+    self.db.verbose = flag
 end
 
 

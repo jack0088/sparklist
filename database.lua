@@ -16,7 +16,7 @@ local Database = class()
 function Database:new(filepath)
     self.timeout = 1
     self.file = filepath
-    self.debuglog = true
+    self.verbose = true
 end
 
 
@@ -55,7 +55,7 @@ function Database:run(sql_query, ...)
         sql_statement = string.format(sql_statement, unpack(variables))
     end
 
-    if self.debuglog then
+    if self.verbose then
         print(string.format("executed SQL transaction in database '%s' with query:\n%s", self.file, sql_statement))
     end
 

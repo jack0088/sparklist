@@ -22,7 +22,7 @@ Response.file = function(url)
         -- return (binary) content, mime-type, status-code
         return content, utilities.filemime(url), 200
     end
-    return nil, nil, 404
+    return nil, nil, 400
 end
 
 
@@ -69,7 +69,7 @@ function Response:submit(content, mime, status, ...)
         end
     end
     if not content then
-        status = status or 404
+        status = status or 400
         mime = mime or "text/html"
         content = assert(dofile("view/error.lua"))(
             self.request.header.path,

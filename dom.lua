@@ -18,7 +18,7 @@ EXAMPLE (single html element)
 EXAMPLE (hierarchical nesting of html elements)
 
     dom.head{
-        dom.title "404",
+        dom.title "400",
         dom.meta{charset = "utf-8"}
     }
 
@@ -36,7 +36,7 @@ EXAMPLE (top level group, single and nested html elements)
         dom["!doctype"] "html",
         dom.html{
             dom.head{
-                dom.title "404",
+                dom.title "400",
                 dom.meta{charset = "utf-8"}
             },
             dom.body{

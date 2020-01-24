@@ -68,7 +68,7 @@ end
 -- in case of string it is supposed to be a file name
 -- (path separated by / and with .extension OR separated by . in require paths)
 -- if that file could be found and returns a function then its supposed to be the @route_handler
--- if no handler function was found through that file path then a proxy @route_handler is created that responds directly with the file path (or view 404 if that leads to nowhere)
+-- if no handler function was found through that file path then a proxy @route_handler is created that responds directly with the file path (or view 400 if that leads to nowhere)
 
 function Router:register(route_method, route_regex, route_handler)
     table.insert(self.map, {

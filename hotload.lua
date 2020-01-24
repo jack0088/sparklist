@@ -9,7 +9,7 @@ local _require = require
 local _ipairs = ipairs
 local _pairs = pairs
 local _type = type
-local _getn = table.getn or function(obj) return #obj end -- Lua > 5.1
+local _getn = table.getn or function(t) return #t end -- Lua > 5.1
 
 local INDEX = function(t, k) return getmetatable(t).__swap.value[k] end
 local NEWINDEX = function(t, k, v) getmetatable(t).__swap.value[k] = v end
@@ -146,6 +146,9 @@ function require(module)
 end
 
 
+-- IMPORTANT NOTE the fallowing Lua overrides are only needed for Lua <= 5.1 backward compatibility because it doen't support __ipairs, __pairs, __len metamethods. Some of Lua's standard functions use facilities like #, for example in table.insert, when shifting entries.
+
+
 function type(obj)
     local proxy = getmetatable(obj)
     if proxy and proxy.__type then
@@ -183,6 +186,37 @@ function table.getn(obj)
         return proxy.__len(obj)
     end
     return _getn(obj)
+end
+
+
+function table.insert(t, p, v)
+    local pos, val
+    if v and type(p) == "number" then
+        assert(p >= 1 and p <= table.getn(t) + 1, "table.insert position index out of range")
+        pos = p
+        val = v
+        if t[pos] then
+            for i = table.getn(t) + 1, pos - 1, -1 do
+                t[i] = t[i - 1]
+            end
+        end
+    else
+        pos = table.getn(t) + 1
+        val = p
+    end
+    t[pos] = val
+end
+
+
+function table.remove(t, p)
+    assert(p >= 1 and p <= table.getn(t) + 1, "table.remove position index out of range")
+    if t[p + 1] then
+        for i = p, table.getn(t) - 1 do
+            t[i] = t[i + 1]
+        end
+        t[table.getn(t)] = nil
+    end
+    t[p] = nil
 end
 
 

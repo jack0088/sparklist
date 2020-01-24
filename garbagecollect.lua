@@ -110,7 +110,7 @@ end
 function GarbageCollector:delete(database, table, row)
     if type(database) == "string" and #database > 0 then
         local poi = Database(database)
-        -- poi.verbose = false
+        -- poi.verbose = true
         if (type(row) == "number" or (type(row) == "string" and tonumber(row) ~= nil)) then
             if poi:has(table) then
                 poi:run("delete from '%s' where id = %s", table, row)
@@ -134,7 +134,7 @@ function GarbageCollector:onEnterFrame()
         self.settings:set("autorun_delay", autorun_delay)
     end
     
-    if tonumber(previous_cycle) <= current_time - tonumber(autorun_delay) then
+    if tonumber(previous_cycle) + tonumber(autorun_delay) <= current_time then
         self:run()
         -- self.settings:set("previous_cycle", current_time) -- NOTE the :run() call updates it anyway
     end
@@ -147,7 +147,7 @@ function GarbageCollector:run()
         self:delete(job.dbname, job.tblname, job.tblrow)
         self:discard(job.id)
     end
-    self.settings:set("previous_cycle", previous_cycle)
+    self.settings:set("previous_cycle", dt.timestamp())
 end
 
 

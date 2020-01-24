@@ -14,7 +14,7 @@ local GarbageCollector = class()
 function GarbageCollector:new(name)
     local gc_name = (type(name) == "string" and #name > 0) and name or "global"
     self.db = Database "db/gc.db"
-    self.name = gc_name.."_queue" -- the storage of the actual garbage collector
+    self.table = gc_name.."_queue" -- the storage of the actual garbage collector
     self:create()
     self.settings = LocalStorage(gc_name.."_settings", self.db.file) -- settings of a garbage collector
     self.verbose = false
@@ -32,12 +32,12 @@ function GarbageCollector:set_verbose(flag)
 end
 
 
-function GarbageCollector:get_name()
+function GarbageCollector:get_table()
     return self.__tablename
 end
 
 
-function GarbageCollector:set_name(name)
+function GarbageCollector:set_table(name)
     assert(type(name) == "string", "garbage collector name missing")
     assert(not name:find("[^%a%d%-_]+"), "garbage collector name '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
     -- TODO? if only pre-defined garbage collectors are allowed to be accessed than we need to guard like this:
@@ -55,20 +55,20 @@ function GarbageCollector:create() -- register a new garbage collector
             tblrow integer check(tblname is not null),
             expiryts integer not null
         )]],
-        self.name
+        self.table
     )
 end
 
 
 function GarbageCollector:destroy() -- destroy an existing garbage collector
-    self.db:run("destroy table if exists '%s'", self.name)
+    self.db:run("destroy table if exists '%s'", self.table)
 end
 
 
 function GarbageCollector:queue(database, table, row, expiry)
     local matching_jobs = self.db:run(
         "select id from '%s' where dbname = '%s' and tblname %s and tblrow %s",
-        self.name,
+        self.table,
         database,
         table and string.format("= '%s'", table) or "is null",
         row and "= "..row or "is null"
@@ -77,14 +77,14 @@ function GarbageCollector:queue(database, table, row, expiry)
         assert(getn(matching_jobs) == 1, "garbage collector queue contains duplicated jobs")
         self.db:run(
             "update '%s' set expiryts = %s where id = %s",
-            self.name,
+            self.table,
             expiry,
             matching_jobs[1].id
         )
     else
         self.db:run(
             "insert into '%s' (dbname, tblname, tblrow, expiryts) values ('%s', '%s', %s, %s)",
-            self.name,
+            self.table,
             database,
             table or "null",
             row or "null",
@@ -103,7 +103,7 @@ function GarbageCollector:discard(job_or_database, table, row)
         if type(table) == "string" and #table > 0 then where = where.." and tblname = '%s'" end
         if type(row) == "number" or (type(row) == "string" and tonumber(row) ~= nil) then where = where.." and tblrow = %s" end
     end
-    self.db:run("delete from '%s' where %s", self.name, where:format(job_or_database, table or "null", row or "null"))
+    self.db:run("delete from '%s' where %s", self.table, where:format(job_or_database, table or "null", row or "null"))
 end
 
 
@@ -125,19 +125,29 @@ end
 
 
 function GarbageCollector:onEnterFrame()
-    self:run()
+    local current_time = dt.timestamp()
+    local autorun_delay = self.settings:get "autorun_delay"
+    local previous_cycle = self.settings:get "previous_cycle" or current_time
+
+    if not autorun_delay then
+        autorun_delay = 86400 -- 1 day (in seconds)
+        self.settings:set("autorun_delay", autorun_delay)
+    end
+    
+    if tonumber(previous_cycle) <= current_time - tonumber(autorun_delay) then
+        self:run()
+        -- self.settings:set("previous_cycle", current_time) -- NOTE the :run() call updates it anyway
+    end
 end
 
 
 function GarbageCollector:run()
-    local current_timestamp = dt.timestamp()
-    local previous_cycle = self.settings:get "previous_cycle" or current_timestamp
-    local garbage_queue = self.db:run("select * from '%s' where expiryts <= %s", self.name, previous_cycle)
-    for _, job in ipairs(garbage_queue) do
+    local previous_cycle = self.settings:get "previous_cycle" or dt.timestamp()
+    for _, job in ipairs(self.db:run("select * from '%s' where expiryts <= %s", self.table, previous_cycle)) do
         self:delete(job.dbname, job.tblname, job.tblrow)
         self:discard(job.id)
     end
-    self.settings:set("previous_cycle", current_timestamp)
+    self.settings:set("previous_cycle", previous_cycle)
 end
 
 

@@ -19,8 +19,8 @@ function GarbageCollector:new(name)
         [[create table if not exists '%s' (
             id integer primary key autoincrement,
             dbname text not null,
-            tbname text,
-            row_id integer check(tbname is not null),
+            tblname text,
+            tblrow integer check(tblname is not null),
             expiry_timestamp integer not null
         )]],
         self.name
@@ -28,9 +28,9 @@ function GarbageCollector:new(name)
 end
 
 
-function GarbageCollector:queue(database, table, row, date)
+function GarbageCollector:queue(database, table, row, expiry)
     local matching_jobs = self.db:run(
-        "select id from '%s' where dbname = '%s' and tbname %s and row_id %s",
+        "select id from '%s' where dbname = '%s' and tblname %s and tblrow %s",
         self.name,
         database,
         table and string.format("= '%s'", table) or "is null",
@@ -41,17 +41,17 @@ function GarbageCollector:queue(database, table, row, date)
         self.db:run(
             "update '%s' set expiry_timestamp = %s where id = %s",
             self.name,
-            date,
+            expiry,
             matching_jobs[1].id
         )
     else
         self.db:run(
-            "insert into '%s' (dbname, tbname, row_id, expiry_timestamp) values ('%s', '%s', %s, %s)",
+            "insert into '%s' (dbname, tblname, tblrow, expiry_timestamp) values ('%s', '%s', %s, %s)",
             self.name,
             database,
             table or "null",
             row or "null",
-            date
+            expiry
         )
     end
 end
@@ -63,8 +63,8 @@ function GarbageCollector:discard(job_or_database, table, row)
         where = "id = %s"
     else
         where = "dbname = '%s'"
-        if type(table) == "string" and #table > 0 then where = where.." and tbname = '%s'" end
-        if type(row) == "number" or (type(row) == "string" and tonumber(row) ~= nil) then where = where.." and row_id = %s" end
+        if type(table) == "string" and #table > 0 then where = where.." and tblname = '%s'" end
+        if type(row) == "number" or (type(row) == "string" and tonumber(row) ~= nil) then where = where.." and tblrow = %s" end
     end
     self.db:run("delete from '%s' where %s", self.name, where:format(job_or_database, table or "null", row or "null"))
 end

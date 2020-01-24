@@ -25,10 +25,21 @@ function Session:new(client, cookie, lifetime)
     end
 
     self.db = Database "db/client_session.db"
+    self.verbose = false
     self.table = session_uuid
     self.cookie_lifetime = lifetime or 604800 -- 7 days (in seconds)
     local death_date = dt.date(dt.timestamp() + self.cookie_lifetime)
     client.response.header:set("set-cookie", self.cookie_name.."="..self.table.."; Expires="..death_date) -- update or create new
+end
+
+
+function Session:get_verbose()
+    return self.db.verbose
+end
+
+
+function Session:set_verbose(flag)
+    self.db.verbose = flag
 end
 
 

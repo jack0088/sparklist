@@ -100,7 +100,6 @@ end
 
 
 function GarbageCollector:onEnterFrame()
-    print "cocooooooOOOOOLLLLLLLL"
     self:run()
 end
 

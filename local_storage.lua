@@ -8,10 +8,10 @@ local Database = hotload "database"
 local LocalStorage = class()
 
 
-function LocalStorage:new(name)
-    self.db = Database "db/local_storage.db"
+function LocalStorage:new(table_name, database_file)
+    self.db = Database(database_file or "db/local_storage.db")
     self.verbose = false
-    self.table = name
+    self.table = table_name
 end
 
 

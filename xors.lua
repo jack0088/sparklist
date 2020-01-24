@@ -8,7 +8,7 @@
 ---> luasocket
 
 
-local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
+local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local socket = require "socket"
 local hotload = require "hotload"
 local class = hotload "class"

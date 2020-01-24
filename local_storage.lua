@@ -1,7 +1,7 @@
 -- 2020 (c) kontakt@herrsch.de
 
 
-local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
+local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local hotload = require "hotload"
 local class = hotload "class"
 local Database = hotload "database"

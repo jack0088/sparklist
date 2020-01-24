@@ -5,7 +5,7 @@
 -- LuaSQL documentation at https://keplerproject.github.io/luasql/manual.html
 
 
-local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
+local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local unpack = unpack or table.unpack -- Lua > 5.1
 local sql = require "luasql.sqlite3".sqlite3()
 local hotload = require "hotload"
@@ -54,7 +54,7 @@ function Database:run(sql_query, ...)
         sql_statement = string.format(sql_statement, unpack(variables))
     end
 
-    print(string.format("executed SQL transaction\nin database: %s\nwith query: %s", self.file, sql_statement))
+    print(string.format("executed SQL transaction in database '%s' with query:\n%s", self.file, sql_statement))
 
     local cursor = assert(self.connection:execute(sql_statement)) -- single transaction (auto-commit mode)
     local dataset, row = {}

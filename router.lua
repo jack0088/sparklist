@@ -49,7 +49,7 @@ EXAMPLE (respond with html layout shorthand; taken care by preload() function, s
 
 --]]
 
-local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
+local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local unpack = unpack or table.unpack -- Lua > 5.1
 local hotload = require "hotload"
 local class = hotload "class"

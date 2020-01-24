@@ -62,7 +62,7 @@ EXAMPLE (append a html element after the fact)
 
 --]]
 
-local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
+local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 
 local SELF_CLOSING_TAGS = { -- sorted alphabetically
     "area",

@@ -17,13 +17,15 @@ local Contact = {}
 
 function Contact:onConnect(server, client)
     server:hook("beforeRequest", server, client)
-    server:hook("beforeResponse", server, client)
     client.request = Request(client.socket)
     if client.request.header then
+        server:hook("beforeResponse", server, client)
         client.response = Response(client.socket, client.request)
     else
         -- certainly not HTTP protocol but some kind of raw data!
-        -- TODO handle raw data receive/send/[route|dispatch]
+        print "could not identify http request..."
+        print(string.format("xors dropped client %s", client.ip))
+        return client:disconnect()-- drop client
     end
 
     local cookie_name = xors_settings:get "client_cookie_name"

@@ -1,6 +1,11 @@
 -- 2019 (c) kontakt@herrsch.de
 
 
+-- NOTE useful git command to setup when you want to count all lines of code in the current git repository
+-- $ git config --local alias.count "! git ls-files | xargs wc -l"
+-- $ git count
+
+
 -- namespace unix plumbing utilities to access (file)system tools at low-level
 local mimetypeguess = require "mimetype"
 local filesystem = {shell = shell}

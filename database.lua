@@ -16,6 +16,7 @@ local Database = class()
 function Database:new(filepath)
     self.timeout = 1
     self.file = filepath
+    self.debuglog = true
 end
 
 
@@ -54,7 +55,9 @@ function Database:run(sql_query, ...)
         sql_statement = string.format(sql_statement, unpack(variables))
     end
 
-    print(string.format("executed SQL transaction in database '%s' with query:\n%s", self.file, sql_statement))
+    if self.debuglog then
+        print(string.format("executed SQL transaction in database '%s' with query:\n%s", self.file, sql_statement))
+    end
 
     local cursor = assert(self.connection:execute(sql_statement)) -- single transaction (auto-commit mode)
     local dataset, row = {}

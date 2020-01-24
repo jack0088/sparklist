@@ -4,6 +4,7 @@
 -- this plugin emits additional, custom xors hook-events to trigger listening plugin-callbacks
 -- it also enriches existing Client object with Request and Response objects
 
+local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local hotload = require "hotload"
 local dt = hotload "datetime"
 local Request = hotload "request"
@@ -11,12 +12,6 @@ local Response = hotload "response"
 local Session = hotload "session"
 local session_gc = hotload "garbagecollect"("session")
 local Contact = {}
-
-
-function Contact:onStartup(server)
-    -- server:insertPlugin(session_gc) -- if not yet done
-    -- print("session_gs plugin inserted onStartup? count >>>>>>>>>>", table.gen(server.plugins))
-end
 
 
 function Contact:onConnect(server, client)
@@ -31,6 +26,8 @@ function Contact:onConnect(server, client)
     local current_time = dt.timestamp()
     local cookie_expiry = current_time + client.request.header.session.cookie_lifetime
     if cookie_expiry > current_time then
+        server:insertPlugin(session_gc) -- if not yet done
+        -- server.plugins[getn(server.plugins) + 1] = session_gc
         session_gc:queue(session_database, session_table, nil, cookie_expiry)
     end
 end

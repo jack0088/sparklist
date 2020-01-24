@@ -15,7 +15,7 @@ local dt = hotload "datetime"
 
 return function(request, response)
     print "receiving chunked request (if any):"
-    request:receiveMessage(function(chunk) -- :receiveMessage() also calls :receiveHeader() if omitted
+    request:receiveMessage(function(chunk)
         print("request chunk received:", chunk)
         print "yielded.."
         coroutine.yield(chunk)

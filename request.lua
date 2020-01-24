@@ -12,9 +12,8 @@ local Request = class()
 
 function Request:new(transmitter)
     self.transmitter = transmitter -- client socket object
-    self.header = Header()
+    self.header = Header():receiveHeader()
     self.message = Message()
-    self:receiveHeader()
 end
 
 

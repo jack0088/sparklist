@@ -19,7 +19,12 @@ function Contact:onConnect(server, client)
     server:hook("beforeRequest", server, client)
     server:hook("beforeResponse", server, client)
     client.request = Request(client.socket)
-    client.response = Response(client.socket, client.request)
+    if client.request.header then
+        client.response = Response(client.socket, client.request)
+    else
+        -- certainly not HTTP protocol but some kind of raw data!
+        -- TODO handle raw data receive/send/[route|dispatch]
+    end
 
     local cookie_name = xors_settings:get "client_cookie_name"
     local cookie_lifetime = xors_settings:get "client_cookie_lifetime"

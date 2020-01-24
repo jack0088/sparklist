@@ -12,10 +12,10 @@ local GarbageCollector = class()
 
 
 function GarbageCollector:new(name)
-    local gc_name = (type(name) == "string" and #name > 0) and name.."_garbage" or "global_garbage"
-    self.db = Database "db/local_storage.db"
-    self.name = gc_name.."_queue"
-    self.settings = LocalStorage(gc_name.."_settings")
+    local gc_name = (type(name) == "string" and #name > 0) and name or "__global"
+    self.db = Database "db/gc.db"
+    self.name = gc_name
+    self.settings = LocalStorage(gc_name.."_gc_settings")
     self.verbose = false
     self.db:run(
         [[create table if not exists '%s' (

@@ -10,7 +10,18 @@ local LocalStorage = class()
 
 function LocalStorage:new(name)
     self.db = Database "db/local_storage.db"
+    self.verbose = false
     self.table = name
+end
+
+
+function LocalStorage:get_verbose()
+    return self.db.verbose
+end
+
+
+function LocalStorage:set_verbose(flag)
+    self.db.verbose = flag
 end
 
 

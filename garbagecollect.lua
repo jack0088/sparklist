@@ -12,11 +12,41 @@ local GarbageCollector = class()
 
 
 function GarbageCollector:new(name)
-    local gc_name = (type(name) == "string" and #name > 0) and name or "__global"
+    local gc_name = (type(name) == "string" and #name > 0) and name or "global"
     self.db = Database "db/gc.db"
-    self.name = gc_name
-    self.settings = LocalStorage(gc_name.."_gc_settings")
+    self.name = gc_name.."_queue" -- the storage of the actual garbage collector
+    self:create()
+    self.settings = LocalStorage(gc_name.."_settings", self.db.file) -- settings of a garbage collector
     self.verbose = false
+end
+
+
+function GarbageCollector:get_verbose()
+    return self.settings.db.verbose and self.db.verbose
+end
+
+
+function GarbageCollector:set_verbose(flag)
+    self.settings.db.verbose = flag
+    self.db.verbose = flag
+end
+
+
+function GarbageCollector:get_name()
+    return self.__tablename
+end
+
+
+function GarbageCollector:set_name(name)
+    assert(type(name) == "string", "garbage collector name missing")
+    assert(not name:find("[^%a%d%-_]+"), "garbage collector name '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
+    -- TODO? if only pre-defined garbage collectors are allowed to be accessed than we need to guard like this:
+    -- assert(self.db:has(name), "no registration found for garbage collector named '"..name:match("(.+)_queue$").."' in '"..self.db.file.."'")
+    self.__tablename = name
+end
+
+
+function GarbageCollector:create() -- register a new garbage collector
     self.db:run(
         [[create table if not exists '%s' (
             id integer primary key autoincrement,
@@ -30,14 +60,8 @@ function GarbageCollector:new(name)
 end
 
 
-function GarbageCollector:get_verbose()
-    return self.settings.db.verbose and self.db.verbose
-end
-
-
-function GarbageCollector:set_verbose(flag)
-    self.settings.db.verbose = flag
-    self.db.verbose = flag
+function GarbageCollector:destroy() -- destroy an existing garbage collector
+    self.db:run("destroy table if exists '%s'", self.name)
 end
 
 
@@ -86,6 +110,7 @@ end
 function GarbageCollector:delete(database, table, row)
     if type(database) == "string" and #database > 0 then
         local poi = Database(database)
+        -- poi.verbose = false
         if (type(row) == "number" or (type(row) == "string" and tonumber(row) ~= nil)) then
             if poi:has(table) then
                 poi:run("delete from '%s' where id = %s", table, row)

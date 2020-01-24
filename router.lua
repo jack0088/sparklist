@@ -103,6 +103,7 @@ function Router:onDispatch(server, client)
                 print(string.format("client dispatched to route '%s'", entry.route))
                 if status and message ~= nil then break end
                 request.route_controller = nil -- free for next mathing route handler!
+                print(string.format("route handler of '%s' is void and falls-through to the next mathing route...", entry.route))
             end
         end
     end

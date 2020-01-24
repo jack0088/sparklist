@@ -29,6 +29,7 @@ return function(request, response, token)
 
     -- dependencies ---> luasec
 
+    --[[
     print "auth route fired..."
 
     local cookie = request.header:get "cookie: swoopid" -- TODO!!!!
@@ -44,4 +45,5 @@ return function(request, response, token)
         end
     end
     return response:submit("no swoopid token found in either cookie or url")
+    --]]
 end

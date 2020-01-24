@@ -38,6 +38,7 @@ function Message:receive(transmitter, length, stream_sink, chunked)
         until length <= 0 -- 0\r\n\r\n
         if threaded then self.content = "" end
         self.received = true
+        return self.content
     end
 end
 
@@ -73,6 +74,7 @@ function Message:send(receiver, stream, chunked)
         else
             self.sent = true
         end
+        return self.content
     end
 end
 

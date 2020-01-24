@@ -35,13 +35,13 @@ end
 
 
 function Response:sendHeader(status)
-    self.header:send(self.receiver, status)
+    return self.header:send(self.receiver, status)
 end
 
 
 function Response:sendMessage(stream)
     local chunked = tostring(self.header:get("Transfer-Encoding")):match("chunked") == "chunked"
-    self.message:send(self.receiver, stream, chunked)
+    return self.message:send(self.receiver, stream, chunked)
 end
 
 

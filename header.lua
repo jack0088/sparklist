@@ -273,6 +273,7 @@ function Header:send(receiver, status)
     assert(self:get "Transfer-Encoding" or self:get "Content-Length", "http content length and/or encoding undefined")
     receiver:send(self:serialize(status))
     self.sent = true
+    return self
 end
 
 

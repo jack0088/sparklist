@@ -19,14 +19,14 @@ end
 
 
 function Request:receiveHeader()
-    self.header:receive(self.transmitter)
+    return self.header:receive(self.transmitter)
 end
 
 
 function Request:receiveMessage(stream_sink)
     local length = tonumber(self.header:get "Content-Length" or 0)
     local chunked = tostring(self.header:get("Transfer-Encoding")):match("chunked") == "chunked"
-    self.message:receive(self.transmitter, length, stream_sink, chunked)
+    return self.message:receive(self.transmitter, length, stream_sink, chunked)
 end
 
 
@@ -41,7 +41,7 @@ function Request:receiveFile(stream_sink)
             -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
         end
     end
-    self:receiveMessage(stream_sink)
+    return self:receiveMessage(stream_sink)
 end
 --]]
 

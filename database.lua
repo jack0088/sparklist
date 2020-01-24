@@ -16,7 +16,7 @@ local Database = class()
 function Database:new(filepath)
     self.timeout = 1
     self.file = filepath
-    self.verbose = true
+    self.verbose = false
 end
 
 

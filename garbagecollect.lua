@@ -87,20 +87,35 @@ function GarbageCollector:delete(database, table, row)
 end
 
 
+function GarbageCollector:onEnterFrame()
+    self:run()
+end
+
+
 function GarbageCollector:run()
+    self:void()
     local current_timestamp = dt.timestamp()
     local previous_cycle = self.settings:get "previous_cycle" or current_timestamp
     local garbage_queue = self.db:run("select * from '%s' where expiryts <= %s", self.name, previous_cycle)
     for _, job in ipairs(garbage_queue) do
+        self.verbose()
         self:delete(job.dbname, job.tblname, job.tblrow)
         self:discard(job.id)
+        self:void()
     end
     self.settings:set("previous_cycle", current_timestamp)
 end
 
 
-function GarbageCollector:onEnterFrame()
-    self:run()
+function GarbageCollector:void()
+    self.settings.db.debuglog = false
+    self.db.debuglog = false
+end
+
+
+function GarbageCollector:verbose()
+    self.settings.db.debuglog = true
+    self.db.debuglog = true
 end
 
 

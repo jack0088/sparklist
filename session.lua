@@ -6,10 +6,10 @@ local dt = hotload "datetime"
 local hash = hotload "randomseed"
 local class = hotload "class"
 local Database = hotload "database"
-local Storage = hotload "local_storage"
-local Session = class(Storage)
-Session.get_table = Storage.get_table
-Session.set_table = Storage.set_table
+local LocalStorage = hotload "local_storage"
+local Session = class(LocalStorage)
+Session.get_table = LocalStorage.get_table
+Session.set_table = LocalStorage.set_table
 
 
 function Session:new(client, cookie, lifetime)

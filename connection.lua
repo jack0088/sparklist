@@ -10,7 +10,7 @@ local dt = hotload "datetime"
 local Request = hotload "request"
 local Response = hotload "response"
 local Session = hotload "session"
-local session_gc = hotload "garbagecollect"("session")
+local session_gc = hotload "gc"("session")
 local xors_settings = hotload "local_storage"("xors")
 local Contact = {}
 

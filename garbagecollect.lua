@@ -1,8 +1,9 @@
 -- 2020 (c) kontakt@herrsch.de
 
 
-local getn = table.getn or function(obj) return #obj end -- Lua > 5.1 idom
+local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local hotload = require "hotload"
+local utilities = require "utilities"
 local dt = hotload "datetime"
 local class = hotload "class"
 local Database = hotload "database"
@@ -71,8 +72,18 @@ end
 
 
 function GarbageCollector:delete(database, table, row)
-    local absolete_object = Database(database)
-    --TODO!!!!
+    if type(database) == "string" and #database > 0 then
+        local poi = Database(database)
+        if (type(row) == "number" or (type(row) == "string" and tonumber(row) ~= nil)) then
+            if poi:has(table) then
+                poi:run("delete from '%s' where id = %s", table, row)
+            end
+        elseif type(table) == "string" and #table > 0 then
+            poi:run("drop table if exists '%s'", table)
+        else
+            utilities.deletefile(database)
+        end
+    end
 end
 
 
@@ -89,6 +100,7 @@ end
 
 
 function GarbageCollector:onEnterFrame()
+    print "cocooooooOOOOOLLLLLLLL"
     self:run()
 end
 

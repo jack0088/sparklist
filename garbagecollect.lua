@@ -21,7 +21,7 @@ function GarbageCollector:new(name)
             dbname text not null,
             tblname text,
             tblrow integer check(tblname is not null),
-            expiry_timestamp integer not null
+            expiryts integer not null
         )]],
         self.name
     )
@@ -39,14 +39,14 @@ function GarbageCollector:queue(database, table, row, expiry)
     if getn(matching_jobs) > 0 then
         assert(getn(matching_jobs) == 1, "garbage collector queue contains duplicated jobs")
         self.db:run(
-            "update '%s' set expiry_timestamp = %s where id = %s",
+            "update '%s' set expiryts = %s where id = %s",
             self.name,
             expiry,
             matching_jobs[1].id
         )
     else
         self.db:run(
-            "insert into '%s' (dbname, tblname, tblrow, expiry_timestamp) values ('%s', '%s', %s, %s)",
+            "insert into '%s' (dbname, tblname, tblrow, expiryts) values ('%s', '%s', %s, %s)",
             self.name,
             database,
             table or "null",
@@ -79,10 +79,10 @@ end
 function GarbageCollector:run()
     local current_timestamp = dt.timestamp()
     local previous_cycle = self.settings:get "previous_cycle" or current_timestamp
-    local garbage_queue = self.db:run("select * from '%s' where expiry_timestamp <= %s", self.name, previous_cycle)
-    for _, entry in ipairs(garbage_queue) do
-        self:delete(entry.database, entry.table, entry.row)
-        self:discard(entry.id)
+    local garbage_queue = self.db:run("select * from '%s' where expiryts <= %s", self.name, previous_cycle)
+    for _, job in ipairs(garbage_queue) do
+        self:delete(job.dbname, job.tblname, job.tblrow)
+        self:discard(job.id)
     end
     self.settings:set("previous_cycle", current_timestamp)
 end

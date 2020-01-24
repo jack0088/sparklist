@@ -21,8 +21,8 @@ function Contact:onConnect(server, client)
     client.request = Request(client.socket)
     client.response = Response(client.socket, client.request)
 
-    local cookie_name = xors_settings:get("client_cookie_name")
-    local cookie_lifetime = xors_settings:get("client_cookie_lifetime")
+    local cookie_name = xors_settings:get "client_cookie_name"
+    local cookie_lifetime = xors_settings:get "client_cookie_lifetime"
     if not cookie_name then
         cookie_name = "xors_session_id"
         xors_settings:set("client_cookie_name", cookie_name)

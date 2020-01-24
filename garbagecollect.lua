@@ -16,6 +16,7 @@ function GarbageCollector:new(name)
     self.db = Database "db/local_storage.db"
     self.name = gc_name.."_queue"
     self.settings = Storage(gc_name.."_settings")
+    self.verbose = false
     self.db:run(
         [[create table if not exists '%s' (
             id integer primary key autoincrement,
@@ -26,6 +27,17 @@ function GarbageCollector:new(name)
         )]],
         self.name
     )
+end
+
+
+function GarbageCollector:get_verbose()
+    return self.settings.db.debuglog and self.db.debuglog
+end
+
+
+function GarbageCollector:set_verbose(flag)
+    self.settings.db.debuglog = flag
+    self.db.debuglog = flag
 end
 
 
@@ -93,29 +105,14 @@ end
 
 
 function GarbageCollector:run()
-    self:void()
     local current_timestamp = dt.timestamp()
     local previous_cycle = self.settings:get "previous_cycle" or current_timestamp
     local garbage_queue = self.db:run("select * from '%s' where expiryts <= %s", self.name, previous_cycle)
     for _, job in ipairs(garbage_queue) do
-        self.verbose()
         self:delete(job.dbname, job.tblname, job.tblrow)
         self:discard(job.id)
-        self:void()
     end
     self.settings:set("previous_cycle", current_timestamp)
-end
-
-
-function GarbageCollector:void()
-    self.settings.db.debuglog = false
-    self.db.debuglog = false
-end
-
-
-function GarbageCollector:verbose()
-    self.settings.db.debuglog = true
-    self.db.debuglog = true
 end
 
 

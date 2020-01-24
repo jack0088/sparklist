@@ -81,16 +81,16 @@ end
 function Router:onDispatch(server, client)
     local request = client.request
     local response = client.response
+    local route = request.header.method:upper()..request.header.path
     for _, entry in ipairs(self.map) do
         -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
-        local captures = {(request.header.method:upper()..request.header.path):match("^"..entry.route.."$")}
+        local captures = {route:match("^"..entry.route.."$")}
         if getn(captures) > 0 then
-            print(string.format("client dispatched to route '%s'", entry.route))
             if type(request.route_controller) ~= "thread" then
                 request.route_controller = coroutine.create(entry.controller)
             end
             if coroutine.status(request.route_controller) ~= "dead" then
-                -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside a route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
+                -- NOTE in most scenarios `return <value>` or `coroutine.yield(<value>)` must NOT return nil from inside that route handler function as a <value> of nil will always fall through to the next matching route (if any) because the response is void!
                 if captures[1] == entry.route then
                     table.remove(captures, 1)
                 end
@@ -100,7 +100,9 @@ function Router:onDispatch(server, client)
                     response,
                     unpack(captures)
                 ))
+                print(string.format("client dispatched to route '%s'", entry.route))
                 if status and message ~= nil then break end
+                request.route_controller = nil -- free for next mathing route handler!
             end
         end
     end

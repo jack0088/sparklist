@@ -1,3 +1,5 @@
+-- 2020 (c) kontakt@herrsch.de
+
 local hotload = require "hotload"
 
 return {

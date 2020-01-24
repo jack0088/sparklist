@@ -1,5 +1,6 @@
 -- 2019 (c) kontakt@herrsch.de
 
+
 -- xors (pronounced horse) is a HTTP server written in vanilla Lua
 -- its original inspiration came from Pegasus https://github.com/EvandroLG/pegasus.lua but became a complete rewrite
 

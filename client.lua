@@ -1,3 +1,6 @@
+-- 2020 (c) kontakt@herrsch.de
+
+
 local hotload = require "hotload"
 local class = hotload "class"
 local Client = class()

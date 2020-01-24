@@ -7,7 +7,7 @@ local utilities = require "utilities"
 local dt = hotload "datetime"
 local class = hotload "class"
 local Database = hotload "database"
-local Storage = hotload "local_storage"
+local LocalStorage = hotload "local_storage"
 local GarbageCollector = class()
 
 
@@ -15,7 +15,7 @@ function GarbageCollector:new(name)
     local gc_name = (type(name) == "string" and #name > 0) and name.."_garbage" or "global_garbage"
     self.db = Database "db/local_storage.db"
     self.name = gc_name.."_queue"
-    self.settings = Storage(gc_name.."_settings")
+    self.settings = LocalStorage(gc_name.."_settings")
     self.verbose = false
     self.db:run(
         [[create table if not exists '%s' (

@@ -136,7 +136,8 @@ function GarbageCollector:onEnterFrame()
     
     if tonumber(previous_cycle) + tonumber(autorun_delay) <= current_time then
         self:run()
-        -- self.settings:set("previous_cycle", current_time) -- NOTE the :run() call updates it anyway
+        -- NOTE the :run() call updates previous_cycle anyway...
+        -- self.settings:set("previous_cycle", current_time)
     end
 end
 

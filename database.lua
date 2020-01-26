@@ -102,6 +102,7 @@ function Database:count(table_name)
 end
 
 
+-- creates a database table named @table_name if not yet existing
 function Database:create(table_name)
     if type(table_name) == "string" then
         self:run(
@@ -116,6 +117,7 @@ function Database:create(table_name)
 end
 
 
+-- destoys existing database table named @table_name
 function Database:destory(table_name)
     if type(table_name) == "string" then
         self:run("drop table if exists '%s'", table_name)

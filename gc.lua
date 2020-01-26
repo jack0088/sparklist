@@ -46,22 +46,13 @@ function GarbageCollector:set_table(name)
 end
 
 
-function GarbageCollector:create() -- register a new garbage collector
-    self.db:run(
-        [[create table if not exists '%s' (
-            id integer primary key autoincrement,
-            dbname text not null,
-            tblname text,
-            tblrow integer check(tblname is not null),
-            expiryts integer not null
-        )]],
-        self.table
-    )
+function GarbageCollector:create()
+    self.db:create(self.table)
 end
 
 
-function GarbageCollector:destroy() -- destroy an existing garbage collector
-    self.db:run("destroy table if exists '%s'", self.table)
+function GarbageCollector:destroy()
+    self.db:destroy(self.table)
 end
 
 

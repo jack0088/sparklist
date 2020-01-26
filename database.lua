@@ -118,7 +118,7 @@ end
 
 
 -- destoys existing database table named @table_name
-function Database:destory(table_name)
+function Database:destroy(table_name)
     if type(table_name) == "string" then
         self:run("drop table if exists '%s'", table_name)
     end

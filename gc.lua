@@ -47,7 +47,18 @@ end
 
 
 function GarbageCollector:create()
-    self.db:create(self.table)
+    if type(self.table) == "string" then
+        self.db:run(
+            [[create table if not exists '%s' (
+                id integer primary key autoincrement,
+                dbname text not null,
+                tblname text,
+                tblrow integer check(tblname is not null),
+                expiryts integer not null
+            )]],
+            self.table
+        )
+    end
 end
 
 

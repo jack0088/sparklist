@@ -102,21 +102,6 @@ function Database:count(table_name)
 end
 
 
--- creates a database table named @table_name if not yet existing
-function Database:create(table_name)
-    if type(table_name) == "string" then
-        self:run(
-            [[create table if not exists '%s' (
-                id integer primary key autoincrement,
-                key text unique not null,
-                value text not null
-            )]],
-            table_name
-        )
-    end
-end
-
-
 -- destoys existing database table named @table_name
 function Database:destroy(table_name)
     if type(table_name) == "string" then

@@ -45,7 +45,16 @@ end
 
 
 function Storage:create()
-    self.db:ceate(self.table)
+    if type(self.table) == "string" then
+        self.db:run(
+            [[create table if not exists '%s' (
+                id integer primary key autoincrement,
+                key text unique not null,
+                value text not null
+            )]],
+            self.table
+        )
+    end
 end
 
 

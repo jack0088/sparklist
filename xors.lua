@@ -7,6 +7,8 @@
 -- xors should run fine on any machine supporting fallowing dependencies
 ---> Lua >= 5.1
 ---> luasocket
+---> luasec
+---> sqlite3 + luasql
 
 
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom

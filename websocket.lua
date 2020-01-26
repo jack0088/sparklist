@@ -1,2 +1,3 @@
 -- TODO rewrite client.request and client.response onjects
 -- client.header is not needed anymore as well...
+return {}

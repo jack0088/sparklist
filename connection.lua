@@ -34,11 +34,12 @@ function Contact:onConnect(server, client)
     --     server.settings:set("client_session_cookie_name", cookie_name)
     -- end
     -- if not cookie_lifetime then
-    --     cookie_lifetime = 604800 -- 7 days (in seconds)
+    --     cookie_lifetime = 604800
     --     server.settings:set("client_session_cookie_lifetime", cookie_lifetime)
     -- end
-    -- client.request.header.session = Session(client, cookie_name, cookie_lifetime)
-    client.request.header.session = Session(client, "sparklist-session", 604800)
+    local cookie_name = "sparklist-session"
+    local cookie_lifetime = 604800 -- 7 days (in seconds)
+    client.request.header.session = Session(client, cookie_name, cookie_lifetime)
     
     local session_database = client.request.header.session.db.file
     local session_table = client.request.header.session.table

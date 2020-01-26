@@ -7,7 +7,7 @@ local utilities = require "utilities"
 local dt = hotload "datetime"
 local class = hotload "class"
 local Database = hotload "database"
-local LocalStorage = hotload "local_storage"
+local Storage = hotload "kvstorage"
 local GarbageCollector = class()
 
 
@@ -16,7 +16,7 @@ function GarbageCollector:new(name)
     self.db = Database "db/gc.db"
     self.table = gc_name.."_queue" -- the storage of the actual garbage collector
     self:create()
-    self.settings = LocalStorage(gc_name.."_settings", self.db.file) -- settings of a garbage collector
+    self.settings = Storage(gc_name.."_settings", self.db.file) -- settings of a garbage collector
     self.verbose = false
 end
 

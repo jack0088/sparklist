@@ -11,7 +11,7 @@ local Request = hotload "request"
 local Response = hotload "response"
 local Session = hotload "session"
 local session_gc = hotload "gc"("session")
-local xors_settings = hotload "local_storage"("xors_settings")
+local xors_settings = hotload "kvstorage"("settings")
 local Contact = {}
 
 
@@ -28,15 +28,15 @@ function Contact:onConnect(server, client)
         return client:disconnect()-- drop client
     end
 
-    local cookie_name = xors_settings:get "client_cookie_name"
-    local cookie_lifetime = xors_settings:get "client_cookie_lifetime"
+    local cookie_name = xors_settings:get "client_session_cookie_name"
+    local cookie_lifetime = xors_settings:get "client_session_cookie_lifetime"
     if not cookie_name then
         cookie_name = "xors_session_id"
-        xors_settings:set("client_cookie_name", cookie_name)
+        xors_settings:set("client_session_cookie_name", cookie_name)
     end
     if not cookie_lifetime then
         cookie_lifetime = 604800 -- 7 days (in seconds)
-        xors_settings:set("client_cookie_lifetime", cookie_lifetime)
+        xors_settings:set("client_session_cookie_lifetime", cookie_lifetime)
     end
     client.request.header.session = Session(client, cookie_name, cookie_lifetime)
     

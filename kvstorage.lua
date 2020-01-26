@@ -5,32 +5,32 @@ local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local hotload = require "hotload"
 local class = hotload "class"
 local Database = hotload "database"
-local LocalStorage = class()
+local Storage = class()
 
 
-function LocalStorage:new(table_name, database_file)
-    self.db = Database(database_file or "db/local_storage.db")
+function Storage:new(table_name, database_file)
+    self.db = Database(database_file or "db/xors.db")
     self.verbose = false
     self.table = table_name
 end
 
 
-function LocalStorage:get_verbose()
+function Storage:get_verbose()
     return self.db.verbose
 end
 
 
-function LocalStorage:set_verbose(flag)
+function Storage:set_verbose(flag)
     self.db.verbose = flag
 end
 
 
-function LocalStorage:get_table() -- getter for LocalStorage.table
+function Storage:get_table() -- getter for Storage.table
     return self.__tablename
 end
 
 
-function LocalStorage:set_table(name) -- setter for LocalStorage.table
+function Storage:set_table(name) -- setter for Storage.table
     assert(type(name) == "string", "missing common identifier string")
     assert(not name:find("[^%a%d%-_]+"), "common identifier string '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
     if self.table ~= nil and self.table ~= name then
@@ -44,7 +44,7 @@ function LocalStorage:set_table(name) -- setter for LocalStorage.table
 end
 
 
-function LocalStorage:create()
+function Storage:create()
     if type(self.table) == "string" then
         self.db:run(
             [[create table if not exists '%s' (
@@ -58,14 +58,14 @@ function LocalStorage:create()
 end
 
 
-function LocalStorage:destory()
+function Storage:destory()
     if type(self.table) == "string" then
         self.db:run("drop table if exists '%s'", self.table)
     end
 end
 
 
-function LocalStorage:exists(key, value)
+function Storage:exists(key, value)
     if key and value then
         local records = self.db:run("select id from '%s' where key = '%s' and value = '%s'", self.table, tostring(key), tostring(value))
         return getn(records) > 0 and record[1].id or false
@@ -80,7 +80,7 @@ function LocalStorage:exists(key, value)
 end
 
 
-function LocalStorage:set(key, value) -- upsert (update + insert)
+function Storage:set(key, value) -- upsert (update + insert)
     if self:exists(key) then
         self.db:run("update '%s' set value = '%s' where key = '%s'", self.table, tostring(value), tostring(key))
     else
@@ -89,7 +89,7 @@ function LocalStorage:set(key, value) -- upsert (update + insert)
 end
 
 
-function LocalStorage:get(key)
+function Storage:get(key)
     if type(key) == "string" then
         local value = self:exists(key)
         return value == false and nil or value
@@ -105,4 +105,4 @@ function LocalStorage:get(key)
 end
 
 
-return LocalStorage
+return Storage

@@ -45,23 +45,12 @@ end
 
 
 function Storage:create()
-    if type(self.table) == "string" then
-        self.db:run(
-            [[create table if not exists '%s' (
-                id integer primary key autoincrement,
-                key text unique not null,
-                value text not null
-            )]],
-            self.table
-        )
-    end
+    self.db:ceate(self.table)
 end
 
 
-function Storage:destory()
-    if type(self.table) == "string" then
-        self.db:run("drop table if exists '%s'", self.table)
-    end
+function Storage:destroy()
+    self.db:destroy(self.table)
 end
 
 

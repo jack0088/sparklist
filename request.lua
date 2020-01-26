@@ -23,8 +23,8 @@ end
 
 
 function Request:receiveMessage(stream_sink)
-    local length = tonumber(self.header:get "Content-Length" or 0)
-    local chunked = tostring(self.header:get("Transfer-Encoding")):match("chunked") == "chunked"
+    local length = tonumber(self.header:get "content-length" or 0)
+    local chunked = tostring(self.header:get("transfer-encoding")):match("chunked") == "chunked"
     return self.message:receive(self.transmitter, length, stream_sink, chunked)
 end
 
@@ -32,7 +32,7 @@ end
 --[[
 function Request:receiveFile(stream_sink)
     local stream_sink
-    if self.method == "POST" and self.header:get "Content-Disposition" then
+    if self.method == "POST" and self.header:get "content-disposition" then
         stream_sink = function(stream)
             -- TODO we need to parse POST data
             -- then, implement receiving file attachments as described in

@@ -40,7 +40,7 @@ end
 
 
 function Response:sendMessage(stream)
-    local chunked = tostring(self.header:get("Transfer-Encoding")):match("chunked") == "chunked"
+    local chunked = tostring(self.header:get("transfer-encoding")):match("chunked") == "chunked"
     return self.message:send(self.receiver, stream, chunked)
 end
 
@@ -78,16 +78,16 @@ function Response:submit(content, mime, status, ...)
             self.header.HTTP_STATUS_MESSAGE[status]
         )
     end
-    self.header:set("Date", dt.date()) -- update/assign
-    self.header:set("Content-Type", mime or "text/plain")
-    self.header:set("Content-Length", #content)
+    self.header:set("date", dt.date()) -- update/assign
+    self.header:set("content-type", mime or "text/plain")
+    self.header:set("content-length", #content)
     self:sendHeader(status or 200)
     return self:sendMessage(content)
 end
 
 
 function Response:refresh(url, timeout, content, mime, ...)
-    self.header:set("Refresh", tostring(timeout or 0).."; URL="..(url or self.request.path))
+    self.header:set("refresh", tostring(timeout or 0).."; url="..(url or self.request.path))
     if content then -- just set the header if content is missing
         return self:submit(content, mime, nil, ...)
     end
@@ -95,14 +95,14 @@ end
 
 
 function Response:redirect(url)
-    self.header:set("Location", url) -- with browser back-button support
+    self.header:set("location", url) -- with browser back-button support
     return self:submit(nil, nil, 307) -- instant, automatic request forward with unchanged request method and body
 end
 
 
 function Response:attach(location, name) -- attach file and force client/browser to download it from given location [with custom name]
     local filename, extension = location:match("(.+)(%.%w%w[%w%p]*)$")
-    self.header:set("Content-Disposition", string.format("attachment; filename=%s", name or filename))
+    self.header:set("content-disposition", string.format("attachment; filename=%s", name or filename))
     return self:submit(location)
 end
 

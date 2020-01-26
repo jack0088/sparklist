@@ -268,9 +268,9 @@ function Header:send(receiver, status)
     assert(not self.sent, "http header already sent")
     assert(receiver, "http receiver socket missing")
     assert(type(status) == "number" or type(status) == "string", "response status code missing")
-    assert(self:get "Date", "date header missing")
-    assert(self:get "Content-Type", "http content type undefined")
-    assert(self:get "Transfer-Encoding" or self:get "Content-Length", "http content length and/or encoding undefined")
+    assert(self:get "date", "date header missing")
+    assert(self:get "content-type", "http content type undefined")
+    assert(self:get "transfer-encoding" or self:get "content-length", "http content length and/or encoding undefined")
     receiver:send(self:serialize(status))
     self.sent = true
     return self

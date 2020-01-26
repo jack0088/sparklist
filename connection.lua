@@ -40,7 +40,7 @@ function Contact:onConnect(server, client)
     local cookie_name = "sparklist-session"
     local cookie_lifetime = 604800 -- 7 days (in seconds)
     client.request.header.session = Session(client, cookie_name, cookie_lifetime)
-    
+
     local session_database = client.request.header.session.db.file
     local session_table = client.request.header.session.table
     local current_time = dt.timestamp()
@@ -64,6 +64,9 @@ function Contact:onProcess(server, client)
                 server:hook("afterRequest", server, client)
             end
             if client.response.message.sent then
+                if client.request.header.session and not client.request.header:get "referer" then
+                    client.request.header.session:set("previous_path", client.request.header.path) -- TODO test this extensivily with all kind of requests, responses and forwardings because I'm not sure it really works in any case!
+                end
                 server:hook("afterResponse", server, client)
             end
         end

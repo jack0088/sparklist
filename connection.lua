@@ -47,7 +47,6 @@ function Contact:onConnect(server, client)
     local cookie_expiry = current_time + cookie_lifetime
     if cookie_expiry > current_time then
         server:insertPlugin(session_gc) -- if not yet done
-        -- server.plugins[getn(server.plugins) + 1] = session_gc
         session_gc:queue(session_database, session_table, nil, cookie_expiry)
     end
 end

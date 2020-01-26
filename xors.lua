@@ -19,13 +19,14 @@ local Client = hotload "client"
 local Xors = class()
 
 
-function Xors:new(settings)
-    if type(settings) ~= "table" then settings = {} end
-    self.host = settings.host or "*"
-    self.port = settings.port or "8080"
-    self.timeout = settings.timeout or 1
-    self.backlog = settings.backlog or 100 -- max queue size of waiting clients
-    self.plugins = settings.plugins or {}
+function Xors:new(options)
+    if type(options) ~= "table" then options = {} end
+    self.host = options.host or "*"
+    self.port = options.port or "8080"
+    self.timeout = options.timeout or 1
+    self.backlog = options.backlog or 100 -- max queue size of waiting clients
+    self.plugins = options.plugins or {}
+    self.settings = hotload "kvstorage"("settings")
 end
 
 

@@ -65,7 +65,9 @@ function Contact:onProcess(server, client)
             end
             if client.response.message.sent then
                 if client.request.header.session and not client.request.header:get "referer" then
-                    client.request.header.session:set("previous_path", client.request.header.path) -- TODO test this extensivily with all kind of requests, responses and forwardings because I'm not sure it really works in any case!
+                    -- NOTE we try only to save what the use really tries to access not the auto-redirected page paths
+                    -- For example, Response.refresh would not be catched but Response.redirect will be!
+                    client.request.header.session:set("previous_path", client.request.header.path)
                 end
                 server:hook("afterResponse", server, client)
             end

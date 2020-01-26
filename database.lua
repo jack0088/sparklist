@@ -102,4 +102,25 @@ function Database:count(table_name)
 end
 
 
+function Database:create(table_name)
+    if type(table_name) == "string" then
+        self:run(
+            [[create table if not exists '%s' (
+                id integer primary key autoincrement,
+                key text unique not null,
+                value text not null
+            )]],
+            table_name
+        )
+    end
+end
+
+
+function Database:destory(table_name)
+    if type(table_name) == "string" then
+        self:run("drop table if exists '%s'", table_name)
+    end
+end
+
+
 return Database

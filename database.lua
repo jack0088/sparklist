@@ -110,4 +110,29 @@ function Database:destroy(table_name)
 end
 
 
+-- rename table: Database:rename(table_name, new_table_name)
+-- rename column: Database:rename(table_name, column_name, new_column_name)
+function Database:rename(table_name, ...)
+    assert(type(table_name) == "string" and #table_name > 0, "missing database table reference")
+    local arguments = {...}
+    if type(arguments[2]) == "string" then
+        local column_name = arguments[1]
+        local new_column_name = arguments[2]
+        assert(type(column_name) == "string" and #column_name > 0, "missing database column reference")
+        assert(type(new_column_name) == "string" and #new_column_name > 0, "missing new database column name")
+        assert(not new_column_name:find("[^%a%d%-_]+"), "new column name string '"..new_column_name.."' must only contain [a-zA-Z0-9%-_] characters")
+        if column_name ~= new_column_name and self:has(table_name) == true then
+            self:run("alter table '%s' rename column '%s' to '%s'", table_name, column_name, new_column_name)
+        end
+    else
+        local new_table_name = arguments[1]
+        assert(type(new_table_name) == "string" and #new_table_name > 0, "missing new database table name")
+        assert(not new_table_name:find("[^%a%d%-_]+"), "new table name string '"..new_table_name.."' must only contain [a-zA-Z0-9%-_] characters")
+        if table_name ~= new_table_name and self:has(table_name) == true then
+            self:run("alter table '%s' rename to '%s'", table_name, new_table_name)
+        end
+    end
+end
+
+
 return Database

@@ -12,6 +12,8 @@ function Storage:new(table_name, database_file)
     self.db = Database(database_file or "db/xors.db")
     self.verbose = false
     self.table = table_name
+    self.column1 = "key" -- column name for key
+    self.column2 = "value" -- column name for value
 end
 
 
@@ -44,15 +46,43 @@ function Storage:set_table(name) -- setter for Storage.table
 end
 
 
+function Storage:get_column1()
+    return self.__columnname1
+end
+
+
+function Storage:set_column1(name)
+    if self.column1 ~= nil and self.column1 ~= name then
+        self.db:rename(self.table, self.column1, name)
+    end
+    self.__columnname1 = name
+end
+
+
+function Storage:get_column_value_name()
+    return self.__columnname2
+end
+
+
+function Storage:set_column_value_name(name)
+    if self.column2 ~= nil and self.column2 ~= name then
+        self.db:rename(self.table, self.column2, name)
+    end
+    self.__columnname2 = name
+end
+
+
 function Storage:create()
     if type(self.table) == "string" then
         self.db:run(
             [[create table if not exists '%s' (
                 id integer primary key autoincrement,
-                key text unique not null,
-                value text not null
+                %s text unique not null,
+                %s text not null
             )]],
-            self.table
+            self.table,
+            self.column1,
+            self.column2
         )
     end
 end
@@ -65,14 +95,23 @@ end
 
 function Storage:exists(key, value)
     if key and value then
-        local records = self.db:run("select id from '%s' where key = '%s' and value = '%s'", self.table, tostring(key), tostring(value))
+        local records = self.db:run(
+            "select id from '%s' where %s = '%s' and %s = '%s'",
+            self.table, self.column1, tostring(key), self.column2, tostring(value)
+        )
         return getn(records) > 0 and record[1].id or false
     elseif value then
-        local records = self.db:run("select key from '%s' where value = '%s'", self.table, tostring(value))
-        return getn(records) > 0 and records[1].key or false
+        local records = self.db:run(
+            "select %s from '%s' where %s = '%s'",
+            self.column1, self.table, self.column2, tostring(value)
+        )
+        return getn(records) > 0 and records[1][self.column1] or false
     elseif key then
-        local records = self.db:run("select value from '%s' where key = '%s'", self.table, tostring(key))
-        return getn(records) > 0 and records[1].value or false
+        local records = self.db:run(
+            "select %s from '%s' where %s = '%s'",
+            self.column2, self.table, self.column1, tostring(key)
+        )
+        return getn(records) > 0 and records[1][self.column2] or false
     end
     return self.db:count(self.table) > 0
 end
@@ -80,9 +119,15 @@ end
 
 function Storage:set(key, value) -- upsert (update + insert)
     if self:exists(key) then
-        self.db:run("update '%s' set value = '%s' where key = '%s'", self.table, tostring(value), tostring(key))
+        self.db:run(
+            "update '%s' set %s = '%s' where %s = '%s'",
+            self.table, self.column2, tostring(value), self.column1, tostring(key)
+        )
     else
-        self.db:run("insert into '%s' (key, value) values ('%s', '%s')", self.table, tostring(key), tostring(value))
+        self.db:run(
+            "insert into '%s' (%s, %s) values ('%s', '%s')",
+            self.table, self.column1, self.column2, tostring(key), tostring(value)
+        )
     end
 end
 
@@ -92,11 +137,16 @@ function Storage:get(key)
         local value = self:exists(key)
         return value == false and nil or value
     end
-    local records = self.db:run("select key, value from '%s'", self.table)
+    local records = self.db:run(
+        "select %s, %s from '%s'",
+        self.column1, self.column2, self.table
+    )
     if getn(records) > 0 then -- unpack rows
         local entries = {}
         for id, row in ipairs(records) do
-            entries[row.key] = row.value
+            local k = row[self.column1]
+            local v = row[self.column2]
+            entries[k] = v
         end
         return entries
     end

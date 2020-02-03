@@ -47,7 +47,7 @@ end
 
 
 function Storage:get_column1()
-    return self.__columnname1
+    return self.__columnname1 or "key"
 end
 
 
@@ -60,7 +60,7 @@ end
 
 
 function Storage:get_column2()
-    return self.__columnname2
+    return self.__columnname2 or "value"
 end
 
 

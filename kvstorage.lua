@@ -59,12 +59,12 @@ function Storage:set_column1(name)
 end
 
 
-function Storage:get_column_value_name()
+function Storage:get_column2()
     return self.__columnname2
 end
 
 
-function Storage:set_column_value_name(name)
+function Storage:set_column2(name)
     if self.column2 ~= nil and self.column2 ~= name then
         self.db:rename(self.table, self.column2, name)
     end

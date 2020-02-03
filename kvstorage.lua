@@ -52,8 +52,8 @@ end
 
 
 function Storage:set_column1(name)
-    if self.column1 ~= nil and self.column1 ~= name then
-        self.db:rename(self.table, self.column1, name)
+    if self.__columnname1 ~= nil and self.__columnname1 ~= name then
+        self.db:rename(self.table, self.__columnname1, name)
     end
     self.__columnname1 = name
 end
@@ -65,8 +65,8 @@ end
 
 
 function Storage:set_column2(name)
-    if self.column2 ~= nil and self.column2 ~= name then
-        self.db:rename(self.table, self.column2, name)
+    if self.__columnname2 ~= nil and self.__columnname2 ~= name then
+        self.db:rename(self.table, self.__columnname2, name)
     end
     self.__columnname2 = name
 end

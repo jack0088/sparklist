@@ -255,10 +255,10 @@ function Header:receive(transmitter)
 
     self.protocol = protocol
     self.method = method:upper()
-    self.url = path -- raw
+    self.url = path -- entire raw url
     self.path = self.normalizePath(resource)
     self.query = self.explodePath(urlquery)
-    -- self.fragment = nil -- browser only feature (e.g. #url-fragment-part)
+    -- self.fragment = nil -- browser only feature (e.g. #url-fragment-part), see https://de.wikipedia.org/wiki/Uniform_Resource_Locator
 
     self:parse(headerquery)
     self.received = true

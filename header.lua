@@ -246,7 +246,7 @@ function Header:receive(transmitter)
         headerquery = headerquery..(#header > 0 and header.."\r\n" or "")
     until #header <= 0
 
-    -- Some browsers send multiple requests to the same url because they try to obtain the .favicon; Safari even trigger request while auto-completing you input. Just don't wonder when you read these in the log file...
+    -- Some browsers send multiple requests to the same url because they try to obtain the favicon.ico; Safari even trigger request while auto-completing you input. Just don't wonder when you read these in the log file...
     print(string.format(
         "%s\n%s",
         firstline,

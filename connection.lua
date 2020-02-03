@@ -67,7 +67,7 @@ function Contact:onProcess(server, client)
                 then
                     -- NOTE we try only to save what the use really tries to access not the auto-redirected page paths
                     -- For example, Response.refresh would not be catched but Response.redirect will be!
-                    client.request.header.session:set("previous_path", client.request.header.path)
+                    client.request.header.session:set("previous_path_request", client.request.header.path)
                 end
                 server:hook("afterResponse", server, client)
             end

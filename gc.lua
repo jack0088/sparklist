@@ -128,18 +128,15 @@ end
 
 function GarbageCollector:onEnterFrame()
     local current_time = dt.timestamp()
-    local autorun_delay = self.settings:get "autorun_delay"
+    local autorun_delay = self.settings:get "autorun_delay" or 0
     local previous_cycle = self.settings:get "previous_cycle" or current_time
 
     if not autorun_delay then
-        autorun_delay = 86400 -- 1 day (in seconds)
-        self.settings:set("autorun_delay", autorun_delay)
+        self.settings:set("autorun_delay", 86400) -- 1 day (in seconds)
     end
     
-    if tonumber(previous_cycle) + tonumber(autorun_delay) <= current_time then
-        self:run()
-        -- NOTE the :run() call updates previous_cycle anyway...
-        -- self.settings:set("previous_cycle", current_time)
+    if current_time >= tonumber(previous_cycle) + tonumber(autorun_delay) then
+        self:run() -- NOTE the :run() call updates previous_cycle anyway
     end
 end
 

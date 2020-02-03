@@ -21,18 +21,16 @@ function Contact:onConnect(server, client)
         server:hook("beforeResponse", server, client)
         client.response = Response(client.socket, client.request)
 
-        -- local cookie_name = server.settings:get "client_session_cookie_name"
-        -- local cookie_lifetime = server.settings:get "client_session_cookie_lifetime"
-        -- if not cookie_name then
-        --     cookie_name = "xors_session_id"
-        --     server.settings:set("client_session_cookie_name", cookie_name)
-        -- end
-        -- if not cookie_lifetime then
-        --     cookie_lifetime = 604800
-        --     server.settings:set("client_session_cookie_lifetime", cookie_lifetime)
-        -- end
-        local cookie_name = "sparklist-session"
-        local cookie_lifetime = 604800 -- 7 days (in seconds)
+        local cookie_name = server.settings:get "session_cookie_name"
+        local cookie_lifetime = server.settings:get "session_cookie_lifetime"
+        if not cookie_name then
+            cookie_name = "xors_session_id"
+            server.settings:set("session_cookie_name", cookie_name)
+        end
+        if not cookie_lifetime then
+            cookie_lifetime = 604800 -- 7 days (in seconds)
+            server.settings:set("session_cookie_lifetime", cookie_lifetime)
+        end
         client.request.header.session = Session(client, cookie_name, cookie_lifetime)
 
         local session_database = client.request.header.session.db.file

@@ -37,7 +37,7 @@ function Contact:onConnect(server, client)
         local session_table = client.request.header.session.table
         local current_time = dt.timestamp()
         local cookie_expiry = current_time + cookie_lifetime
-        if not client.response.header:get "set-cookie" then cookie_expiry = 0 end -- already expired timestamp
+        if not client.response.header:get "set-cookie" then cookie_expiry = 0 end -- already expired timestamp (will be collected with next gc cycle)
         session_gc:queue(session_database, session_table, nil, cookie_expiry)
         server:insertPlugin(session_gc) -- will be inserted only once in app lifetime
     else

@@ -28,7 +28,10 @@ function Session:new(client, cookie, lifetime)
 
     Storage.new(self, session_uuid, "db/session.db")
     
-    client.response.header:set("set-cookie", cookie.."="..self.table.."; Expires="..death_date) -- update or create new
+    if not client.request.header.path:match("%.%w%w[%w%p]*$") then
+        -- update or create new cookie BUT ONLY IF it is not a resource file like favicon.ico
+        client.response.header:set("set-cookie", cookie.."="..self.table.."; Expires="..death_date)
+    end
 end
 
 

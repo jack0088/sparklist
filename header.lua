@@ -149,7 +149,9 @@ function Header:set(header_name, header_value)
             -- add security recomendations for cookies, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie and https://tools.ietf.org/html/rfc6265#page-7
             assert(cookie.name, cookie.value, "cookie header is missing attributes")
             cookie.name = cookie.name:gsub("[^a-zA-Z%-_]*", "") -- trim control characters, separator character, spaces and tabs
-            cookie["HttpOnly"] = cookie["HttpOnly"] == false and false or true -- nil defaults to true
+            cookie["HttpOnly"] = cookie["HttpOnly"] == false and false or true -- forbid JS to access cookies? nil defaults to true
+            -- cookie["Secure"] = cookie["Secure"] == false and false or true -- use TLS/HTTPS only? nil defaults to true
+            -- cookie["SameSite"] = cookie["SameSite"] or "None" -- Browsers default behaviour is "Lax"
             cookie["SameSite"] = cookie["SameSite"] or "Lax"
             return cookie
         end

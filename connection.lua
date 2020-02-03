@@ -64,7 +64,10 @@ function Contact:onProcess(server, client)
                 server:hook("afterRequest", server, client)
             end
             if client.response.message.sent then
-                if client.request.header.session and not client.request.header:get "referer" then
+                if client.request.header.method == "GET"
+                and client.request.header.session
+                and not client.request.header:get "referer"
+                then
                     -- NOTE we try only to save what the use really tries to access not the auto-redirected page paths
                     -- For example, Response.refresh would not be catched but Response.redirect will be!
                     client.request.header.session:set("previous_path", client.request.header.path)

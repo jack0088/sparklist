@@ -15,7 +15,7 @@ function Session:new(client, cookie, lifetime)
     assert(client.request and client.response, "missing client request/response object")
     assert(cookie, "missing set-cookie name")
     assert(lifetime, "missing set-cookie max-age")
-    
+
     local session_uuid = hash(32)
     local death_date = dt.date(dt.timestamp() + lifetime)
 
@@ -27,9 +27,15 @@ function Session:new(client, cookie, lifetime)
     end
 
     Storage.new(self, session_uuid, "db/session.db")
-    
-    if not client.request.header.path:match("%.%w%w[%w%p]*$") then
-        -- update or create new cookie BUT ONLY IF it is not a resource file like favicon.ico
+
+    if client.request.header.method == "GET"
+    and not client.request.header:get "referer"
+    and not client.request.header.path:match("%.%w%w[%w%p]*$")
+    then
+        -- update or create new session cookie BUT ONLY IF
+        -- it's a GET request
+        -- it's not refering to some preceding request
+        -- it's not a resource file like e.g. favicon.ico
         client.response.header:set("set-cookie", cookie.."="..self.table.."; Expires="..death_date)
     end
 end

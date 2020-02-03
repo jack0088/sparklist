@@ -20,34 +20,34 @@ function Contact:onConnect(server, client)
     if client.request.header then
         server:hook("beforeResponse", server, client)
         client.response = Response(client.socket, client.request)
+
+        -- local cookie_name = server.settings:get "client_session_cookie_name"
+        -- local cookie_lifetime = server.settings:get "client_session_cookie_lifetime"
+        -- if not cookie_name then
+        --     cookie_name = "xors_session_id"
+        --     server.settings:set("client_session_cookie_name", cookie_name)
+        -- end
+        -- if not cookie_lifetime then
+        --     cookie_lifetime = 604800
+        --     server.settings:set("client_session_cookie_lifetime", cookie_lifetime)
+        -- end
+        local cookie_name = "sparklist-session"
+        local cookie_lifetime = 604800 -- 7 days (in seconds)
+        client.request.header.session = Session(client, cookie_name, cookie_lifetime)
+
+        local session_database = client.request.header.session.db.file
+        local session_table = client.request.header.session.table
+        local current_time = dt.timestamp()
+        local cookie_expiry = current_time + cookie_lifetime
+        if cookie_expiry > current_time then
+            server:insertPlugin(session_gc) -- if not yet done
+            session_gc:queue(session_database, session_table, nil, cookie_expiry)
+        end
     else
         -- certainly not HTTP protocol but some kind of raw data!
         print "could not identify http request..."
         print(string.format("xors dropped client %s", client.ip))
         return client:disconnect()-- drop client
-    end
-
-    -- local cookie_name = server.settings:get "client_session_cookie_name"
-    -- local cookie_lifetime = server.settings:get "client_session_cookie_lifetime"
-    -- if not cookie_name then
-    --     cookie_name = "xors_session_id"
-    --     server.settings:set("client_session_cookie_name", cookie_name)
-    -- end
-    -- if not cookie_lifetime then
-    --     cookie_lifetime = 604800
-    --     server.settings:set("client_session_cookie_lifetime", cookie_lifetime)
-    -- end
-    local cookie_name = "sparklist-session"
-    local cookie_lifetime = 604800 -- 7 days (in seconds)
-    client.request.header.session = Session(client, cookie_name, cookie_lifetime)
-
-    local session_database = client.request.header.session.db.file
-    local session_table = client.request.header.session.table
-    local current_time = dt.timestamp()
-    local cookie_expiry = current_time + cookie_lifetime
-    if cookie_expiry > current_time then
-        server:insertPlugin(session_gc) -- if not yet done
-        session_gc:queue(session_database, session_table, nil, cookie_expiry)
     end
 end
 

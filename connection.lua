@@ -31,15 +31,22 @@ function Contact:onConnect(server, client)
             cookie_lifetime = 604800 -- 7 days (in seconds)
             server.settings:set("session_cookie_lifetime", cookie_lifetime)
         end
-        client.request.header.session = Session(client, cookie_name, cookie_lifetime)
+        client.session = Session(client, cookie_name, cookie_lifetime)
 
-        local session_database = client.request.header.session.db.file
-        local session_table = client.request.header.session.table
+        local session_database = client.session.db.file
+        local session_table = client.session.table
         local current_time = dt.timestamp()
         local cookie_expiry = current_time + cookie_lifetime
-        if not client.response.header:get "set-cookie" then cookie_expiry = 0 end -- already expired timestamp (will be collected with next gc cycle)
+        if not client.session.continued and not client.response.header:get "set-cookie" then
+            cookie_expiry = 0 -- already expired timestamp (will be collected with next gc cycle)
+        end
         session_gc:queue(session_database, session_table, nil, cookie_expiry)
         server:insertPlugin(session_gc) -- will be inserted only once in app lifetime
+
+        --
+        -- TODO client.user = User()
+        -- with .session ref inside & premissions & other things about the user + db methods
+        --
     else
         -- certainly not HTTP protocol but some kind of raw data!
         print "could not identify http request..."
@@ -61,13 +68,13 @@ function Contact:onProcess(server, client)
                 server:hook("afterRequest", server, client)
             end
             if client.response.message.sent then
-                if client.request.header.session
+                if client.session
                 and client.request.header.method == "GET"
                 and not client.request.header:get "referer"
                 then
                     -- NOTE we try only to save what the use really tries to access not the auto-redirected page paths
                     -- For example, Response.refresh would not be catched but Response.redirect will be!
-                    client.request.header.session:set("previous_path_request", client.request.header.path)
+                    client.session:set("previous_path_request", client.request.header.path)
                 end
                 server:hook("afterResponse", server, client)
             end

@@ -19,7 +19,7 @@
 
 local https = require "ssl.https"
 
-return function(request, response, token)
+return function(client, token)
     -- client uses swoops fontend plugin that opens a form and sends a login request
     -- swoopjs receives that login request and generates a resonse containing a user identification token
     -- that swoopjs response is forwarded onto an url specified in their admin panel
@@ -32,7 +32,7 @@ return function(request, response, token)
     --[[
     print "auth route fired..."
 
-    local cookie = request.header:get "cookie: swoopid" -- TODO!!!!
+    local cookie = client.request.header:get "cookie: swoopid" -- TODO!!!!
     local identity = token or cookie
     print(identity, token, cookie)
 
@@ -40,10 +40,10 @@ return function(request, response, token)
         local email, status = https.request("https://app.swoopnow.com/api/inbound_emails/"..identity) -- TODO add timeout of 1s
         print(string.format("swoopjs responded with token=%s, state=%s, email=%s", identity, status, email))
         if status == 200 and type(email) == "string" and #email > 0 then
-            response:addHeader("Set-Cookie", "swoopid="..identity) -- create new or update existing
-            return response:submit("view/profile.lua", "text/html", 200, email, request.header.url)
+            client.response:addHeader("set-cookie", "swoopid="..identity) -- create new or update existing
+            return client.response:submit("view/profile.lua", "text/html", 200, email, request.header.url)
         end
     end
-    return response:submit("no swoopid token found in either cookie or url")
+    return client.response:submit("no swoopid token found in either cookie or url")
     --]]
 end

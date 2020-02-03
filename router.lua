@@ -96,8 +96,7 @@ function Router:onDispatch(server, client)
                 end
                 local status, message = assert(coroutine.resume(
                     request.route_controller,
-                    request,
-                    response,
+                    client,
                     unpack(captures)
                 ))
                 print(string.format("client dispatched to route '%s'", entry.route))
@@ -124,8 +123,8 @@ local function preload(handler)
             return controller(...)
         end
     end
-    return function(request, response)
-        return response:submit(handler)
+    return function(client)
+        return client.response:submit(handler)
     end
 end
 

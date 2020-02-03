@@ -1,4 +1,4 @@
-return function(request, response)
+return function(client)
     -- ignore request and respond with error 400
-    return response:submit()
+    return client.response:submit()
 end

@@ -1,4 +1,4 @@
-return function(request, response, filename, extension) -- requests to files
+return function(client, filename, extension) -- requests to files
     local allowed_extensions = {
         "jpg",
         "jpeg",
@@ -12,8 +12,8 @@ return function(request, response, filename, extension) -- requests to files
         "txt"
     }
     if table.concat(allowed_extensions, " "):find(extension) then -- whitelist look-up
-        return response:submit(request.header.url)
-        -- return response:attach(request.header.url) -- force browser to download file
+        return client.response:submit(client.request.header.url)
+        -- return client.response:attach(client.request.header.url) -- force browser to download file
     end
-    return response:submit(nil, nil, 403)
+    return client.response:submit(nil, nil, 403)
 end

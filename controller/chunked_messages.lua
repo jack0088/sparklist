@@ -13,36 +13,36 @@
 local hotload = require "hotload"
 local dt = hotload "datetime"
 
-return function(request, response)
+return function(client)
     print "receiving chunked request (if any):"
-    request:receiveMessage(function(chunk)
+    client.request:receiveMessage(function(chunk)
         print("request chunk received:", chunk)
         print "yielded.."
         coroutine.yield(chunk)
     end)
-    print("request.message:", request.message)
+    print("request.message:", client.request.message)
 
     print "responding with chunked response:"
-    response.header:set("Date", dt.date())
-    response.header:set("Content-Type", "text/plain; charset=utf-8")
-    response.header:set("Transfer-Encoding", "chunked")
+    client.response.header:set("Date", dt.date())
+    client.response.header:set("Content-Type", "text/plain; charset=utf-8")
+    client.response.header:set("Transfer-Encoding", "chunked")
 
-    print("-->", response.header:get "Transfer-Encoding", response.header:get "Transfer-Encoding" == "chunked")
-    response:sendHeader(200)
+    print("-->", client.response.header:get "Transfer-Encoding", client.response.header:get "Transfer-Encoding" == "chunked")
+    client.response:sendHeader(200)
 
     local f, line = io.open("upload/lol.txt", "rb")
     repeat
         line = f:read("*l")
         if line then
-            response:sendMessage(line.."\n")
+            client.response:sendMessage(line.."\n")
             print("response chunk send:", line)
             print "yielded.."
             coroutine.yield(line)
         end
     until not line
     f:close()
-    print("response.message:", response.message)
+    print("response.message:", client.response.message)
     print("done req/res!")
 
-    return response:submit()
+    return client.response:submit()
 end

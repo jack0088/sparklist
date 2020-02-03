@@ -129,9 +129,9 @@ end
 function GarbageCollector:onEnterFrame()
     local current_time = dt.timestamp()
     local autorun_delay = self.settings:get "autorun_delay" or 0
-    local previous_cycle = self.settings:get "previous_cycle" or current_time
+    local previous_cycle = self.settings:get "previous_cycle" or 0
 
-    if not autorun_delay then
+    if not autorun_delay or autorun_delay <= 0 then
         self.settings:set("autorun_delay", 86400) -- 1 day (in seconds)
     end
     

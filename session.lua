@@ -16,12 +16,14 @@ function Session:new(client, cookie, lifetime)
     assert(cookie, "missing set-cookie name")
     assert(lifetime, "missing set-cookie max-age")
 
+    self.continued = false -- continue existing session?
     local session_uuid = hash(32)
     local death_date = dt.date(dt.timestamp() + lifetime)
 
     for key, value in client.request.header:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do
         if key == cookie then
             session_uuid = value
+            self.continued = true
             break
         end
     end

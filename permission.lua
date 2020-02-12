@@ -16,15 +16,15 @@ function Permission:new(name, description)
 end
 
 
-function Permission:exists(name)
-    if type(tonumber(name)) == "number" then -- id!
+function Permission:exists(n)
+    if type(tonumber(n)) == "number" then -- check by id
         local records = self.db:run(
             "select id from '%s' where id = %s",
-            self.table, name
+            self.table, n
         )
-        return getn(records) > 0 and record[1].id == tonumber(name) or false
+        return getn(records) > 0 and record[1].id == tonumber(n) or false
     end
-    return not not Storage.exists(self, name)
+    return not not Storage.exists(self, n) -- check by name
 end
 
 

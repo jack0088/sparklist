@@ -117,9 +117,9 @@ function Storage:exists(key, value)
 end
 
 
-function Storage:set(key, value) -- upsert (update + insert)
+function Storage:set(key, value)
     if type(key) ~= nil then
-        if type(value) ~= nil then
+        if type(value) ~= nil then -- upsert (update + insert)
             if self:exists(key) then
                 self.db:run(
                     "update '%s' set %s = '%s' where %s = '%s'",

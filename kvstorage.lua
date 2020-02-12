@@ -118,16 +118,23 @@ end
 
 
 function Storage:set(key, value) -- upsert (update + insert)
-    if type(key) ~= nil and type(value) ~= nil then
-        if self:exists(key) then
-            self.db:run(
-                "update '%s' set %s = '%s' where %s = '%s'",
-                self.table, self.column2, tostring(value), self.column1, tostring(key)
-            )
+    if type(key) ~= nil then
+        if type(value) ~= nil then
+            if self:exists(key) then
+                self.db:run(
+                    "update '%s' set %s = '%s' where %s = '%s'",
+                    self.table, self.column2, tostring(value), self.column1, tostring(key)
+                )
+            else
+                self.db:run(
+                    "insert into '%s' (%s, %s) values ('%s', '%s')",
+                    self.table, self.column1, self.column2, tostring(key), tostring(value)
+                )
+            end
         else
             self.db:run(
-                "insert into '%s' (%s, %s) values ('%s', '%s')",
-                self.table, self.column1, self.column2, tostring(key), tostring(value)
+                "delete from '%s' where %s = '%s'",
+                self.table, self.column1, tostring(key)
             )
         end
     end

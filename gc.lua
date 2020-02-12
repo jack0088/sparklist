@@ -142,12 +142,13 @@ end
 
 
 function GarbageCollector:run()
-    local previous_cycle = self.settings:get "previous_cycle" or dt.timestamp()
+    local current_time = dt.timestamp()
+    local previous_cycle = self.settings:get "previous_cycle" or current_time
     for _, job in ipairs(self.db:run("select * from '%s' where expiryts <= %s", self.table, previous_cycle)) do
         self:delete(job.dbname, job.tblname, job.tblrow)
         self:discard(job.id)
     end
-    self.settings:set("previous_cycle", dt.timestamp())
+    self.settings:set("previous_cycle", current_time)
 end
 
 

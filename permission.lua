@@ -19,4 +19,5 @@ function Permission:exists(name)
     return not not Storage.exists(self, name)
 end
 
+
 return Permission

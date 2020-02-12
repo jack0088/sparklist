@@ -131,7 +131,7 @@ function Storage:set(key, value) -- upsert (update + insert)
                     self.table, self.column1, self.column2, tostring(key), tostring(value)
                 )
             end
-        else
+        elseif self:exists(key) then
             self.db:run(
                 "delete from '%s' where %s = '%s'",
                 self.table, self.column1, tostring(key)

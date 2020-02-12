@@ -8,11 +8,10 @@ local Storage = hotload "kvstorage"
 local Permission = class(Storage)
 
 
-function Permission:new(name, description)
+function Permission:new()
     Storage.new(self, "permissions", "db/acl.db")
     self.column1 = "name"
     self.column2 = "description"
-    self:set(name, permission)
 end
 
 

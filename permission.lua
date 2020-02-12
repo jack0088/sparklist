@@ -30,4 +30,13 @@ function Permission:exists(n)
 end
 
 
+function Permission:getId(name)
+    local records = self.db:run(
+        "select id from '%s' where %s = '%s'",
+        self.table, self.column1, tostring(name)
+    )
+    return getn(records) > 0 and record[1].id or nil
+end
+
+
 return Permission

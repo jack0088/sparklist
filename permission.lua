@@ -19,7 +19,7 @@ function Permission:exists(n)
     if type(n) == "nil" then
         return false
     end
-    if type(tonumber(n)) == "number" then -- check by id
+    if type(tonumber(n)) == "number" and tonumber(n) > 0 then -- check by id
         local records = self.db:run(
             "select id from '%s' where id = %s",
             self.table, n

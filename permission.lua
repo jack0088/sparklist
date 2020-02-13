@@ -20,7 +20,11 @@ function Permission:exists(n)
         return false
     end
     if type(tonumber(n)) == "number" then -- check by id
-        return self:getId(n) == tonumber(n) or false
+        local records = self.db:run(
+            "select id from '%s' where id = %s",
+            self.table, n
+        )
+        return getn(records) > 0 and tonumber(record[1].id) == tonumber(n) or false
     end
     return not not Storage.exists(self, n) -- check by name
 end

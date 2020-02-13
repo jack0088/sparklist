@@ -17,11 +17,10 @@ function Authority:new(name, permissions)
     self.column1 = "name"
     self.column2 = "permissions"
 
-    if type(permissions) == "string" and #permissions > 1 then
-        Storage.set(self, name, permissions)
-    end
-
-    if name ~= nil then
+    if type(name) == "string" and #name > 0 then
+        if type(permissions) == "string" and #permissions > 1 then
+            self:set(name, permissions)
+        end
         self.name = name
     end
 end
@@ -33,7 +32,7 @@ end
 
 
 function Authority:set_name(name)
-    assert(self:exists(), "permission group named '"..name.."' does not exist yet")
+    assert(self:exists(name), "permission group named '"..name.."' does not exist yet")
     self.__name = name
     self.exists = function() return self:exists(self.name) end
     self.set = function(...) return self:set(self.name, ...) end

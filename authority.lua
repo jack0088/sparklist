@@ -9,7 +9,7 @@ local valid_permissions = hotload "permissions"()
 local Authority = class(Storage)
 
 
--- @name (optional string) name of the authority to act on e.g. "admin", "visitor"
+-- @name (optional string) name of the authority to act on e.g. "admin", "visitor", "author"
 -- @permissions (optional string) list of (default) permission id's for that authority with CSV syntax, e.g. "1; 7; 22; 311;" and is useful to set when authority not exists yet
 function Authority:new(name, permissions)
     Storage.new(self, "groups", "db/acl.db")

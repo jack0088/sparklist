@@ -44,7 +44,7 @@ function Contact:onConnect(server, client)
         server:insertPlugin(session_gc) -- will be inserted only once in app lifetime
 
         --
-        -- TODO client.user = User()
+        -- TODO client.user = Visitor()
         -- with .session ref inside & premissions & other things about the user + db methods
         --
     else

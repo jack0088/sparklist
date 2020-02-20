@@ -60,7 +60,7 @@ function Authority:set(name, permissions)
     if type(permissions) == "table" then
         table.sort(permissions)
         for pos = getn(permissions), 1, -1 do
-            if permissions[pos] == permissions[pos - 1] then
+            if tonumber(permissions[pos]) == tonumber(permissions[pos - 1]) then
                 table.remove(permissions, pos)
             end
         end
@@ -88,11 +88,13 @@ function Authority:removePermission(authority, permission)
         permission = valid_permissions:getId(permission)
     end
     if type(tonumber(permission)) == "number" then
-        local permissions = self:get(authority)
-        local i, j = permissions:sub(permissions:find("[%s;]+"..permission..";") or -1):match("%d+")
-        if i and j then
-            self:set(authority, permissions:sub(1, i - 1)..permissions:sub(j + 1))
+        local permissions = {}
+        for id in self:get(authority):gmatch("%d+") do
+            if tonumber(id) ~= tonumber(permission) then
+                table.insert(permissions, id)
+            end
         end
+        self:set(authority, permissions)
     end
 end
 
@@ -101,9 +103,14 @@ function Authority:hasPermission(authority, permission)
     if type(tonumber(permission)) ~= "number" then
         permission = valid_permissions:getId(permission)
     end
-    return
-        valid_permissions:exists(permission)
-        and tonumber(self:get(authority):match("[%s;]+("..permission..");") or 0) == tonumber(permission)
+    if valid_permissions:exists(permission) then
+        for id in self:get(authority):gmatch("%d+") do
+            if tonumber(id) == tonumber(permission) then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 

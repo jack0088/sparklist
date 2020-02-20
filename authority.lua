@@ -38,7 +38,7 @@ function Authority:set_name(name)
     self.get = function() return self:get(self.name) end
     self.addPermission = function(...) return self:addPermission(self.name, ...) end
     self.removePermission = function(...) return self.removePermission(self.name, ...) end
-    self.hasPermission = function(...) return self:addPermission(self.name, ...) end
+    self.hasPermission = function(...) return self:hasPermission(self.name, ...) end
 end
 
 

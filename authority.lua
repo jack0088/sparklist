@@ -31,7 +31,7 @@ end
 
 
 function Authority:set_name(name)
-    assert(self:exists(name), "permission group named '"..name.."' does not exist yet")
+    assert(self:exists(name), "authority named '"..name.."' does not exist yet")
     self.__name = name
     self.exists = function() return self:exists(self.name) end
     self.set = function(...) return self:set(self.name, ...) end

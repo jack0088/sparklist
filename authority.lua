@@ -5,7 +5,7 @@ local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local hotload = require "hotload"
 local class = hotload "class"
 local Storage = hotload "kvstorage"
-local valid_permissions = hotload "permissions"()
+local valid_permissions = hotload "permission"()
 local Authority = class(Storage)
 
 

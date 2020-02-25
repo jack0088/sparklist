@@ -13,3 +13,5 @@ Xors depends on [Lua >= 5.1](https://www.lua.org/manual/5.1/manual.html) and [Lu
 ## acknowledgement
 
 All of this is very rudimentary work in progress and subject to change. Nothing of this should be used in production.
+
+**Currently I'm re-writing the passwordless Swoop service integration. The goal is to trigger an authentication check on every client request. The router can ask for different permissions while dispatching and responding to a request which makes things simple to manage.**

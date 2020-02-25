@@ -10,6 +10,6 @@ Xors depends on [Lua >= 5.1](https://www.lua.org/manual/5.1/manual.html) and [Lu
 [Sparklist](https://sparklist.io) is my first web service that uses the xors HTTP web server, as mentioned above. It's a platform for sharing \(business\) ideas and/or making ones that don't exist yet. The site combines some elements from different services like Twitter, Reddit, StackOverflow, HackerOne and others.
 
 
-# acknowledgement
+## acknowledgement
 
 All of this is very rudimentary work in progress and subject to change. Nothing of this should be used in production.

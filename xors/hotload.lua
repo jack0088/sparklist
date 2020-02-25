@@ -136,8 +136,8 @@ do
     -- 1. load the real, working methods from the utilities module
     -- 2. at this point we can actually use hotload() to its full extent
     -- 3. update the entire utilities module by aquiring it, which makes it hot-reload-able
-    utilities = dofile "utilities.lua"
-    utilities = hotload "utilities"
+    utilities = dofile "xors/utilities.lua"
+    utilities = hotload "xors.utilities"
 end
 
 

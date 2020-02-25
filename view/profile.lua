@@ -1,5 +1,5 @@
-local hotload = require "hotload"
-local dom = hotload "dom"
+local hotload = require "xors.hotload"
+local dom = hotload "xors.dom"
 
 return function(email, url)
     local message = "sorry fellow, i dont know you."

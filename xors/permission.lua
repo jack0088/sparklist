@@ -2,9 +2,9 @@
 
 
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
-local hotload = require "hotload"
-local class = hotload "class"
-local Storage = hotload "kvstorage"
+local hotload = require "xors.hotload"
+local class = hotload "xors.class"
+local Storage = hotload "xors.kvstorage"
 local Permission = class(Storage)
 
 

@@ -2,8 +2,8 @@
 
 -- HTTP/1.1
 
-local hotload = require "hotload"
-local class = hotload "class"
+local hotload = require "xors.hotload"
+local class = hotload "xors.class"
 local Header = class()
 
 Header.HTTP_STATUS_MESSAGE = {

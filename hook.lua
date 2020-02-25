@@ -1,10 +1,14 @@
 -- 2020 (c) kontakt@herrsch.de
 
-local hotload = require "hotload"
+package.path = "./?/init.lua;"..package.path -- Lua <= 5.1
+
+require "xors.logger"
+
+local hotload = require "xors.hotload"
 
 return {
     hotload, -- run watcher via :onEnterFrame
-    hotload "connection",
-    hotload "websocket",
+    hotload "xors.connection",
+    hotload "xors.websocket",
     hotload "dispatcher"
 }

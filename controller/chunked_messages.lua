@@ -10,8 +10,8 @@
 -- similar applies to responses - they blocking as well, but when writing only chunk by chunk you can use a while loop for example
 -- now, that loop can be yielded as well as you can guess :)
 
-local hotload = require "hotload"
-local dt = hotload "datetime"
+local hotload = require "xors.hotload"
+local dt = hotload "xors.datetime"
 
 return function(client)
     print "receiving chunked request (if any):"

@@ -8,8 +8,8 @@
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local unpack = unpack or table.unpack -- Lua > 5.1
 local sql = require "luasql.sqlite3".sqlite3()
-local hotload = require "hotload"
-local class = hotload "class"
+local hotload = require "xors.hotload"
+local class = hotload "xors.class"
 local Database = class()
 
 

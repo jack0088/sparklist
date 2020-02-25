@@ -1,11 +1,11 @@
 -- 2020 (c) kontakt@herrsch.de
 
 
-local hotload = require "hotload"
-local dt = hotload "datetime"
-local hash = hotload "randomseed"
-local class = hotload "class"
-local Storage = hotload "kvstorage"
+local hotload = require "xors.hotload"
+local dt = hotload "xors.datetime"
+local hash = hotload "xors.randomseed"
+local class = hotload "xors.class"
+local Storage = hotload "xors.kvstorage"
 local Session = class(Storage)
 Session.get_table = Storage.get_table
 Session.set_table = Storage.set_table

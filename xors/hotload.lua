@@ -120,7 +120,7 @@ hotload = setmetatable(
             if file_path:sub(1, 1) == "/" then file_path = "."..file_path end
             if file_path:sub(-4) ~= ".lua" then file_path = file_path..".lua" end
             if not utilities.isfile(file_path) then
-                file_path = file_path:sub(1, -4).."init.lua"
+                file_path = file_path:sub(1, -5).."/init.lua"
                 if not utilities.isfile(file_path) then
                     file_path = nil
                 end

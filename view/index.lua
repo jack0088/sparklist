@@ -12,6 +12,8 @@ local page = dom{
         dom.body{
             dom.button{innerHTML = "Login with SwoopJS", id="swooplogin"},
             dom.script{src = "https://app.swoopnow.com/swoop.js"},
+            -- TODO swoop is only a demo-key replace it later
+            -- also the key should be moved into the database!
             dom.script "Swoop.init('wb_VVknxPn8YkxMipKjFWEehw'); document.getElementById('swooplogin').addEventListener('click', function(){Swoop.open('login');});",
             dom.p "show some user pictures here",
             dom.p "some other content over here",

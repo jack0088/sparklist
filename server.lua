@@ -1,8 +1,8 @@
 -- 2019 (c) kontakt@herrsch.de
 
-local searchpath = require "xors.searchpath"
-searchpath("./xors/?.lua")
-searchpath("./xors/?/init.lua")
+local search = require "xors.searchpath"
+search("./xors/?.lua")
+search("./xors/?/init.lua")
 
 local hotload = require "hotload"
 hotload "logger"

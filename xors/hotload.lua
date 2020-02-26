@@ -222,6 +222,7 @@ function table.remove(t, p)
 end
 
 
+--[[
 function table.concat(t, s)
     local q
     for i = 1, table.getn(t) do
@@ -233,6 +234,7 @@ function table.concat(t, s)
     end
     return q or ""
 end
+--]]
 
 
 return hotload

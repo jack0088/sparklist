@@ -3,7 +3,7 @@
 
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local locations = {}
-local previous_record
+local append_pos
 
 
 local function clamp(num, min, max)
@@ -25,7 +25,8 @@ local function record(path, pos)
         end
     end
     
-    pos = clamp(tonumber(pos) or max, min, max)
+    pos = pos or append_pos or max
+    pos = clamp(tonumber(pos), min, max)
 
     if not path then
         if pos <= count then
@@ -48,6 +49,7 @@ local function record(path, pos)
     end
 
     table.insert(locations, pos, path)
+    append_pos = pos + 1
     package.path = table.concat(locations, ";")
 end
 

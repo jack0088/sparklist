@@ -2,7 +2,11 @@
 
 
 -- NOTE useful git command to setup when you want to count all lines of code in the current git repository
+-- To count ALL files:
 -- $ git config --local alias.count "! git ls-files | xargs wc -l"
+-- To count ONLY whitelisted files:
+-- $ git config --local alias.count "! git ls-files | grep '\(.lua\|.html\|.css\|.js\|.json\|.txt\|.md\)$' | xargs wc -l"
+-- Calling the script symlink:
 -- $ git count
 
 

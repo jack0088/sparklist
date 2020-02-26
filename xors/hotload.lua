@@ -6,6 +6,7 @@
 -- and use table.getn whenever we have to check the number of entires in numerical tables
 
 local _require = require
+local _dofile = dofile
 local _ipairs = ipairs
 local _pairs = pairs
 local _type = type
@@ -128,8 +129,36 @@ hotload = setmetatable(
             end
             return nil
         end
+
+        -- TODO refactor __path and __heap and use patched dofile() instead
     }
 )
+
+
+-- patch so we can use package.path to automatically search files, e.g. "utilities" becomes "xors/utilities.lua"
+-- as well as directly passing the entire path, e.g. "xors/utilities.lua"
+function dofile(path)
+    local search_paths = package.path
+    local file_name = path:match("(.+)(%.%w%w[%w%p]*)$")
+    if not search_paths:match("%./%?;") then
+        search_paths = "./?;"..search_paths
+    end
+    if not file_name then
+        file_name = path
+    end
+    for url in search_paths:gmatch("[^;]+") do
+        local status, content = pcall(_dofile, url:gsub("%?", file_name))
+        if status == true and content ~= nil then
+            return content
+        end
+    end
+    error("failed to find resource file for '"..path.."'")
+end
+
+
+function require(module)
+    return (type(hotload) == "table" and hotload.package_loaded[module]) and hotload(module) or _require(module)
+end
 
 
 do
@@ -137,13 +166,8 @@ do
     -- 1. load the real, working methods from the utilities module
     -- 2. at this point we can actually use hotload() to its full extent
     -- 3. update the entire utilities module by aquiring it, which makes it hot-reload-able
-    utilities = dofile "xors/utilities.lua"
-    utilities = hotload "xors.utilities"
-end
-
-
-function require(module)
-    return (type(hotload) == "table" and hotload.package_loaded[module]) and hotload(module) or _require(module)
+    utilities = dofile "utilities"
+    utilities = hotload "utilities"
 end
 
 

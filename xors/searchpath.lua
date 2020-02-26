@@ -25,8 +25,8 @@ local function record(path, pos)
         end
     end
     
-    pos = pos or append_pos or max
-    pos = clamp(tonumber(pos), min, max)
+    pos = tonumber(pos) or append_pos or max
+    pos = clamp(pos, min, max)
 
     if not path then
         if pos <= count then
@@ -38,12 +38,13 @@ local function record(path, pos)
     for index, location in ipairs(locations) do
         if location == path then
             if index == pos then
+                append_pos = pos + 1
                 return
             end
-            if pos > index then
-                pos = clamp(pos - 1, min, max)
-            end
             table.remove(locations, index)
+            count = count - 1
+            max = max - 1
+            pos = clamp(pos, min, max)
             break
         end
     end
@@ -61,5 +62,5 @@ end
 
 
 record("./?.lua", 1)
-record("./?/init.lua", 2) -- Lua <= 5.1
+record("./?/init.lua") -- Lua <= 5.1
 return record

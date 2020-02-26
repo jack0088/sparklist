@@ -116,16 +116,17 @@ hotload = setmetatable(
         end;
 
         __path = function(self, resource)
-            local file_path = resource:gsub("%.", "/")
-            if file_path:sub(1, 1) == "/" then file_path = "."..file_path end
-            if file_path:sub(-4) ~= ".lua" then file_path = file_path..".lua" end
-            if not utilities.isfile(file_path) then
-                file_path = file_path:sub(1, -5).."/init.lua"
-                if not utilities.isfile(file_path) then
-                    file_path = nil
+            local file_path = resource
+            local file_name, file_extension = resource:match("(.+)(%.%w%w[%w%p]*)$")
+            if file_extension == ".lua" then file_path = file_name end
+            file_path = file_path:gsub("%.", "/")
+            for location in package.path:gmatch("[^;]+") do
+                local search_path = location:gsub("%?", file_path)
+                if utilities.isfile(search_path) then
+                    return search_path
                 end
             end
-            return file_path
+            return nil
         end
     }
 )
@@ -215,8 +216,22 @@ function table.remove(t, p)
             t[i] = t[i + 1]
         end
         t[table.getn(t)] = nil
+    else
+        t[p] = nil
     end
-    t[p] = nil
+end
+
+
+function table.concat(t, s)
+    local q
+    for i = 1, table.getn(t) do
+        if not q then
+            q = tostring(t[i])
+        else
+            q = q..tostring(s)..tostring(t[i])
+        end
+    end
+    return q or ""
 end
 
 

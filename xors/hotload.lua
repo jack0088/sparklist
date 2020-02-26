@@ -196,7 +196,7 @@ function table.insert(t, p, v)
         pos = p
         val = v
         if t[pos] then
-            for i = table.getn(t) + 1, pos - 1, -1 do
+            for i = table.getn(t) + 1, pos + 1, -1 do
                 t[i] = t[i - 1]
             end
         end

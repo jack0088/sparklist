@@ -7,7 +7,7 @@
 
 
 -- namespace unix plumbing utilities to access (file)system tools at low-level
-local mimetypeguess = require "xors.mimetype"
+local mimetypeguess = require "mimetype"
 local filesystem = {shell = shell}
 
 

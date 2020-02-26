@@ -1,8 +1,8 @@
 -- 2020 (c) kontakt@herrsch.de
 
 
-local hotload = require "xors.hotload"
-local class = hotload "xors.class"
+local hotload = require "hotload"
+local class = hotload "class"
 local Client = class()
 
 

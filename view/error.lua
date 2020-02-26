@@ -1,5 +1,5 @@
-local hotload = require "xors.hotload"
-local dom = hotload "xors.dom"
+local hotload = require "hotload"
+local dom = hotload "dom"
 
 return function(path, method, status, message)
     assert(type(path) == "string", "view is missing parameters")

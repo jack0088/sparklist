@@ -3,10 +3,10 @@
 -- client request parser
 -- runs on every request coming from client to server
 
-local hotload = require "xors.hotload"
-local class = hotload "xors.class"
-local Header = hotload "xors.header"
-local Message = hotload "xors.message"
+local hotload = require "hotload"
+local class = hotload "class"
+local Header = hotload "header"
+local Message = hotload "message"
 local Request = class()
 
 

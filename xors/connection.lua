@@ -5,12 +5,12 @@
 -- it also enriches existing Client object with Request and Response objects
 
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
-local hotload = require "xors.hotload"
-local dt = hotload "xors.datetime"
-local Request = hotload "xors.request"
-local Response = hotload "xors.response"
-local Session = hotload "xors.session"
-local session_gc = hotload "xors.gc"("session")
+local hotload = require "hotload"
+local dt = hotload "datetime"
+local Request = hotload "request"
+local Response = hotload "response"
+local Session = hotload "session"
+local session_gc = hotload "gc"("session")
 local Contact = {}
 
 

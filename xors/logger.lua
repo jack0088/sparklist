@@ -2,7 +2,9 @@
 
 -- NOTE every day a new log file is created and filled with messages from the command line console
 
-local util = dofile "xors/utilities.lua"
+local hotload = require "hotload"
+local util = hotload "utilities"
+
 local path = "log/"
 local _print = print
 

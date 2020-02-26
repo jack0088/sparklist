@@ -2,12 +2,12 @@
 
 
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
-local hotload = require "xors.hotload"
-local utilities = require "xors.utilities"
-local dt = hotload "xors.datetime"
-local class = hotload "xors.class"
-local Database = hotload "xors.database"
-local Storage = hotload "xors.kvstorage"
+local hotload = require "hotload"
+local utilities = require "utilities"
+local dt = hotload "datetime"
+local class = hotload "class"
+local Database = hotload "database"
+local Storage = hotload "kvstorage"
 local GarbageCollector = class()
 
 

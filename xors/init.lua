@@ -10,12 +10,11 @@
 ---> luasec
 ---> sqlite3 + luasql
 
-
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local socket = require "socket"
-local hotload = require "xors.hotload"
-local class = hotload "xors.class"
-local Client = hotload "xors.client"
+local hotload = require "hotload"
+local class = hotload "class"
+local Client = hotload "client"
 local Xors = class()
 
 
@@ -26,7 +25,7 @@ function Xors:new(options)
     self.timeout = options.timeout or 1
     self.backlog = options.backlog or 100 -- max queue size of waiting clients
     self.plugins = options.plugins or {}
-    self.settings = hotload "xors.kvstorage"("settings")
+    self.settings = hotload "kvstorage"("settings")
 end
 
 

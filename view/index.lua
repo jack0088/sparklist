@@ -1,5 +1,5 @@
-local hotload = require "xors.hotload"
-local dom = hotload "xors.dom"
+local hotload = require "hotload"
+local dom = hotload "dom"
 
 local page = dom{
     dom["!doctype"] "html",

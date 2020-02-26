@@ -5,12 +5,12 @@
 
 
 local runstring = loadstring or load -- Lua > 5.1
-local hotload = require "xors.hotload"
-local class = hotload "xors.class"
-local dt = hotload "xors.datetime"
-local utilities = hotload "xors.utilities"
-local Header = hotload "xors.header"
-local Message = hotload "xors.message"
+local hotload = require "hotload"
+local class = hotload "class"
+local dt = hotload "datetime"
+local utilities = hotload "utilities"
+local Header = hotload "header"
+local Message = hotload "message"
 local Response = class()
 
 

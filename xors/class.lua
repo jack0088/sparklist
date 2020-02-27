@@ -149,8 +149,10 @@ local function class(parent)
         return INHERIT_GETTERS_SETTERS and (prefix == "get_" or prefix == "set_")
     end
     local obj = setmetatable({__parent = parent or super}, class_mt)
-    for k, v in pairs(replica(obj, getter_setter_only)) do -- auto-transfer getters and setters
-        obj[k] = v
+    if INHERIT_GETTERS_SETTERS then
+        for k, v in pairs(replica(obj, getter_setter_only)) do -- auto-transfer getters and setters
+            obj[k] = v
+        end
     end
     return obj
 end

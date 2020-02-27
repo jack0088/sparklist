@@ -142,13 +142,14 @@ class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
 
 -- Create a new class object or create a sub-class from an already existing class
 -- @parent (optional table): parent class to sub-call from
+-- TODO? @transfer_getters_setters (optional boolean) temporary override for @INHERIT_GETTERS_SETTERS
 local function class(parent)
     local function getter_setter_only(object, key)
         local prefix = key:sub(1, 4)
         return INHERIT_GETTERS_SETTERS and (prefix == "get_" or prefix == "set_")
     end
     local obj = setmetatable({__parent = parent or super}, class_mt)
-    for k, v in pairs(replica(obj, getter_setter_only)) do
+    for k, v in pairs(replica(obj, getter_setter_only)) do -- auto-transfer getters and setters
         obj[k] = v
     end
     return obj

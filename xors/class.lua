@@ -121,7 +121,7 @@ local function cast(object, ...)
     if mt == class_mt then mt = cast_mt end
     local copy = setmetatable(
         replica(object, function(obj, key, val)
-            local prefix = key:sub(1, 4)
+            local prefix = tostring(key):sub(1, 4)
             return key ~= "__parent" and (INHERIT_GETTERS_SETTERS or (prefix ~= "get_" and prefix ~= "set_"))
         end),
         mt
@@ -145,7 +145,7 @@ class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
 -- TODO? @transfer_getters_setters (optional boolean) temporary override for @INHERIT_GETTERS_SETTERS
 local function class(parent)
     local function getter_setter_only(object, key)
-        local prefix = key:sub(1, 4)
+        local prefix = tostring(key):sub(1, 4)
         return INHERIT_GETTERS_SETTERS and (prefix == "get_" or prefix == "set_")
     end
     local obj = setmetatable({__parent = parent or super}, class_mt)

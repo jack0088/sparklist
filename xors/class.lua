@@ -12,6 +12,11 @@
 
 local unpack = unpack or table.unpack -- Lua > 5.1
 
+-- IMPORTANT NOTE getters and setters are never copied over to sub-classes or class-instances as they may reference to upvalues (default behaviour)!
+-- So if you need them in your new object, just re-assing them manually from __parent to the new object
+-- Alternatively, set the @INHERIT_GETTERS_SETTERS flag to true to invert the default behaviour (= always auto-transfer getters and setter to sub-classes and class-instances)!
+local INHERIT_GETTERS_SETTERS = true
+
 -- Cache of the metatables we need for proxies to support inheritance and getters/setters
 -- they will be set at later time, but need to reference earlier in code, thus this workaround
 local class_mt
@@ -87,15 +92,13 @@ end
 -- Call the constructor of the new class instance (if there is any) and return its return value
 -- or simply return the new class instance itself, if there the instance has no constructor method
 -- @object (required table): class object to deep-copy recursevly
--- @... (optional arguments): argements are passed to the optional class constructor
-local function replica(object)
-    local copy = object.__parent and replica(object.__parent) or {}
+local function replica(object, copy_condition)
+    local copy = object.__parent and replica(object.__parent, copy_condition) or {}
+    -- copy variable stores the real copy of object.__parent at this point, so just add the rest of the object to it
     if object ~= super then
         for k, v in pairs(object) do
-            local prefix = k:sub(1, 4)
-            if k ~= "__parent" and prefix ~= "get_" and prefix ~= "set_" then
-                 -- copy IS now a copy of object.__parent, so just add the rest of the object to it
-                copy[k] = type(v) == "table" and replica(v) or v
+            if copy_condition(object, k, v) then
+                copy[k] = type(v) == "table" and replica(v, copy_condition) or v
             end
         end
     end
@@ -104,7 +107,8 @@ end
 
 
 -- This wrapper adds a proxy to a class instance to maintain getter/setter support
--- @... (required arguments) the list starts with the class to instanciate from,
+-- @object (required table) class to instanciate from,
+-- @... (optional arguments): argements are passed to the optional class constructor
 -- and is fallowed by optional number and type of arguments to that the instance constructor might need
 -- returns (table) an instance of a class
 local function cast(object, ...)
@@ -115,7 +119,13 @@ local function cast(object, ...)
     -- because this override could throw off getter/setter support altogether!
     local mt = getmetatable(object)
     if mt == class_mt then mt = cast_mt end
-    local copy = setmetatable(replica(object), mt)
+    local copy = setmetatable(
+        replica(object, function(obj, key, val)
+            local prefix = key:sub(1, 4)
+            return key ~= "__parent" and (INHERIT_GETTERS_SETTERS or (prefix ~= "get_" and prefix ~= "set_"))
+        end),
+        mt
+    )
     if type(copy.new) == "function" then
         local instance = copy:new(...) or copy
         instance.new = nil -- an instance of a class doesn't need its constructor anymore
@@ -132,10 +142,16 @@ class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
 
 -- Create a new class object or create a sub-class from an already existing class
 -- @parent (optional table): parent class to sub-call from
--- IMPORTANT NOTE getters and setters are never copied over to sub-classes or class-instances as they may reference to upvalues!
--- So if you need them in your sub-class, just re-assing them manually from their __parent
 local function class(parent)
-    return setmetatable({__parent = parent or super}, class_mt)
+    local function getter_setter_only(object, key)
+        local prefix = key:sub(1, 4)
+        return INHERIT_GETTERS_SETTERS and (prefix == "get_" or prefix == "set_")
+    end
+    local obj = setmetatable({__parent = parent or super}, class_mt)
+    for k, v in pairs(replica(obj, getter_setter_only)) do
+        obj[k] = v
+    end
+    return obj
 end
 
 

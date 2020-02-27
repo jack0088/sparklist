@@ -11,5 +11,5 @@ local server = hotload "xors"{
     port = 80,
     timeout = 0.1,
     backlog = 100,
-	plugins = hotload "hook"
+	plugins = hotload "hooks"
 }:run()

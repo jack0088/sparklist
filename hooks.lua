@@ -2,8 +2,8 @@
 
 local hotload = require "hotload"
 return {
-    hotload, -- run watcher via :onEnterFrame
+    hotload, -- run observer via :onEnterFrame event
     hotload "connection",
     hotload "websocket",
-    hotload "dispatcher"
+    hotload "endpoints"
 }

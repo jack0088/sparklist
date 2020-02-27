@@ -92,7 +92,9 @@ local function replica(object)
     local copy = object.__parent and replica(object.__parent) or {}
     if object ~= super then
         for k, v in pairs(object) do
-            if k ~= "__parent" then -- copy IS now a copy of object.__parent, so just copy the rest of object
+            local prefix = k:sub(1, 4)
+            if k ~= "__parent" and prefix ~= "get_" and prefix ~= "set_" then
+                 -- copy IS now a copy of object.__parent, so just add the rest of the object to it
                 copy[k] = type(v) == "table" and replica(v) or v
             end
         end
@@ -130,7 +132,7 @@ class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
 
 -- Create a new class object or create a sub-class from an already existing class
 -- @parent (optional table): parent class to sub-call from
--- IMPORTANT NOTE getters and setters are never copied over to sub-classes as they may reference to upvalues!
+-- IMPORTANT NOTE getters and setters are never copied over to sub-classes or class-instances as they may reference to upvalues!
 -- So if you need them in your sub-class, just re-assing them manually from their __parent
 local function class(parent)
     return setmetatable({__parent = parent or super}, class_mt)

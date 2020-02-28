@@ -12,9 +12,10 @@
 
 local unpack = unpack or table.unpack -- Lua > 5.1
 
--- IMPORTANT NOTE getters and setters are never copied over to sub-classes or class-instances as they may reference to upvalues (default behaviour)!
--- So if you need them in your new object, just re-assing them manually from __parent to the new object
--- Alternatively, set the @INHERIT_GETTERS_SETTERS flag to true to invert the default behaviour (= always auto-transfer getters and setter to sub-classes and class-instances)!
+-- IMPORTANT NOTE getters and setters are normally never copied over to sub-classes or class instances as they may reference to upvalues!
+-- However, if you need them in your new object, just re-assing them manually from __parent to this new object
+-- Alternatively, set the global @INHERIT_GETTERS_SETTERS flag to true, which will always shallow-copy getters and setter from __parent over to new sub-classes and class instances!
+-- NOTE getters and setters are shallow-copied for the purpose of being able to nil them in a sub-class if needed!
 local INHERIT_GETTERS_SETTERS = true
 
 -- Cache of the metatables we need for proxies to support inheritance and getters/setters
@@ -122,10 +123,22 @@ local function cast(object, ...)
     local copy = setmetatable(
         replica(object, function(obj, key, val)
             local prefix = tostring(key):sub(1, 4)
-            return key ~= "__parent" and (INHERIT_GETTERS_SETTERS or (prefix ~= "get_" and prefix ~= "set_"))
+            return
+                key ~= "__parent"
+                and (INHERIT_GETTERS_SETTERS or (prefix ~= "get_" and prefix ~= "set_"))
         end),
         mt
     )
+    if INHERIT_GETTERS_SETTERS then
+        for k, v in pairs(copy) do
+            local prefix = tostring(k):sub(1, 4)
+            if (prefix == "get_" or prefix == "set_") and object.__parent[k] == nil then
+                -- explicitly nil getters & setters that don't exist in the object.__parent
+                -- because these were explicitly removed by the user in this class instance
+                copy[k] = nil
+            end
+        end
+    end
     if type(copy.new) == "function" then
         local instance = copy:new(...) or copy
         instance.new = nil -- an instance of a class doesn't need its constructor anymore
@@ -142,16 +155,14 @@ class_mt = {__index = readproxy, __newindex = proxy, __call = cast}
 
 -- Create a new class object or create a sub-class from an already existing class
 -- @parent (optional table): parent class to sub-call from
--- TODO? @transfer_getters_setters (optional boolean) temporary override for @INHERIT_GETTERS_SETTERS
 local function class(parent)
-    local function getter_setter_only(object, key)
-        local prefix = tostring(key):sub(1, 4)
-        return INHERIT_GETTERS_SETTERS and (prefix == "get_" or prefix == "set_")
-    end
     local obj = setmetatable({__parent = parent or super}, class_mt)
-    if INHERIT_GETTERS_SETTERS then
-        for k, v in pairs(replica(obj, getter_setter_only)) do -- auto-transfer getters and setters
-            obj[k] = v
+    if INHERIT_GETTERS_SETTERS then -- shallow-copy getters and setters from __parent to this (sub-)class
+        for k, v in pairs(obj.__parent) do
+            local prefix = tostring(k):sub(1, 4)
+            if (prefix == "get_" or prefix == "set_") and type(v) == "function" and obj[k] == nil then
+                obj[k] = v
+            end
         end
     end
     return obj

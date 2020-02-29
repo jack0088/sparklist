@@ -132,7 +132,7 @@ local function cast(object, ...)
     if INHERIT_GETTERS_SETTERS then
         for k, v in pairs(copy) do
             local prefix = tostring(k):sub(1, 4)
-            if (prefix == "get_" or prefix == "set_") and object.__parent[k] == nil then
+            if (prefix == "get_" or prefix == "set_") and object[k] == nil then
                 -- explicitly nil getters & setters that don't exist in the object.__parent
                 -- because these were explicitly removed by the user in this class instance
                 copy[k] = nil

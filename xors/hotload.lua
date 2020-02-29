@@ -109,7 +109,7 @@ hotload = setmetatable(
         __heap = function(self, module)
             local path = self:__path(module)
             assert(type(path) == "string", "can't find module '"..module.."'")
-            local ok, msg = pcall(dofile, path)
+            local ok, msg = pcall(_dofile, path)
             if ok == true and msg ~= nil then
                 return module, path, msg
             end

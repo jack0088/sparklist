@@ -102,14 +102,6 @@ function Database:count(table_name)
 end
 
 
--- destoys existing database table named @table_name
-function Database:destroy(table_name)
-    if type(table_name) == "string" then
-        self:run("drop table if exists '%s'", table_name)
-    end
-end
-
-
 -- rename table: Database:rename(table_name, new_table_name)
 -- rename column: Database:rename(table_name, column_name, new_column_name)
 function Database:rename(table_name, ...)
@@ -131,6 +123,14 @@ function Database:rename(table_name, ...)
         if table_name ~= new_table_name and self:has(table_name) == true then
             self:run("alter table '%s' rename to '%s'", table_name, new_table_name)
         end
+    end
+end
+
+
+-- destoys existing database table named @table_name
+function Database:destroy(table_name)
+    if type(table_name) == "string" then
+        self:run("drop table if exists '%s'", table_name)
     end
 end
 

@@ -4,38 +4,24 @@
 local getn = table.getn or function(t) return #t end -- Lua > 5.1 idom
 local hotload = require "hotload"
 local class = hotload "class"
-local Storage = hotload "kvstorage"
-local Permission = class(Storage)
+local KVStorage = hotload "kvstorage"
+local Permission = class(KVStorage)
 
 
 function Permission:new()
-    Storage.new(self, "permissions", "db/acl.db")
-    self.column1 = "name"
-    self.column2 = "description"
+    KVStorage.new(self, "permissions", "name", "description", "db/acl.db")
 end
 
 
-function Permission:exists(n)
-    if type(n) == "nil" then
+function Permission:exists(identifier)
+    if type(identifier) == "nil" then
         return false
     end
-    if type(tonumber(n)) == "number" and tonumber(n) > 0 then -- check by id
-        local records = self.db:run(
-            "select id from '%s' where id = %s",
-            self.table, n
-        )
-        return getn(records) > 0 and tonumber(record[1].id) == tonumber(n) or false
+    if type(tonumber(identifier)) == "number" and tonumber(identifier) > 0 then -- check by id
+        local records = self:run("select id from '%s' where id = %s", self.table, identifier)
+        return getn(records) > 0 and tonumber(record[1].id) == tonumber(identifier) or false
     end
-    return not not Storage.exists(self, n) -- check by name
-end
-
-
-function Permission:getId(name)
-    local records = self.db:run(
-        "select id from '%s' where %s = '%s'",
-        self.table, self.column1, tostring(name)
-    )
-    return getn(records) > 0 and record[1].id or nil
+    return not not KVStorage.exists(self, identifier) -- check by name
 end
 
 

@@ -33,7 +33,7 @@ function Contact:onConnect(server, client)
         end
         client.session = Session(client, cookie_name, cookie_lifetime)
 
-        local session_database = client.session.db.file
+        local session_database = client.session.file
         local session_table = client.session.table
         local current_time = dt.timestamp()
         local cookie_expiry = current_time + cookie_lifetime

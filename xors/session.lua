@@ -5,10 +5,8 @@ local hotload = require "hotload"
 local dt = hotload "datetime"
 local hash = hotload "randomseed"
 local class = hotload "class"
-local Storage = hotload "kvstorage"
-local Session = class(Storage)
-Session.get_table = Storage.get_table
-Session.set_table = Storage.set_table
+local KVStorage = hotload "kvstorage"
+local Session = class(KVStorage)
 
 
 function Session:new(client, cookie, lifetime)
@@ -28,7 +26,7 @@ function Session:new(client, cookie, lifetime)
         end
     end
 
-    Storage.new(self, session_uuid, "db/session.db")
+    KVStorage.new(self, session_uuid, nil, nil, "db/session.db")
 
     if client.request.header.method == "GET"
     and not client.request.header:get "referer"

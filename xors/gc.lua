@@ -7,28 +7,29 @@ local utilities = require "utilities"
 local dt = hotload "datetime"
 local class = hotload "class"
 local Database = hotload "database"
-local Storage = hotload "kvstorage"
-local GarbageCollector = class()
+local KVStorage = hotload "kvstorage"
+local GarbageCollector = class(Database)
 
 
 function GarbageCollector:new(name)
-    local gc_name = (type(name) == "string" and #name > 0) and name or "global"
-    self.db = Database "db/gc.db"
-    self.table = gc_name.."_queue" -- the storage of the actual garbage collector
-    self:create()
-    self.settings = Storage(gc_name.."_settings", self.db.file) -- settings of a garbage collector
-    self.verbose = false
+    Database.new(self, "db/gc.db")
+    self.table = name or "global"
 end
 
 
-function GarbageCollector:get_verbose()
-    return self.settings.db.verbose and self.db.verbose
-end
-
-
-function GarbageCollector:set_verbose(flag)
-    self.settings.db.verbose = flag
-    self.db.verbose = flag
+function GarbageCollector:create(table)
+    if type(table) == "string" then
+        self:run(
+            [[create table if not exists '%s' (
+                id integer primary key autoincrement,
+                dbname text not null,
+                tblname text,
+                tblrow integer check(tblname is not null),
+                expiryts integer not null
+            )]],
+            table
+        )
+    end
 end
 
 
@@ -38,37 +39,18 @@ end
 
 
 function GarbageCollector:set_table(name)
-    assert(type(name) == "string", "garbage collector name missing")
+    assert(type(name) == "string" and #name > 0, "garbage collector name missing")
     assert(not name:find("[^%a%d%-_]+"), "garbage collector name '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
-    -- TODO? if only pre-defined garbage collectors are allowed to be accessed than we need to guard like this:
-    -- assert(self.db:has(name), "no registration found for garbage collector named '"..name:match("(.+)_queue$").."' in '"..self.db.file.."'")
-    self.__tablename = name
-end
-
-
-function GarbageCollector:create()
-    if type(self.table) == "string" then
-        self.db:run(
-            [[create table if not exists '%s' (
-                id integer primary key autoincrement,
-                dbname text not null,
-                tblname text,
-                tblrow integer check(tblname is not null),
-                expiryts integer not null
-            )]],
-            self.table
-        )
-    end
-end
-
-
-function GarbageCollector:destroy()
-    self.db:destroy(self.table)
+    -- NOTE if you want to allow pre-defined garbage collectors only, then guard like this as well:
+    -- assert(self:has(name), "no registration found for garbage collector named '"..name:match("(.+)_queue$").."' in '"..self.file.."'")
+    self.__tablename = name.."_queue"
+    self:create(self.table)
+    self.settings = KVStorage(name.."_settings", nil, nil, self.file) -- settings of a garbage collector
 end
 
 
 function GarbageCollector:queue(database, table, row, expiry)
-    local matching_jobs = self.db:run(
+    local matching_jobs = self:run(
         "select id from '%s' where dbname = '%s' and tblname %s and tblrow %s",
         self.table,
         database,
@@ -77,14 +59,14 @@ function GarbageCollector:queue(database, table, row, expiry)
     )
     if getn(matching_jobs) > 0 then
         assert(getn(matching_jobs) == 1, "garbage collector queue contains duplicated jobs")
-        self.db:run(
+        self:run(
             "update '%s' set expiryts = %s where id = %s",
             self.table,
             expiry,
             matching_jobs[1].id
         )
     else
-        self.db:run(
+        self:run(
             "insert into '%s' (dbname, tblname, tblrow, expiryts) values ('%s', '%s', %s, %s)",
             self.table,
             database,
@@ -105,7 +87,7 @@ function GarbageCollector:discard(job_or_database, table, row)
         if type(table) == "string" and #table > 0 then where = where.." and tblname = '%s'" end
         if type(row) == "number" or (type(row) == "string" and tonumber(row) ~= nil) then where = where.." and tblrow = %s" end
     end
-    self.db:run("delete from '%s' where %s", self.table, where:format(job_or_database, table or "null", row or "null"))
+    self:run("delete from '%s' where %s", self.table, where:format(job_or_database, table or "null", row or "null"))
 end
 
 
@@ -126,6 +108,12 @@ function GarbageCollector:delete(database, table, row)
 end
 
 
+function GarbageCollector:collect()
+    self.settings:set("previous_cycle", 0) -- force trigger/run next cycle!
+    self:onEnterFrame()
+end
+
+
 function GarbageCollector:onEnterFrame()
     local current_time = dt.timestamp()
     local autorun_delay = tonumber(self.settings:get "autorun_delay" or 0)
@@ -136,18 +124,12 @@ function GarbageCollector:onEnterFrame()
     end
     
     if current_time >= previous_cycle + autorun_delay then
-        for _, job in ipairs(self.db:run("select * from '%s' where expiryts <= %s", self.table, previous_cycle)) do
+        for _, job in ipairs(self:run("select * from '%s' where expiryts <= %s", self.table, previous_cycle)) do
             self:delete(job.dbname, job.tblname, job.tblrow)
             self:discard(job.id)
         end
         self.settings:set("previous_cycle", current_time)
     end
-end
-
-
-function GarbageCollector:run()
-    self.settings:set("previous_cycle", 0) -- force trigger next cycle!
-    self:onEnterFrame()
 end
 
 

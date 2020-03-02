@@ -17,10 +17,10 @@ function Authority:new(name, permissions)
         if (type(permissions) == "table" and getn(permissions) > 0)
         or (type(permissions) == "string" and #permissions > 1)
         then
-            Authority.set(name, permissions)
+            Authority.set(self, name, permissions)
         end
         self.identifier = name
-        Authority.purge(self.identifier)
+        Authority.purge(self, self.identifier)
     end
 end
 
@@ -31,7 +31,7 @@ end
 
 
 function Authority:set_identifier(name)
-    assert(Authority.exists(name), "authority named '"..name.."' does not exist yet")
+    assert(Authority.exists(self, name), "authority named '"..name.."' does not exist yet")
     self.__identifier = name
     local wrappable_methods = {
         "create",
@@ -79,7 +79,7 @@ function Authority:set(name, permissions)
         end
     end
     -- convert table back into a string with CSV syntax and save into db
-    KVStorage.set(name, table.concat(permissions, "; ")..";")
+    KVStorage.set(self, name, table.concat(permissions, "; ")..";")
 end
 
 
@@ -92,7 +92,7 @@ function Authority:purge(name)
             table.insert(valid_permissions, permission_name)
         end
     end
-    Authority.set(name, valid_permissions)
+    Authority.set(self, name, valid_permissions)
 end
 
 
@@ -104,7 +104,7 @@ function Authority:hasPermission(authority_name, permission_identifier)
             permission_identifier = permission_keys:getUUID(permission_identifier)
         end
         local permissions_list, matching_permission = {}
-        for permission_name in Authority.get(authority_name):gmatch("[^%s;]+") do
+        for permission_name in Authority.get(self, authority_name):gmatch("[^%s;]+") do
             table.insert(permissions_list, permission_name)
             local uid = permission_keys:getUUID(permission_name)
             if uid == permission_identifier then
@@ -120,20 +120,20 @@ end
 
 
 function Authority:addPermission(authority_name, permission_identifier)
-    assert(Authority.hasPermission(authority_name, permission_identifier), string.format(
+    assert(Authority.hasPermission(self, authority_name, permission_identifier), string.format(
         "could not add permission '%s' to authority '%s' because such permission does not exist",
         permission_identifier,
         authority_name
     ))
-    Authority.set(authority_name, (Authority.get(authority_name) or "").." "..permission_identifier..";")
+    Authority.set(self, authority_name, (Authority.get(self, authority_name) or "").." "..permission_identifier..";")
 end
 
 
 function Authority:removePermission(authority_name, permission_identifier)
-    local exists, permissions, match = Authority.hasPermission(authority_name, permission_identifier)
+    local exists, permissions, match = Authority.hasPermission(self, authority_name, permission_identifier)
     if exists then
         table.remove(permissions, match)
-        Authority.set(authority_name, permissions)
+        Authority.set(self, authority_name, permissions)
     end
 end
 

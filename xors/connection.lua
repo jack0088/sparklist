@@ -11,6 +11,7 @@ local Request = hotload "request"
 local Response = hotload "response"
 local Session = hotload "session"
 local session_gc = hotload "gc"("session")
+local Identity = hotload "identity"
 local Contact = {}
 
 
@@ -43,10 +44,8 @@ function Contact:onConnect(server, client)
         session_gc:queue(session_database, session_table, nil, cookie_expiry)
         server:insertPlugin(session_gc) -- will be inserted only once in app lifetime
 
-        --
-        -- TODO client.user = Visitor()
-        -- with .session ref inside & premissions & other things about the user + db methods
-        --
+        client.user = Identity(client.session)
+        print("client.user:validLogin() >>>>>>>>>>>>>>>>>>>>>>>>", client.user:validLogin())
     else
         -- certainly not HTTP protocol but some kind of raw data!
         print "could not identify http request..."

@@ -28,16 +28,13 @@ function User:new(email, authorities, session)
     KVStorage.new(self, "users", "email", "authorities", "db/acl.db")
     self.column3 = "session"
 
-    if not self.validEmail(email)
-    and type(email) == "string"
-    and not session
-    then
+    if not self.validEmail(email) and type(email) == "string" then
         local usr = self:run(
             "select * from '%s' where %s = '%s'",
             self.table, self.column3, tostring(email)
         )
-        assert(getn(usr) == 1, "one session belongs to multiple users")
-        if usr[1].session == email then
+        assert(getn(usr) <= 1, "one session belongs to multiple users (prohibited behaviour)")
+        if usr[1] and usr[1].session == email then
             email = usr[1].email
             session = usr[1].session
         end
@@ -61,7 +58,7 @@ function User:create(table)
             [[create table if not exists '%s' (
                 id integer primary key autoincrement,
                 %s text unique not null,
-                %s text not null
+                %s text not null,
                 %s text unique
             )]],
             table,
@@ -73,15 +70,15 @@ function User:create(table)
 end
 
 
-function Storage:get_column3()
+function User:get_column3()
     return self.__columnname3 or "optional"
 end
 
 
-function Storage:set_column3(name)
+function User:set_column3(name)
     if type(name) == "string" and #name > 0 then
-        if self.__columnname3 ~= nil and self.__columnname3 ~= name then
-            self:rename(self.table, self.__columnname3, name)
+        if self.column3 ~= name then
+            self:rename(self.table, self.column3, name)
         end
         self.__columnname3 = name
     end

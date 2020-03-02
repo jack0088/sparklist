@@ -15,18 +15,18 @@ function Session:new(client, cookie, lifetime)
     assert(lifetime, "missing set-cookie max-age")
 
     self.continued = false -- continue existing session?
-    local session_uuid = hash(32)
+    self.uuid = hash(32)
     local death_date = dt.date(dt.timestamp() + lifetime)
 
     for key, value in client.request.header:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do
         if key == cookie then
-            session_uuid = value
+            self.uuid = value
             self.continued = true
             break
         end
     end
 
-    KVStorage.new(self, session_uuid, nil, nil, "db/session.db")
+    KVStorage.new(self, self.uuid, nil, nil, "db/session.db")
 
     if client.request.header.method == "GET"
     and not client.request.header:get "referer"

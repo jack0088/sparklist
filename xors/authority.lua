@@ -125,7 +125,7 @@ function Authority:addPermission(authority_name, permission_identifier)
         permission_identifier,
         authority_name
     ))
-    Authority.set(authority_name, Authority.get(authority_name).." "..permission_identifier..";")
+    Authority.set(authority_name, (Authority.get(authority_name) or "").." "..permission_identifier..";")
 end
 
 

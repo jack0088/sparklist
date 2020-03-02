@@ -6,6 +6,7 @@ local hotload = require "hotload"
 local class = hotload "class"
 local KVStorage = hotload "kvstorage"
 local Authority = hotload "authority"
+local permission_groups = Authority()
 local User = class(Authority)
 
 
@@ -46,10 +47,10 @@ function User:new(email, authorities, session)
         if (type(authorities) == "table" and getn(authorities) > 0)
         or (type(authorities) == "string" and #authorities > 1)
         then
-            self:set(email, authorities, session)
+            User.set(self, email, authorities, session)
         end
         self.identifier = email
-        User.purge(self.identifier)
+        User.purge(self, self.identifier)
     end
 end
 
@@ -134,7 +135,7 @@ function User:set(email, authorities, session)
     assert(self.validEmail(email))
     Authority.set(self, email, authorities)
     if session ~= nil then
-        User.setSession(email, session) -- update
+        User.setSession(self, email, session) -- update
     end
 end
 
@@ -142,7 +143,7 @@ end
 -- @email (required string)
 -- @uid (required string or nil) nil will set db column to null wich erases current reference to a client session; otherwise pass a unique identifier to store a new client session reference
 function User:setSession(email, uid)
-    assert(User.exists(email), "could not assign session to missing user")
+    assert(User.exists(self, email), "could not assign session to missing user")
     self:run(
         "update '%s' set %s = '%s' where %s = '%s'",
         self.table, self.column3, tostring(uid or "null")
@@ -153,18 +154,20 @@ end
 function User:purge(email)
     local valid_authorities = {}
     for authority_name in Authority.get(email):gmatch("[^%s;]+") do
-        if Authority.exists(authority_name) then
+        if Authority.exists(self, authority_name) then
             table.insert(valid_authorities, authority_name)
         end
     end
-    Authority.set(email, valid_authorities)
+    Authority.set(self, email, valid_authorities)
 end
 
 
 function User:hasPermission(user_email, permission_identifier)
-    for authority_uid in User.get(user_email):gmatch("[^%s;]+") do
-        if Authority.hasPermission(authority_name, permission_identifier) then
-            return true
+    if Authority.exists(self, permission_identifier) then
+        for authority_name in User.get(self, user_email):gmatch("[^%s;]+") do
+            if Authority.hasPermission(self, authority_name, permission_identifier) then
+                return true
+            end
         end
     end
     return false
@@ -182,22 +185,34 @@ end
 
 
 function User:hasAuthority(user_email, authority_identifier)
-    -- TODO
+    for authority_name in (User.get(self, user_email) or ""):gmatch("[^%s;]+") do
+        if authority_identifier == authority_name
+        and permission_groups:exists(authority_name)
+        then
+            return true
+        end
+    end
+    return false
 end
 
 
 function User:addAuthority(user_email, authority_identifier)
-    -- TODO
+    User.set(self, user_email, (User.get(self, user_email) or "").." "..authority_identifier..";")
 end
 
 
 function User:removeAuthority(user_email, authority_identifier)
-    -- TODO
+    local authorities = {}
+    for authority_name in (User.get(self, user_email) or ""):gmatch("[^%s;]+") do
+        if authority_identifier == authority_name then
+            table.insert(authorities, authority_name)
+        end
+    end
+    if getn(authorities) < 1 then
+        authorities = nil -- causes deletion of entire user
+    end
+    User.set(self, user_email, authorities)
 end
-
-
--- TODO? :authenticated() method?
--- or should I better outsource this to a plugin module?
 
 
 return User

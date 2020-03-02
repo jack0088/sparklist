@@ -23,7 +23,7 @@ end
 function Database:connect()
     self:disconnect()
     assert(type(self.file) == "string", "missing database file path")
-    self.connection = sql:connect(self.file, self.timeout or 1)
+    self.connection = assert(sql:connect(self.file, self.timeout or 1))
 end
 
 

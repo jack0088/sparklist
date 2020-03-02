@@ -78,8 +78,13 @@ function Authority:set(name, permissions)
             end
         end
     end
-    -- convert table back into a string with CSV syntax and save into db
-    KVStorage.set(self, name, table.concat(permissions, "; ")..";")
+    if getn(permissions) > 0 then
+        -- convert table back into a string with CSV syntax and save into db
+        KVStorage.set(self, name, table.concat(permissions, "; ")..";")
+    else
+        -- delete the entire authority because no permission keys left assigned to it
+        KVStorage.set(self, name, nil)
+    end
 end
 
 
@@ -133,6 +138,10 @@ function Authority:removePermission(authority_name, permission_identifier)
     local exists, permissions, match = Authority.hasPermission(self, authority_name, permission_identifier)
     if exists then
         table.remove(permissions, match)
+        if getn(permissions) < 1 then
+            -- delete the entire authority because no permission keys left assigned to it
+            permissions = nil
+        end
         Authority.set(self, authority_name, permissions)
     end
 end

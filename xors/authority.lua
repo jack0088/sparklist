@@ -43,7 +43,7 @@ function Authority:set_identifier(name)
         "removePermission"
     }
     for _, method in ipairs(wrappable_methods) do
-        -- wrap class methods so that we don't need to pass the autority identifier anymore
+        -- bind/wrap class methods so that we don't need to pass the autority identifier anymore
         self[method] = function(...) return self[method](self.identifier, ...) end
     end
 end
@@ -54,6 +54,8 @@ function Authority:exists(name)
 end
 
 
+-- @name (required string)
+-- @permissions (required string or table) list of permission names to add to the authority with @name
 function Authority:set(name, permissions)
     -- convert string into table
     if type(permissions) == "string" then
@@ -81,6 +83,8 @@ function Authority:set(name, permissions)
 end
 
 
+-- clean permission name in db column to only contain permissions that really exist and are valid
+-- @name (require string)
 function Authority:purge(name)
     local valid_permissions = {}
     for permission_name in Authority.get(name):gmatch("[^%s;]+") do

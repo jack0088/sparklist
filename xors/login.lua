@@ -13,13 +13,13 @@ local Session = hotload "session"
 
 return function(client, token) -- route handler
     if type(token) == "string" then
-        local user = Identity(Session(token))
+        local user = Identity(client)
         if not user.continued then
             user:destroy(user.uuid) -- NOTE potentially dangerous operation because destroyed session could have been in use!
         end
         if user.authenticated then
             client.session:set("user_authentication_token", token)
-            return client.response:redirect(client.session:get "previous_path_request")
+            return client.response:redirect(client.session:get "previous_path_request" or "/")
         end
     end
     return client.response:submit("view/unauthorized.lua", "text/html", 200, client.request.url)

@@ -49,7 +49,7 @@ function Contact:onConnect(server, client)
         -- it is almost certainly not the HTTP protocol but some kind of raw data!
         print "could not identify http request..."
         print(string.format("xors dropped client %s", client.ip))
-        return client:disconnect()-- drop client
+        return client:disconnect() -- drop client
     end
 end
 

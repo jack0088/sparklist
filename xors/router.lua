@@ -81,7 +81,7 @@ end
 function Router:onDispatch(server, client)
     local request = client.request
     local response = client.response
-    local route = request.header.method:upper()..request.header.path
+    local route = request.header.method:upper()..request.header.url
     for _, entry in ipairs(self.map) do
         -- for more inspiration or improvements see http://nikic.github.io/2014/02/18/Fast-request-routing-using-regular-expressions.html
         local captures = {route:match("^"..entry.route.."$")}

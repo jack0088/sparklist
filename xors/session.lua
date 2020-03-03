@@ -11,19 +11,12 @@ local Session = class(KVStorage)
 
 
 function Session:new(client, cookie, lifetime)
-    local hash_length = 32
+    local db = "db/session.db"
 
-    if type(client) == "string" then -- when passing unique session hash instead of @client object
-        assert(client == hash_length, "invalid session hash")
-        self.uuid = uuid
-        self.continued = false
-        self.file = "db/session.db"
-
-        if Database(self.file):has(self.uuid) then
-            self.continued = true
-            KVStorage.new(self, self.uuid, nil, nil, self.file)
-        end
-
+    if type(client) == "string" then -- passing unique session hash instead of @client object
+        assert(#client > 0, "invalid session hash")
+        self.continued = Database(db):has(client)
+        KVStorage.new(self, client, nil, nil, db)
         return self
     end
 
@@ -32,18 +25,18 @@ function Session:new(client, cookie, lifetime)
     assert(lifetime, "missing set-cookie max-age")
 
     self.continued = false -- continue existing session?
-    self.uuid = hash(hash_length)
+    local uuid = hash(32)
     local death_date = dt.date(dt.timestamp() + lifetime)
 
     for key, value in client.request.header:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do
         if key == cookie then
-            self.uuid = value
             self.continued = true
+            uuid = value
             break
         end
     end
 
-    KVStorage.new(self, self.uuid, nil, nil, "db/session.db")
+    KVStorage.new(self, uuid, nil, nil, db)
 
     if client.request.header.method == "GET"
     and not client.request.header:get "referer"
@@ -55,6 +48,16 @@ function Session:new(client, cookie, lifetime)
         -- it's not a resource file like e.g. favicon.ico
         client.response.header:set("set-cookie", cookie.."="..self.table.."; Expires="..death_date)
     end
+end
+
+
+function Session:get_uuid()
+    return self.table
+end
+
+
+function Session:set_uuid(hash)
+    self.table = hash
 end
 
 

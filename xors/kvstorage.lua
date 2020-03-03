@@ -58,8 +58,8 @@ end
 
 function Storage:set_column1(name)
     if type(name) == "string" and #name > 0 then
-        if self.__columnname1 ~= nil and self.__columnname1 ~= name then
-            self:rename(self.table, self.__columnname1, name)
+        if self.column1 ~= name and self.__columnname1 ~= name then
+            self:rename(self.table, self.column1, name)
         end
         self.__columnname1 = name
     end
@@ -73,8 +73,8 @@ end
 
 function Storage:set_column2(name)
     if type(name) == "string" and #name > 0 then
-        if self.__columnname2 ~= nil and self.__columnname2 ~= name then
-            self:rename(self.table, self.__columnname2, name)
+        if self.column2 ~= name and self.__columnname2 ~= name then
+            self:rename(self.table, self.column2, name)
         end
         self.__columnname2 = name
     end

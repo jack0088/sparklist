@@ -77,7 +77,7 @@ end
 
 function User:set_column3(name)
     if type(name) == "string" and #name > 0 then
-        if self.column3 ~= name then
+        if self.column2 ~= name and self.__columnname3 ~= name then
             self:rename(self.table, self.column3, name)
         end
         self.__columnname3 = name

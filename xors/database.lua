@@ -90,14 +90,20 @@ function Database:has(table_name, column_name)
         local table_exists = getn(tables) > 0 and tables[1].name == tostring(table_name) or false
 
         if type(column_name) == "string" then
-            local columns = self.run("select name from pragma_table_info('%s')", tostring(table_name))
-            local column_exists = getn(columns) > 0 and columns[1].name == tostring(column_name) or false
+            local columns = self:run("select name from pragma_table_info('%s')", tostring(table_name))
+            local column_exists = false
+            for n, c in ipairs(columns) do
+                if c.name == tostring(column_name) then
+                    column_exists = true
+                    break
+                end
+            end
             return table_exists and column_exists, columns
         end
 
         return table_exists, tables
     end
-    
+
     local tables = self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
     return false, tables
 end
@@ -126,8 +132,9 @@ function Database:rename(table_name, ...)
         assert(type(column_name) == "string" and #column_name > 0, "missing database column reference")
         assert(type(new_column_name) == "string" and #new_column_name > 0, "missing new database column name")
         assert(not new_column_name:find("[^%a%d%-_]+"), "new column name string '"..new_column_name.."' must only contain [a-zA-Z0-9%-_] characters")
-
-        if column_name ~= new_column_name and self:has(table_name, column_name) == true then
+        
+        if column_name ~= new_column_name and self:has(table_name, column_name) then
+            print("done renaming")
             self:run("alter table '%s' rename column '%s' to '%s'", table_name, column_name, new_column_name)
         end
     else
@@ -136,7 +143,7 @@ function Database:rename(table_name, ...)
         assert(type(new_table_name) == "string" and #new_table_name > 0, "missing new database table name")
         assert(not new_table_name:find("[^%a%d%-_]+"), "new table name string '"..new_table_name.."' must only contain [a-zA-Z0-9%-_] characters")
         
-        if table_name ~= new_table_name and self:has(table_name) == true then
+        if table_name ~= new_table_name and self:has(table_name) then
             self:run("alter table '%s' rename to '%s'", table_name, new_table_name)
         end
     end

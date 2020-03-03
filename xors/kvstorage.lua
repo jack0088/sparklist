@@ -40,14 +40,13 @@ end
 function Storage:set_table(name)
     assert(type(name) == "string", "missing common identifier string")
     assert(not name:find("[^%a%d%-_]+"), "common identifier string '"..name.."' must only contain [a-zA-Z0-9%-_] characters")
-    if self.table ~= nil and self.table ~= name then
-        if self:count(self.table) < 1 then
-            -- before switching to new db table delete the current one if it remains empty
-            self:destroy()
+    if self.table ~= name then
+        if self.table ~= nil and self:count(self.table) < 1 then
+            self:destroy() -- before switching to new db table delete the current one if it remains empty
         end
+        self:create(name)
     end
     self.__tablename = name
-    self:create(self.table)
 end
 
 

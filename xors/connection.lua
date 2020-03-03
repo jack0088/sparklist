@@ -46,7 +46,7 @@ function Contact:onConnect(server, client)
 
         client.user = Identity(client.session)
     else
-        -- certainly not HTTP protocol but some kind of raw data!
+        -- it is almost certainly not the HTTP protocol but some kind of raw data!
         print "could not identify http request..."
         print(string.format("xors dropped client %s", client.ip))
         return client:disconnect()-- drop client

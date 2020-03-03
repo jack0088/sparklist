@@ -33,7 +33,7 @@ end
 
 function Identity:set_session(delegate)
     self.__session = delegate
-    self.set_authenticated()
+    self:set_authenticated()
 end
 
 
@@ -45,7 +45,9 @@ end
 function Identity:set_authenticated() -- ignore flag because we evaluate and set this flag in realtime
     local token = self.session:get "user_authentication_token"
     if token then
-        local email, status = https.request("https://app.swoopnow.com/api/inbound_emails/"..token) -- TODO add timeout
+        -- TODO check if ssl is needed once xors is behind a ssl proxy
+        -- TODO add timeout to request
+        local email, status = https.request("https://app.swoopnow.com/api/inbound_emails/"..token)
         if status == 200
         and User.validEmail(email)
         and select(2, User.exists(self, email)) == self.session.uuid
@@ -58,7 +60,7 @@ end
 
 
 function Identity:validLogin()
-    return self.authenticated == true
+    return self.authenticated
 end
 
 

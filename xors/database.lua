@@ -81,14 +81,20 @@ function Database:run(sql_query, ...)
 end
 
 
--- check if table @name exists and return true or false
--- if @table_name is nil then returns all existing tables in that database
-function Database:has(table_name)
+-- returns true or false and a list of all available records (= tables or columns)
+-- @table_name (optional string) db table name of table to check for existance in this database; if nil then returns all available tables in this db
+-- @column_name (optional string) db column name in this @table_name to check for existance
+function Database:has(table_name, column_name)
     if type(table_name) == "string" then
-        local matches = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(table_name))
-        return getn(matches) > 0 and matches[1].name == tostring(table_name) or false
+        if type(column_name) == "string" then
+            local columns = self.run("select name from pragma_table_info('%s')", tostring(table_name))
+            return getn(columns) > 0 and columns[1].name == tostring(column_name) or false, columns
+        end
+        local tables = self:run("select name from sqlite_master where type = 'table' and name = '%s'", tostring(table_name))
+        return getn(tables) > 0 and tables[1].name == tostring(table_name) or false, tables
     end
-    return self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
+    local tables = self:run "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'"
+    return false, tables
 end
 
 

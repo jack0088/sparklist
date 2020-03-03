@@ -5,17 +5,34 @@ local hotload = require "hotload"
 local dt = hotload "datetime"
 local hash = hotload "randomseed"
 local class = hotload "class"
+local Database = hotload "database"
 local KVStorage = hotload "kvstorage"
 local Session = class(KVStorage)
 
 
 function Session:new(client, cookie, lifetime)
+    local hash_length = 32
+
+    if type(client) == "string" then -- when passing unique session hash instead of @client object
+        assert(client == hash_length, "invalid session hash")
+        self.uuid = uuid
+        self.continued = false
+        self.file = "db/session.db"
+
+        if Database(self.file):has(self.uuid) then
+            self.continued = true
+            KVStorage.new(self, self.uuid, nil, nil, self.file)
+        end
+
+        return self
+    end
+
     assert(client.request and client.response, "missing client request/response object")
     assert(cookie, "missing set-cookie name")
     assert(lifetime, "missing set-cookie max-age")
 
     self.continued = false -- continue existing session?
-    self.uuid = hash(32)
+    self.uuid = hash(hash_length)
     local death_date = dt.date(dt.timestamp() + lifetime)
 
     for key, value in client.request.header:get("cookie", string.gmatch, "([^=; ]+)=([^=;]+)") or function() end do

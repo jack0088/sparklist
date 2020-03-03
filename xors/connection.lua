@@ -45,7 +45,6 @@ function Contact:onConnect(server, client)
         server:insertPlugin(session_gc) -- will be inserted only once in app lifetime
 
         client.user = Identity(client.session)
-        print("client.user:validLogin() >>>>>>>>>>>>>>>>>>>>>>>>", client.user:validLogin())
     else
         -- certainly not HTTP protocol but some kind of raw data!
         print "could not identify http request..."

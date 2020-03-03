@@ -44,7 +44,7 @@ function Contact:onConnect(server, client)
         session_gc:queue(session_database, session_table, nil, cookie_expiry)
         server:insertPlugin(session_gc) -- will be inserted only once in app lifetime
 
-        client.user = Identity(client.session)
+        client.user = Identity(client)
     else
         -- it is almost certainly not the HTTP protocol but some kind of raw data!
         print "could not identify http request..."

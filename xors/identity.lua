@@ -42,10 +42,10 @@ function Identity:get_authenticated()
 end
 
 
-function Identity:set_authenticated() -- ignore flag-parameter because we evaluate and set this flag in realtime
+function Identity:set_authenticated()
     local token = self.session:get "user_authentication_token"
     if token then
-        -- TODO check if ssl is needed once xors is behind a ssl proxy
+        -- TODO check if ssl is even needed once xors is behind a ssl proxy
         -- TODO add timeout to request
         local email, status = https.request("https://app.swoopnow.com/api/inbound_emails/"..token)
         if status == 200

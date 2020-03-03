@@ -70,8 +70,8 @@ function Contact:onProcess(server, client)
                 and client.request.header.method == "GET"
                 and not client.request.header:get "referer"
                 then
-                    -- NOTE we try only to save what the use really tries to access not the auto-redirected page paths
-                    -- For example, Response.refresh would not be catched but Response.redirect will be!
+                    -- NOTE we try to save only what the user really tries to access, not the auto-redirected page paths
+                    -- For example, Response.refresh would NOT be catched but Response.redirect would be!
                     client.session:set("previous_path_request", client.request.header.path)
                 end
                 server:hook("afterResponse", server, client)
